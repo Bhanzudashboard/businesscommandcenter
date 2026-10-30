@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily KRA — Business Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f7fa;--surface:#ffffff;--raised:#fbfcfe;--line:#dce5ed;--line2:#c6d4e0;
+  --ink:#0e1d2a;--mute:#57708a;--dim:#8fa4b8;
+  --accent:#1668b3;--accent-soft:#e8f1fa;--accent-line:#a8cbe9;
+  --pos:#0d7550;--pos-bg:#e4f3ec;--warn:#a4640f;--warn-bg:#fbeed8;--neg:#b8382a;--neg-bg:#fbe6e2;
+  --off:#4f5f78;--off-bg:#e9eef4;--leave:#6f4e9c;--leave-bg:#f0eaf8;
+  --strip:#0e1d2a;--strip-ink:#b9c8d6;--strip-on:#f4f7fa;
+  --shadow:0 1px 2px rgba(14,29,42,.05),0 8px 24px -16px rgba(14,29,42,.18);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --display:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0b131b;--surface:#111b25;--raised:#15212d;--line:#223241;--line2:#2e4254;
+  --ink:#e4edf5;--mute:#93a8bb;--dim:#62788c;
+  --accent:#62a8e8;--accent-soft:#122a40;--accent-line:#285680;
+  --pos:#4cc395;--pos-bg:#0e2a20;--warn:#e2a654;--warn-bg:#2d2313;--neg:#ee7e70;--neg-bg:#341b18;
+  --off:#a9b8ca;--off-bg:#1a2633;--leave:#bc9fe2;--leave-bg:#261e35;
+  --strip:#050a0f;--strip-ink:#8ea2b5;--strip-on:#0b131b;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0b131b;--surface:#111b25;--raised:#15212d;--line:#223241;--line2:#2e4254;
+  --ink:#e4edf5;--mute:#93a8bb;--dim:#62788c;
+  --accent:#62a8e8;--accent-soft:#122a40;--accent-line:#285680;
+  --pos:#4cc395;--pos-bg:#0e2a20;--warn:#e2a654;--warn-bg:#2d2313;--neg:#ee7e70;--neg-bg:#341b18;
+  --off:#a9b8ca;--off-bg:#1a2633;--leave:#bc9fe2;--leave-bg:#261e35;
+  --strip:#050a0f;--strip-ink:#8ea2b5;--strip-on:#0b131b;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+img,svg{max-width:100%}
+.mono{font-family:var(--mono)}
+
+/* ── app tabs: the same strip sits on top of the command centre ── */
+.apptabs{background:var(--strip);display:flex;align-items:flex-end;gap:2px;padding:8px 22px 0;overflow-x:auto}
+.apptabs a{color:var(--strip-ink);text-decoration:none;font-size:12.5px;font-weight:500;padding:8px 16px 9px;border-radius:8px 8px 0 0;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.apptabs a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.apptabs a.on{background:var(--surface);color:var(--ink);font-weight:600}
+.apptabs .pend{font-family:var(--mono);font-size:10.5px;background:var(--neg);color:#fff;border-radius:9px;padding:0 6px;line-height:17px}
+
+/* ── masthead ── */
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+.mast{display:flex;align-items:center;gap:18px;padding:14px 26px 12px;flex-wrap:wrap}
+.kick{font-size:11px;color:var(--mute);margin-bottom:2px}
+h1{font-family:var(--display);font-size:23px;font-weight:700;letter-spacing:-.022em;line-height:1.1}
+.who{margin-left:auto;display:flex;align-items:center;gap:10px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);flex:none}
+.who-t{line-height:1.25;text-align:right}
+.who-t b{display:block;font-weight:600}
+.who-t span{font-size:11.5px;color:var(--mute)}
+.viewbar{display:flex;align-items:center;gap:12px;padding:0 26px;border-top:1px solid var(--line);flex-wrap:wrap}
+.vtabs{display:flex;gap:4px;overflow-x:auto}
+.vtab{background:none;border:0;padding:11px 12px 10px;font-weight:500;color:var(--mute);border-bottom:2px solid transparent;white-space:nowrap}
+.vtab:hover{color:var(--ink)}
+.vtab.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.proto{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--warn);padding:6px 0}
+.proto select{border:1px solid var(--warn);background:var(--warn-bg);color:var(--ink);border-radius:6px;padding:4px 8px;font-size:12px}
+
+main{max-width:1240px;margin:0 auto;padding:22px 26px 60px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.ph{display:flex;align-items:baseline;gap:10px;padding:16px 20px 0;flex-wrap:wrap}
+.ph h2{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.01em}
+.ph p{color:var(--mute);font-size:12.5px}
+.ph .r{margin-left:auto}
+.pb{padding:14px 20px 20px}
+.note{color:var(--mute);font-size:12.5px}
+.btn{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:500;font-size:13px;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--accent-line);background:var(--accent-soft)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover{background:#0f5596;border-color:#0f5596}
+.btn-go{background:var(--pos);border-color:var(--pos);color:#fff;font-weight:600;padding:11px 20px;font-size:14px}
+.btn-go:hover{filter:brightness(1.08);background:var(--pos)}
+.btn-s{padding:5px 10px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;color:var(--accent);font-weight:500;padding:0}
+.link:hover{text-decoration:underline}
+
+/* ── status chips ── */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.st::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-present{background:var(--pos-bg);color:var(--pos)}
+.st-lop{background:var(--neg-bg);color:var(--neg)}
+.st-weekoff{background:var(--off-bg);color:var(--off)}
+.st-leave{background:var(--leave-bg);color:var(--leave)}
+.st-pending{background:var(--warn-bg);color:var(--warn)}
+.st-progress{background:var(--accent-soft);color:var(--accent)}
+.st-future,.st-none{background:var(--paper);color:var(--dim)}
+
+/* ── my day hero: the shift clock ── */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;padding:22px 26px;margin-bottom:18px}
+.clock{width:188px;height:188px;position:relative;flex:none}
+.clock svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.clock .trk{fill:none;stroke:var(--line);stroke-width:5}
+.clock .time{fill:none;stroke:var(--warn);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.clock .seg{fill:none;stroke:var(--line);stroke-width:13;stroke-linecap:butt;transition:stroke .5s}
+.clock .seg.done{stroke:var(--accent)}
+.clock .seg.cur{stroke:var(--accent-line)}
+.clock.allgood .seg{stroke:var(--pos)}
+.clock-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.clock-c b{font-family:var(--display);font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.clock-c span{font-size:11.5px;color:var(--mute);margin-top:4px}
+.hero h2{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+.hero .sub{color:var(--mute);margin-top:6px;max-width:58ch}
+.cd{display:flex;align-items:baseline;gap:10px;margin-top:14px;flex-wrap:wrap}
+.cd b{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em}
+.cd span{color:var(--mute);font-size:12.5px}
+.cd.hot b{color:var(--neg)}
+.facts{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap}
+.fact b{font-family:var(--mono);font-size:18px;font-weight:600;display:block;line-height:1.2}
+.fact span{font-size:11.5px;color:var(--mute)}
+.week{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.wd{width:38px;text-align:center;font-size:10.5px;color:var(--mute)}
+.wd i{display:block;height:8px;border-radius:4px;margin-top:4px;background:var(--line)}
+.wd.present i{background:var(--pos)}.wd.lop i{background:var(--neg)}.wd.weekoff i{background:var(--off)}.wd.leave i{background:var(--leave)}.wd.progress i,.wd.pending i{background:var(--warn)}
+
+/* ── the form flow ── */
+.flow{display:grid;grid-template-columns:232px 1fr;gap:18px;align-items:start}
+.rail{padding:10px;position:sticky;top:140px}
+.rstep{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;padding:9px 10px;border-radius:8px;text-align:left;color:var(--mute)}
+.rstep:hover{background:var(--paper)}
+.rstep.on{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.rn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line2);display:grid;place-items:center;font-family:var(--mono);font-size:11px;flex:none;transition:all .3s}
+.rstep.ok .rn{background:var(--accent);border-color:var(--accent);color:#fff}
+.rstep.bad .rn{border-color:var(--neg);color:var(--neg)}
+.rl{line-height:1.25}
+.rl small{display:block;font-size:11px;color:var(--dim);font-weight:400}
+.stage{overflow:hidden}
+.stage-in{padding:22px 24px 8px}
+.stage-in.enter{animation:slideIn .38s cubic-bezier(.2,.8,.2,1)}
+.stage-in.enter.back{animation-name:slideBack}
+@keyframes slideIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+.stage h3{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.015em}
+.stage .why{color:var(--mute);font-size:12.5px;margin-top:3px;max-width:70ch}
+.blk{margin-top:20px;padding-top:18px;border-top:1px dashed var(--line)}
+.blk:first-of-type{border-top:0;padding-top:0}
+.blk h4{font-size:13.5px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.blk h4 small{font-weight:400;color:var(--mute);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 18px}
+.grid.w2{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f>label,.f>.lab{font-size:12px;font-weight:500;color:var(--mute)}
+.f.err>label,.f.err>.lab{color:var(--neg)}
+.f.err .inp,.f.err .stp{border-color:var(--neg)}
+.inp{border:1px solid var(--line2);background:var(--raised);border-radius:8px;padding:9px 11px;width:100%;transition:border-color .15s,box-shadow .15s}
+.inp:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{min-height:62px;resize:vertical}
+.money{position:relative}
+.money .inp{padding-left:26px;font-family:var(--mono)}
+.money::before{content:'₹';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--dim)}
+.stp{display:flex;align-items:center;border:1px solid var(--line2);border-radius:8px;background:var(--raised);width:max-content}
+.stp button{width:36px;height:38px;border:0;background:none;font-size:18px;color:var(--accent);border-radius:8px}
+.stp button:hover{background:var(--accent-soft)}
+.stp input{width:52px;text-align:center;border:0;background:none;font-family:var(--mono);font-size:15px;font-weight:600;padding:8px 0;-moz-appearance:textfield}
+.stp input::-webkit-outer-spin-button,.stp input::-webkit-inner-spin-button{-webkit-appearance:none}
+.stp input:focus{outline:0}
+.pips{display:flex;gap:4px;margin-top:2px}
+.pips i{width:16px;height:5px;border-radius:3px;background:var(--line);transition:background .3s}
+.pips i.on{background:var(--pos)}
+.yn{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;width:max-content}
+.yn button{border:0;background:var(--raised);padding:8px 16px;font-weight:500;color:var(--mute)}
+.yn button+button{border-left:1px solid var(--line2)}
+.yn button.on[data-v="yes"]{background:var(--pos);color:#fff}
+.yn button.on[data-v="no"]{background:var(--neg);color:#fff}
+.yn button.on:not([data-v="yes"]):not([data-v="no"]){background:var(--accent);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line2);background:var(--raised);border-radius:20px;padding:6px 13px;font-size:12.5px;display:inline-flex;align-items:center;gap:7px;transition:all .18s}
+.chip::before{content:'';width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2);transition:all .18s}
+.chip.on{border-color:var(--pos);background:var(--pos-bg);color:var(--ink)}
+.chip.on::before{background:var(--pos);border-color:var(--pos);box-shadow:inset 0 0 0 3px var(--pos-bg)}
+.chip:active{transform:scale(.96)}
+.live{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap}
+.meter{flex:1;min-width:220px;background:var(--paper);border-radius:10px;padding:12px 14px}
+.meter .top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--mute)}
+.meter .top b{font-family:var(--mono);font-size:18px;color:var(--ink)}
+.bar{height:8px;background:var(--line);border-radius:5px;margin-top:8px;position:relative;overflow:visible}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--accent);width:0;transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
+.bar i.good{background:var(--pos)}.bar i.bad{background:var(--neg)}.bar i.mid{background:var(--warn)}
+.bar .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.5}
+.meter .msg{font-size:11.5px;margin-top:6px;color:var(--mute)}
+.case{border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px;background:var(--raised)}
+.case.new{animation:pop .3s ease}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.case-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:600;font-size:12.5px}
+.warnline{font-size:12px;color:var(--warn);background:var(--warn-bg);padding:6px 10px;border-radius:6px;margin-top:8px}
+.foot{display:flex;align-items:center;gap:10px;padding:16px 24px;border-top:1px solid var(--line);margin-top:22px;background:var(--raised);flex-wrap:wrap}
+.foot .sp{flex:1}
+.foot .saved{font-size:12px;color:var(--dim)}
+.errs{font-size:12.5px;color:var(--neg)}
+
+/* ── done / closed states ── */
+.done{padding:34px 28px;display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center}
+.stamp{width:150px;height:150px;border-radius:50%;border:4px double var(--pos);color:var(--pos);display:grid;place-content:center;text-align:center;transform:rotate(-9deg);flex:none}
+.stamp b{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:.01em;line-height:1}
+.stamp span{font-family:var(--mono);font-size:11px;margin-top:5px}
+.stamp.anim{animation:stamp .55s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{0%{opacity:0;transform:rotate(-9deg) scale(2.2)}60%{opacity:1}100%{transform:rotate(-9deg) scale(1)}}
+.stamp.lop{border-color:var(--neg);color:var(--neg)}
+.stamp.weekoff{border-color:var(--off);color:var(--off)}
+.stamp.leave{border-color:var(--leave);color:var(--leave)}
+.done h3{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.02em}
+.done p{color:var(--mute);margin-top:6px;max-width:62ch}
+.done .acts{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:18px}
+.sum{background:var(--paper);border-radius:8px;padding:10px 12px}
+.sum b{font-family:var(--mono);font-size:16px;display:block}
+.sum span{font-size:11.5px;color:var(--mute)}
+
+/* ── kpis & tables ── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi>span{font-size:12px;color:var(--mute)}
+.kpi b{display:block;font-family:var(--mono);font-size:24px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.kpi>small{font-size:11.5px;color:var(--dim)}
+.kpi.neg b{color:var(--neg)}.kpi.pos b{color:var(--pos)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-weight:500;color:var(--mute);font-size:11.5px;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--paper)}
+.good{color:var(--pos)}.bad{color:var(--neg)}.mid{color:var(--warn)}
+.tl-n{display:flex;align-items:center;gap:9px;font-weight:500}
+.tl-n .av{width:26px;height:26px;font-size:10.5px}
+
+/* ── calendar ── */
+.calwrap{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+.calhead{display:flex;align-items:center;gap:10px;padding:16px 20px 6px}
+.calhead h2{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.015em;min-width:160px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:10px 20px 20px}
+.cal .dh{font-size:11px;color:var(--mute);text-align:center;padding-bottom:4px}
+.cd2{aspect-ratio:1/0.72;border-radius:9px;border:1px solid var(--line);background:var(--raised);padding:6px 7px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;position:relative;min-height:54px;transition:transform .15s,box-shadow .15s}
+.cd2 .dn{font-family:var(--mono);font-size:12px;font-weight:600}
+.cd2 .dl{font-size:10px;font-weight:600;line-height:1.15}
+.cd2.present{background:var(--pos-bg);border-color:transparent;color:var(--pos)}
+.cd2.lop{background:var(--neg-bg);border-color:transparent;color:var(--neg)}
+.cd2.weekoff{background:var(--off-bg);border-color:transparent;color:var(--off)}
+.cd2.leave{background:var(--leave-bg);border-color:transparent;color:var(--leave)}
+.cd2.pending,.cd2.progress{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.cd2.future{color:var(--mute)}
+.cd2.none,.cd2.blank{background:transparent;border-color:transparent;color:var(--dim)}
+.cd2.can{cursor:pointer}
+.cd2.can:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.cd2.lock{opacity:.55}
+.cd2.sel{outline:2px solid var(--accent);outline-offset:1px;transform:translateY(-2px)}
+.cd2 .rv{position:absolute;top:5px;right:6px;font-size:9px;font-weight:700;color:var(--neg)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:0 20px 16px;font-size:11.5px;color:var(--mute)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.side .pb>*+*{margin-top:12px}
+.side .sumgrid{grid-template-columns:1fr 1fr}
+.rule{font-size:12px;color:var(--mute);padding-left:14px;position:relative}
+.rule::before{content:'';position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--accent-line)}
+
+/* ── floor ── */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.grp{margin-bottom:18px}
+.grp-h{font-size:12px;color:var(--mute);margin:0 0 8px 2px}
+.grp-h b{color:var(--ink);font-weight:600}
+.tile{perspective:800px;height:104px}
+.tile-in{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.tile.flip .tile-in{transform:rotateX(180deg)}
+.face{position:absolute;inset:0;border-radius:11px;border:1px solid var(--line);background:var(--surface);padding:12px 14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow)}
+.face.back{transform:rotateX(180deg);background:var(--pos-bg);border-color:transparent}
+.face .tl-n{font-weight:600}
+.face .meta{display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;font-size:11.5px;color:var(--mute)}
+.face.back .meta{color:var(--pos)}
+.face.lopf{background:var(--neg-bg);border-color:transparent}
+.face.offf{background:var(--off-bg);border-color:transparent}
+.face.lvf{background:var(--leave-bg);border-color:transparent}
+.just{animation:glow 1.6s ease 2}
+@keyframes glow{50%{box-shadow:0 0 0 4px var(--pos-bg),0 0 0 6px var(--pos)}}
+.heat{display:grid;gap:3px;font-size:10.5px;align-items:center}
+.heat .hn{white-space:nowrap;padding-right:10px;color:var(--ink);font-size:12px}
+.heat .hd{color:var(--dim);text-align:center;font-family:var(--mono);font-size:9.5px}
+.hc{height:20px;border-radius:4px;background:var(--line)}
+.hc.present{background:var(--pos)}.hc.lop{background:var(--neg)}.hc.weekoff{background:var(--off);opacity:.5}.hc.leave{background:var(--leave);opacity:.75}
+.hc.pending,.hc.progress{background:var(--warn)}.hc.future,.hc.none{background:var(--paper)}
+.hc.rv{background:repeating-linear-gradient(45deg,var(--leave) 0 3px,var(--neg) 3px 6px)}
+.lb{display:flex;flex-direction:column;gap:8px}
+.lbr{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center}
+.lbr .rk{font-family:var(--mono);color:var(--dim);font-size:12px}
+.lbr .bar{margin-top:4px;height:6px}
+.lbr .v{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.flame{font-family:var(--mono);font-size:11.5px;color:var(--warn);font-weight:600}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:18px;align-items:start}
+
+/* ── overlays ── */
+.scrim{position:fixed;inset:0;background:rgba(8,16,24,.45);z-index:80;display:flex;justify-content:center;align-items:flex-start;padding:5vh 16px;overflow:auto;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.modal{background:var(--surface);border-radius:14px;width:min(860px,100%);box-shadow:0 30px 80px -30px rgba(0,0,0,.5);animation:rise .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+.mh{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)}
+.mh h2{font-family:var(--display);font-size:18px;font-weight:700}
+.mh .x{margin-left:auto;border:0;background:none;font-size:22px;color:var(--mute);width:34px;height:34px;border-radius:8px}
+.mh .x:hover{background:var(--paper)}
+.mb{padding:18px 22px 22px}
+.mails{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:300px}
+.mlist{display:flex;flex-direction:column;gap:6px;max-height:440px;overflow:auto}
+.mi{text-align:left;border:1px solid var(--line);background:var(--raised);border-radius:8px;padding:9px 11px;font-size:12px}
+.mi.on{border-color:var(--accent);background:var(--accent-soft)}
+.mi b{display:block;font-size:12.5px}
+.mi span{color:var(--mute)}
+.mail{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mail .hdr{background:var(--paper);padding:12px 16px;font-size:12px;line-height:1.75}
+.mail .hdr span{color:var(--mute);display:inline-block;width:56px}
+.mail .hdr .subj{font-weight:600;font-size:14px;margin-top:4px}
+.mail .bd{padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.6}
+.tag{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:10px;margin-left:6px}
+.tag.lop{background:var(--neg-bg);color:var(--neg)}.tag.rev{background:var(--leave-bg);color:var(--leave)}.tag.rem{background:var(--warn-bg);color:var(--warn)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 20px;font-size:12.5px}
+.kv div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv span{color:var(--mute)}
+.kv b{font-weight:500;text-align:right;white-space:normal}
+.dsec{margin-top:16px}
+.dsec h4{font-size:13px;margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:10px;font-size:13px;z-index:99;animation:rise .25s;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);max-width:90vw}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:95}
+
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.verd{display:flex;flex-wrap:wrap;gap:8px}
+.verd button{border:1px solid var(--line2);background:var(--raised);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:500;color:var(--mute);transition:all .18s}
+.verd button:hover{border-color:var(--vc);color:var(--ink)}
+.verd button.on{background:var(--vc);border-color:var(--vc);color:#fff}
+.verd button:active{transform:scale(.96)}
+.vchip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;color:var(--vc);background:color-mix(in srgb,var(--vc) 14%,transparent);white-space:nowrap}
+.case-h small{font-weight:400}
+.pipe{background:var(--paper);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.pipe-h{font-size:15px}
+.pipe-h b,.pipe-big b{font-family:var(--mono);font-size:21px;font-weight:600}
+.pbar{height:10px;background:var(--accent-line);border-radius:6px;margin-top:10px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--pos);width:0;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.prows{display:flex;flex-direction:column}
+.prow{display:grid;grid-template-columns:1fr 128px 128px;gap:16px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.prow.ph2{padding:0 0 4px}
+.prow.ph2 span{font-size:11.5px;color:var(--mute);text-align:center}
+.prow .f{gap:0;align-items:center}
+.prow .pips{display:none}
+.prow .pl{font-weight:500}
+.sums{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:16px}
+.scard{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--raised)}
+.scard.bad{border-color:var(--neg);background:var(--neg-bg)}
+.sc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:10px}
+.slist{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:12.5px}
+.slist li{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pipe-big{font-size:15px}
+.pcats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0 18px}
+.pcat{background:var(--paper);border-radius:8px;padding:10px 12px}
+.pcat span{display:block;font-size:11.5px;color:var(--mute)}
+.pcat b{font-family:var(--mono);font-size:18px}
+.pcat small{color:var(--dim);font-size:11px;margin-left:6px}
+.pteam{display:flex;flex-direction:column;gap:10px}
+.ptr{display:grid;grid-template-columns:190px 1fr 250px;gap:14px;align-items:center}
+.ptrack{display:flex;height:14px;background:var(--paper);border-radius:7px;overflow:hidden}
+.ptrack i{display:block;height:100%;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.ptrack i.in{width:var(--w)}
+.ptrack .pc{background:var(--pos)}
+.ptrack .po{background:var(--accent-line)}
+.pnum{font-size:12px;color:var(--mute)}
+.pnum b{color:var(--ink)}
+@media (max-width:700px){.ptr{grid-template-columns:1fr;gap:6px}.prow{grid-template-columns:1fr 110px 110px;gap:8px}.prow .stp button{width:30px}.prow .stp input{width:40px}}
+.egrid{display:grid;grid-template-columns:minmax(90px,1fr) repeat(3,minmax(80px,140px));gap:8px 12px;align-items:center}
+.egrid .eh{font-size:11.5px;color:var(--mute);text-align:center}
+.egrid .et{font-family:var(--mono);font-size:15px;text-align:center;padding:6px 0;border-top:1px solid var(--line)}
+.egrid .inp{text-align:center}
+.trend{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;height:210px;align-items:end}
+.tcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.tcol i{display:block;width:70%;max-width:38px;height:0;background:var(--accent);border-radius:5px 5px 2px 2px;transition:height .8s cubic-bezier(.2,.8,.2,1)}
+.tcol i.in{height:calc(var(--h) * .72)}
+.tv{font-family:var(--mono);font-size:10px;color:var(--mute)}
+.th{font-family:var(--mono);font-size:10px;color:var(--pos);font-weight:600}
+.td{font-size:10px;color:var(--dim);white-space:nowrap}
+.signin{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;padding:34px 30px;max-width:720px;margin:40px auto}
+.signin h2{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.02em}
+@media (max-width:900px){
+  .flow,.calwrap,.two{grid-template-columns:1fr}
+  .rail{position:static;display:flex;overflow-x:auto;gap:4px}
+  .rstep{width:auto;flex:none}
+  .rl small{display:none}
+  .hero{grid-template-columns:1fr;justify-items:start;padding:18px}
+  .clock{width:150px;height:150px}
+  .clock-c b{font-size:30px}
+  .done{grid-template-columns:1fr;justify-items:start}
+  .mails{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .mast,.viewbar{padding-left:15px;padding-right:15px}
+  main{padding:14px 12px 50px}
+  .apptabs{padding:6px 10px 0}
+  .who-t{display:none}
+  .proto{margin-left:0;width:100%}
+  .hero h2{font-size:24px}
+  .stage-in{padding:18px 16px 4px}
+  .foot{padding:14px 16px}
+  .cal{gap:4px;padding:8px 10px 16px}
+  .cd2{padding:4px;min-height:44px}
+  .cd2 .dl{font-size:8.5px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<nav class="apptabs" aria-label="Command centre sections">
+  <a href="https://bhanzudashboard.github.io/businesscommandcenter/" target="_top">Business Command Centre</a>
+  <a href="https://bhanzudashboard.github.io/businesscommandcenter/kra.html" target="_top" class="on" aria-current="page">Daily KRA <span class="pend" id="pendBadge" hidden></span></a>
+</nav>
+<header>
+  <div class="mast">
+    <div>
+      <div class="kick">Sales leadership, US &amp; Canada</div>
+      <h1>Daily KRA</h1>
+    </div>
+    <div class="who" id="who"></div>
+  </div>
+  <div class="viewbar">
+    <div class="vtabs" id="vtabs" role="tablist"></div>
+    <label class="proto">Prototype with sample data. View as
+      <select id="asUser"></select>
+    </label>
+  </div>
+</header>
+<main id="view"></main>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div id="overlay"></div>
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   DAILY KRA — extension page for the Business Command Centre
+   Prototype build: everything runs in memory on sample data.
+   In the live build, the DATA layer at the bottom calls the KRA Apps
+   Script (separate sheet, separate script); nothing else changes.
+   ════════════════════════════════════════════════════════════════════ */
+const CFG = {
+  CUTOFF_MIN: 11 * 60 + 30,      // 11:30 AM IST
+  BACKDATE_DAYS: 15,             // week off / leave can be marked this far back
+  AHEAD_DAYS: 60,
+  START: '2026-10-01',           // sample history starts here
+  SENDER: 'budhaditya.chakraborty@expinfi.com',
+  URL: 'https://bhanzudashboard.github.io/businesscommandcenter/kra.html',
+  VERIFY_MIN: 0.8, AUDITS: 2, VOC: 2, SEG_MIN: 30
+};
+const MGRS = {
+  akash: { name: 'Akash Tripathi', email: 'akash.tripathi@expinfi.com' },
+  mahadevan: { name: 'Mahadevan K', email: 'mahadevan.k@expinfi.com' },
+  vikash: { name: 'Vikash Sharma', email: 'vikash.sharma@expinfi.com' },
+  abhishek: { name: 'Abhishek Das', email: 'abhishek.das@expinfi.com' }
+};
+const ADMIN = { name: 'Budhaditya Chakraborty', email: CFG.SENDER };
+const TLS = [
+  { id: 'prabhu', name: 'Prabhu G', email: 'prabhu.g_4923@expinfi.com', mgr: 'akash' },
+  { id: 'naeem', name: 'Naeem Bhat', email: 'naeem.bhat_6024@expinfi.com', mgr: 'akash' },
+  { id: 'uday', name: 'Uday Kumar', email: 'kumar.uday_6224@expinfi.com', mgr: 'akash' },
+  { id: 'deepali', name: 'Deepali', email: 'deepali_4923@expinfi.com', mgr: 'mahadevan' },
+  { id: 'satyam', name: 'Satyam Anand', email: 'satyam.anand_5024@expinfi.com', mgr: 'mahadevan' },
+  { id: 'pranesh', name: 'Pranesh Srinivasan', email: 'pranesh.srinivasan_10725@expinfi.com', mgr: 'vikash' },
+  { id: 'ishan', name: 'Ishan Rout', email: 'ishan.rout@expinfi.com', mgr: 'vikash' },
+  { id: 'umar', name: 'Umar Reyaz', email: 'umar.reyaz_6824@expinfi.com', mgr: 'abhishek' },
+  { id: 'prathuin', name: 'Prathuin Prakash', email: 'prathuin.prakash_15325@expinfi.com', mgr: 'abhishek' }
+];
+const TL = id => TLS.find(t => t.id === id);
+
+/* ── helpers ── */
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const initials = n => n.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+const first = n => n.split(' ')[0];
+const fmtN = v => v == null || isNaN(v) ? '—' : Math.round(v).toLocaleString('en-IN');
+const money = v => v == null || isNaN(v) ? '—' : '₹' + Math.round(v).toLocaleString('en-IN');
+const pct = (v, d = 0) => v == null || !isFinite(v) ? '—' : (v * 100).toFixed(d) + '%';
+const num = v => v === '' || v == null ? null : Number(v);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ── IST dates. A Date shifted by +5:30 and read with getUTC* is IST wall time. ── */
+const IST = 330 * 60000, DAY = 864e5;
+const istNow = () => new Date(Date.now() + IST);
+const key = d => d.toISOString().slice(0, 10);
+const fromKey = k => new Date(k + 'T00:00:00Z');
+const addDays = (k, n) => key(new Date(fromKey(k).getTime() + n * DAY));
+const istToday = () => key(istNow());
+const dow = k => fromKey(k).getUTCDay();
+const fmtDay = k => fromKey(k).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const fmtLong = k => fromKey(k).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+const fmtTime = ms => new Date(ms + IST).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+const fmtStamp = ms => fmtDay(key(new Date(ms + IST))) + ', ' + fmtTime(ms);
+/* One shift is open at a time: before 11:30 AM it is last night's shift,
+   after 11:30 AM it is tonight's. The deadline is 11:30 AM the next morning. */
+function openShift() {
+  const n = istNow(), m = n.getUTCHours() * 60 + n.getUTCMinutes();
+  return m < CFG.CUTOFF_MIN ? addDays(key(n), -1) : key(n);
+}
+const deadline = k => fromKey(addDays(k, 1)).getTime() + CFG.CUTOFF_MIN * 60000 - IST;
+const monthOf = k => k.slice(0, 7);
+const weekStart = k => addDays(k, -((dow(k) + 6) % 7));   // Monday
+
+/* ── sample data ── */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+const ri = (r, a, b) => a + Math.floor(r() * (b - a + 1));
+const ADVISORS = {"prabhu":["Prathviraj Patil","Sagar Gowda","Shreepad Labshetwar","Lakshya Kashyap","Anup Sivasankaran","Dhanush Reddys","Aman Raina","Theeksha B","Meenakshi R","Abdullah Rasheed","Syed Rahaman","Vishal Pujari"],"naeem":["Adrija Das","Rahul Manwatkar","Koushik Js","Ananya Halder","Varun Kumar","Pratham Prakash","Abel Mathew","Sanjay K","Pupalu Vishalnaidu","Lakshmi S","Gokul S"],"uday":["Robinson A","Ayan Borah","Varun Yalla","Kavya Suresh","Aman Jha","Pranav E","Naseer Ahmed","Jeshika Gupta"],"deepali":["Steffin Francis","Kumari Saloni","Sheikmohammed Suhel","Reek Chakraborty","Tanima Sarkar","Sneha Jha","Aniruddha Polley","Shyaam Elango","K Nithya","Kartik Chauhan","Jashwanth Pilla","Rehan Ahmed"],"satyam":["Marina Seena","Sahil Poon","Aaradhya Jargar","Shouvik Mukherjee","Kumar Aryan","Abhay Gupta","Maryam Shafi","Suprith Sangala","Avula Yeswanth","Hitha Hr","Karthick Selvaraj","Amith Sharma"],"pranesh":["Shubham Jha","Anakha Muralidharan","Keerthana Konada","Tannu K","Vinayak Shinde","Prashanthraddi Ajjanavar","Carolin Roy","Shabeer Ahmed","Himasree Bhattacharya","Karthikeyan G","Manoj S"],"ishan":["Shwetha Singh","Sampath Kumar","Pooja Behuria","Hari Krishna","Hemaswitha Nunna","Kiran H","Syed Usman","Anjali B","Abhishek Dhawan","Rohit Kumar","Abdul Baasit"],"umar":["Prashant Uppadhya","Anchal Bishnoi","Muhammed B","Anuradha Bera","Chethan V"],"prathuin":["Abhishek Mukherjee","Vishal N","Deon Dsouza"]};
+/* stage and grade lists match the values in the command centre's own feed */
+const STAGES = ['AD-WIP', 'AD Attempted', 'AD Positive', 'AD May Buy Later', 'AD Reactivation', 'AD Reattempt', 'Demo Completed', 'Payment Link Sent', 'Partial Payment / Downpayment', 'Closed Won', 'AD Not Interested', 'Not Qualified', 'RP - Missed', 'RP - Dropped', 'Future Prospect'];
+const GRADES = ['UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const VERDICTS = ['Excellent pitch', 'Good', 'Needs improvement', 'Mis-sale identified'];
+const VCOL = { 'Excellent pitch': 'var(--pos)', 'Good': 'var(--accent)', 'Needs improvement': 'var(--warn)', 'Mis-sale identified': 'var(--neg)' };
+const TOPICS = ['Pitch', 'Probing', 'Objection handling', 'Product clarity', 'Ethical closing'];
+const CRM = ['CRM stages accurate', 'Notes updated', 'Dispositions correct', 'Payment follow-ups current', 'Next actions set'];
+const PIPE = [['pl_hi', 'High-intent leads'], ['pl_pay', 'Pending payment links'], ['pl_dm', 'Decision-maker follow-ups'], ['pl_od', 'Overdue commitments']];
+const OO_TOPICS = ['Low conversion; probing gaps', 'Attendance and login hours', 'Pitch quality from audit', 'Career growth and targets', 'Handling price objections'];
+
+function genKRA(r, i, id) {
+  const adv = ADVISORS[id];
+  const target = [50000, 45000, 45000, 55000, 40000, 50000, 45000, 35000, 35000][i];
+  const rpT = [6, 5, 5, 6, 5, 6, 5, 3, 3][i];
+  const close = Math.round(target * (0.62 + r() * 0.65) / 100) * 100;
+  const rpC = Math.round(rpT * (0.5 + r() * 0.9) * 2) / 2;
+  const demos = ri(r, 7, 17);
+  const verdict = () => { const x = r(); return x < .18 ? 'Excellent pitch' : x < .62 ? 'Good' : x < .96 ? 'Needs improvement' : 'Mis-sale identified'; };
+  const lead = () => 'LD-' + ri(r, 10000, 99999);
+  const nA = r() < .82 ? 2 : ri(r, 1, 3), nV = ri(r, 1, 3);
+  const k = {
+    rev_target: target, rev_close: close, rp_target: rpT, rp_close: rpC,
+    demos, enrols: 0,
+    recovery: close < target || rpC < rpT ? pick(r, ['Push 4 pending payment links first hour', 'Re-pitch 3 warm demos with trial offer', 'Decision-maker calls for 5 leads']) : '',
+    audits: nA, audit_list: Array.from({ length: nA }, () => ({ lead: lead(), stage: pick(r, STAGES.slice(0, 8)), advisor: pick(r, adv), verdict: verdict(), note: '' })),
+    voc: nV, voc_list: Array.from({ length: nV }, () => ({ lead: lead(), grade: pick(r, GRADES.slice(0, 10)), eth: r() < .72 ? 'Indian' : 'Non-Indian', stage: pick(r, STAGES.slice(0, 8)), feedback: pick(r, ['Price vs competitor', 'Wants trial first', 'Timing clash with school', 'Parent to decide with spouse']) })),
+    ref_held: r() < .9 ? 'yes' : 'no', ref_start: r() < .85 ? '23:00' : '23:10', ref_end: '00:00',
+    topics: TOPICS.filter(() => r() < .85), ref_present: ri(r, 8, 14), ref_reason: 'Floor escalation during slot',
+    oo: r() < .55 ? 'yes' : 'no', oo_list: [],
+    crm: CRM.filter(() => r() < .88), crm_gaps: 'Updated stale dispositions on 3 leads',
+    cases: { mis: { none: true, items: [] } }
+  };
+  k.members = ri(r, 8, 14); k.calls = ri(r, 22, 34) * k.members; const at = ri(r, 150, 320); k.avg_talk = Math.floor(at / 60) + ':' + String(at % 60).padStart(2, '0');
+  k.talk_hrs = Math.round(k.calls * (0.35 + r() * 0.2) * at / 3600 * 2) / 2;
+  k.in_dc = Math.round(demos * (0.6 + r() * 0.2)); k.ni_dc = demos - k.in_dc;
+  k.in_cl = Math.round(k.in_dc * (0.15 + r() * 0.2)); k.ni_cl = Math.round(k.ni_dc * (0.1 + r() * 0.2)); k.enrols = k.in_cl + k.ni_cl;
+  k.in_cnt = k.in_dc + ri(r, 10, 30); k.ni_cnt = k.ni_dc + ri(r, 5, 18);
+  k.plan_m = Math.round(k.enrols * (0.55 + r() * 0.3)); k.plan_bm = k.enrols - k.plan_m;
+  if (k.oo === 'yes') k.oo_list = Array.from({ length: r() < .7 ? 1 : 2 }, () => ({ counsellor: pick(r, adv), topic: pick(r, OO_TOPICS), email: r() < .6 ? 'yes' : 'no' }));
+  PIPE.forEach(([p], j) => { const t = ri(r, [6, 3, 3, 0][j], [18, 12, 10, 6][j]); k[p] = t; k[p + '_c'] = Math.round(t * (0.2 + r() * 0.5)); });
+  k.audit_list.forEach((a, j) => { if (a.verdict === 'Mis-sale identified') { k.cases.mis.none = false; k.cases.mis.items.push({ advisor: a.advisor, ref: a.lead, issue: pick(r, ['Promised guaranteed grade jump', 'Hid recurring fee', 'Claimed limited seats falsely']), checks: ['Evidence verified', 'L1 intervention', 'Documented', 'Advisor coached'], esc: pick(r, ['No', 'L2']), status: pick(r, ['Open', 'In progress', 'Closed']), fromAudit: j }); } });
+  return k;
+}
+
+const DB = { days: {}, cutoff: {}, mails: [], drafts: {} };
+function seed() {
+  const r = rng(20261030), os = openShift();
+  TLS.forEach((t, i) => {
+    const d = DB.days[t.id] = {};
+    const offDow = [0, 1, 6, 2, 0, 3, 5, 4, 1][i];
+    const lopP = [.04, .06, .03, .1, .02, .05, .11, .04, .07][i];
+    for (let k = CFG.START; k < os; k = addDays(k, 1)) {
+      if (dow(k) === offDow) { d[k] = { off: 'weekoff', markedAt: fromKey(k).getTime() - DAY }; continue; }
+      const x = r();
+      if (x < .025) { d[k] = { off: 'leave', reason: pick(r, ['Medical', 'Family function', 'Personal work']), markedAt: fromKey(k).getTime() - 2 * DAY }; continue; }
+      if (x < .025 + lopP) { d[k] = {}; continue; }   // nothing filled: LOP
+      const sub = deadline(k) - (ri(r, 15, 460)) * 60000;
+      d[k] = { kra: genKRA(r, i, t.id), submittedAt: sub };
+    }
+  });
+  /* tonight's board: a realistic mid-morning mix */
+  const plan = { prabhu: 'blank', naeem: 'sub', uday: 'draft', deepali: 'blank', satyam: 'blank', pranesh: 'sub', ishan: 'blank', umar: 'off', prathuin: 'sub' };
+  TLS.forEach((t, i) => {
+    const p = plan[t.id], d = DB.days[t.id];
+    if (p === 'sub') d[os] = { kra: genKRA(r, i, t.id), submittedAt: Math.min(Date.now() - ri(r, 10, 200) * 60000, deadline(os) - 60000) };
+    else if (p === 'off') d[os] = { off: 'weekoff', markedAt: Date.now() - 3 * DAY };
+    else if (p === 'draft') { const g = genKRA(r, i, t.id); DB.drafts[t.id] = { k: os, v: Object.fromEntries(['members', 'calls', 'avg_talk', 'talk_hrs', 'rev_target', 'rev_close', 'rp_target', 'rp_close', 'in_cnt', 'in_dc', 'in_cl', 'ni_cnt', 'ni_dc', 'ni_cl', 'plan_m', 'plan_bm', 'demos', 'enrols', 'recovery', 'audits', 'audit_list', 'voc', 'voc_list'].map(x => [x, g[x]])), step: 2, visited: [0, 1] }; delete d[os]; }
+    else delete d[os];
+  });
+  /* one backdated leave that reversed an LOP, to show the flow */
+  let rk = addDays(os, -6);
+  while (DB.days.ishan[rk] && DB.days.ishan[rk].off) rk = addDays(rk, -1);
+  DB.days.ishan[rk] = { off: 'leave', reason: 'Fever; informed Vikash on call', markedAt: deadline(rk) + 2 * DAY, reversed: true, lopMailedAt: deadline(rk) + 60000 };
+  /* mail log for recent LOPs */
+  for (let k = addDays(os, -8); k < os; k = addDays(k, 1))
+    TLS.forEach(t => {
+      const e = DB.days[t.id][k];
+      if (e && e.reversed) { DB.mails.push(mailLOP(t, k, e.lopMailedAt)); DB.mails.push(mailReversed(t, k, e.off, e.markedAt)); }
+      else if (statusOf(t.id, k) === 'lop') DB.mails.push(mailLOP(t, k, deadline(k) + 60000));
+    });
+  DB.mails.sort((a, b) => b.at - a.at);
+}
+
+/* ── status rules (the same rules run server-side in the live build) ── */
+function statusOf(id, k) {
+  const e = (DB.days[id] || {})[k], os = openShift();
+  if (e && e.off) return e.off;                       // weekoff | leave
+  if (e && e.submittedAt) return 'present';
+  if (k > os) return 'future';
+  if (k < CFG.START) return 'none';
+  if (k === os && !DB.cutoff[k]) return DB.drafts[id] && DB.drafts[id].k === k ? 'progress' : 'pending';
+  return 'lop';
+}
+const LABEL = { present: 'Present', lop: 'LOP', weekoff: 'Week off', leave: 'Leave', pending: 'Not started', progress: 'In progress', future: '', none: '' };
+const chip = s => `<span class="st st-${s}">${LABEL[s] || '—'}</span>`;
+function canMarkOff(id, k) {
+  const t = istToday(), s = statusOf(id, k);
+  if (k < CFG.START) return { ok: false, why: 'Before the tracker started.' };
+  if (k < addDays(t, -CFG.BACKDATE_DAYS)) return { ok: false, why: 'More than 15 days ago, so it can no longer be changed.' };
+  if (k > addDays(t, CFG.AHEAD_DAYS)) return { ok: false, why: 'Too far ahead.' };
+  if (s === 'present') return { ok: false, why: 'A KRA was submitted for this day.' };
+  return { ok: true };
+}
+function weekOffClash(id, k) {
+  const ws = weekStart(k);
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (d !== k && statusOf(id, d) === 'weekoff') return d; }
+  return null;
+}
+
+/* ── month stats ── */
+function stats(id, month) {
+  const os = openShift(), o = { present: 0, lop: 0, weekoff: 0, leave: 0, reversed: 0, tgt: 0, close: 0, rpT: 0, rpC: 0, demos: 0, enrols: 0, audits: 0, voc: 0, oo: 0, openCases: 0, mis: 0, verdicts: {} };
+  for (let k = month + '-01'; monthOf(k) === month && k <= os; k = addDays(k, 1)) {
+    const s = statusOf(id, k), e = (DB.days[id] || {})[k];
+    if (o[s] != null && s !== 'pending' && s !== 'progress') o[s]++;
+    if (e && e.reversed) o.reversed++;
+    if (s === 'present') {
+      const q = e.kra;
+      o.tgt += +q.rev_target || 0; o.close += +q.rev_close || 0; o.rpT += +q.rp_target || 0; o.rpC += +q.rp_close || 0;
+      o.demos += +q.demos || 0; o.enrols += +q.enrols || 0; o.audits += +q.audits || 0; o.voc += +q.voc || 0;
+      o.oo += (q.oo_list || []).length;
+      (q.audit_list || []).forEach(a => { if (a.verdict) o.verdicts[a.verdict] = (o.verdicts[a.verdict] || 0) + 1; });
+      (q.cases.mis.items || []).forEach(c => { o.mis++; if (c.status !== 'Closed') o.openCases++; });
+    }
+  }
+  o.work = o.present + o.lop; o.comp = o.work ? o.present / o.work : null;
+  o.att = o.tgt ? o.close / o.tgt : null; o.rpAtt = o.rpT ? o.rpC / o.rpT : null; o.dc2e = o.demos ? o.enrols / o.demos : null;
+  o.apd = o.present ? o.audits / o.present : null; o.vpd = o.present ? o.voc / o.present : null;
+  return o;
+}
+/* pipeline as of a TL's latest KRA: totals come from the four lines they fill in */
+function pipeOf(q) {
+  const cats = PIPE.map(([p, l]) => ({ p, l, t: +q[p] || 0, c: +q[p + '_c'] || 0 }));
+  const total = cats.reduce((a, x) => a + x.t, 0), closed = cats.reduce((a, x) => a + x.c, 0);
+  return { cats, total, closed, open: total - closed };
+}
+function latestKRA(id) {
+  for (let k = openShift(), i = 0; i < 10; i++, k = addDays(k, -1)) { const e = DB.days[id][k]; if (e && e.submittedAt) return { k, e }; }
+  return null;
+}
+
+function streak(id) {
+  let n = 0, k = openShift();
+  if (statusOf(id, k) !== 'present') k = addDays(k, -1);
+  for (let i = 0; i < 120 && k >= CFG.START; i++, k = addDays(k, -1)) {
+    const s = statusOf(id, k);
+    if (s === 'present') n++; else if (s === 'weekoff' || s === 'leave') continue; else break;
+  }
+  return n;
+}
+
+/* ── mails (the live script sends these from the sender account via MailApp) ── */
+function mailLOP(t, k, at) {
+  const m = MGRS[t.mgr];
+  return { type: 'lop', at, to: t.email, cc: m.email, subject: `LOP marked for ${fmtDay(k)}: daily KRA not submitted`,
+    body: `Hi ${first(t.name)},\n\nYour daily KRA for the shift of ${fmtLong(k)} was not submitted by the 11:30 AM IST cut-off, so the day has been marked as LOP.\n\nMissed entries cannot be filled in afterwards.\n\nIf this day was your week off or an approved leave, mark it in your Daily KRA calendar by ${fmtLong(addDays(k, CFG.BACKDATE_DAYS))}. The LOP will then be reversed and ${first(m.name)} will be informed.\n\nDaily KRA: ${CFG.URL}\n\nThis is an automated message from the Business Command Centre.` };
+}
+function mailReversed(t, k, off, at) {
+  const m = MGRS[t.mgr];
+  return { type: 'rev', at, to: t.email, cc: m.email, subject: `LOP reversed for ${fmtDay(k)}: marked as ${LABEL[off].toLowerCase()}`,
+    body: `Hi ${first(t.name)},\n\nYou marked ${fmtLong(k)} as ${LABEL[off].toLowerCase()} on ${fmtStamp(at)}, so the LOP for that day has been reversed.\n\n${first(m.name)}, this was marked after the day had passed. It is shown under "Marked after the day" in your team view.\n\nDaily KRA: ${CFG.URL}\n\nThis is an automated message from the Business Command Centre.` };
+}
+function mailReminder(t, k) {
+  return { type: 'rem', at: deadline(k) - 3600000, to: t.email, cc: '', subject: `1 hour left: daily KRA for ${fmtDay(k)}`,
+    body: `Hi ${first(t.name)},\n\nYour daily KRA for the shift of ${fmtLong(k)} is not submitted yet. The cut-off is 11:30 AM IST, after which the day is marked as LOP and ${first(MGRS[t.mgr].name)} is informed.\n\nIt takes about 5 minutes: ${CFG.URL}\n\nThis is an automated message from the Business Command Centre.` };
+}
+</script>
+<script>
+/* ════════════════ state ════════════════ */
+const S = { seen: new Set(), as: 'tl:prabhu', view: 'day', step: 0, editing: false, errs: new Set(), calMonth: null, sel: new Set(), mgr: 'akash', mailSel: 0, showErr: false };
+const role = () => S.as.split(':')[0];
+const meId = () => S.as.split(':')[1];
+const me = () => TL(meId());
+
+/* ════════════════ path helpers for the draft ════════════════ */
+const getP = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+function setP(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { if (a[k] == null) a[k] = {}; a = a[k]; }); a[ks[ks.length - 1]] = v; }
+
+function blankKRA(id) {
+  let tgt = '', rpt = '';
+  for (let k = addDays(openShift(), -1), i = 0; i < 30; i++, k = addDays(k, -1)) { const e = DB.days[id][k]; if (e && e.kra) { tgt = e.kra.rev_target; rpt = e.kra.rp_target; break; } }
+  return { members: 0, calls: '', avg_talk: '', talk_hrs: '', rev_target: tgt, rev_close: '', rp_target: rpt, rp_close: '',
+    in_cnt: '', in_dc: '', in_cl: '', ni_cnt: '', ni_dc: '', ni_cl: '', plan_m: '', plan_bm: '', demos: 0, enrols: 0, recovery: '',
+    audits: 0, audit_list: [], voc: 0, voc_list: [], ref_held: '', ref_start: '23:00', ref_end: '00:00', topics: [], ref_present: 0, ref_reason: '',
+    oo: '', oo_list: [], crm: [], crm_gaps: '', pl_hi: 0, pl_hi_c: 0, pl_pay: 0, pl_pay_c: 0, pl_dm: 0, pl_dm_c: 0, pl_od: 0, pl_od_c: 0,
+    cases: { mis: { none: false, items: [] } } };
+}
+function draft() {
+  const id = meId(), os = openShift();
+  let d = DB.drafts[id];
+  if (!d || d.k !== os) d = DB.drafts[id] = { k: os, v: blankKRA(id), step: 0, visited: [] };
+  if (!d.visited) d.visited = [];
+  const b = blankKRA(id); for (const k in b) if (d.v[k] === undefined) d.v[k] = b[k];
+  return d;
+}
+let F = {};
+
+/* ════════════════ field builders ════════════════ */
+const ek = k => S.showErr && S.errs.has(k) ? ' err' : '';
+const v = k => getP(F, k);
+const fMoney = (k, l) => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label><div class="money"><input class="inp" id="i-${k}" inputmode="numeric" autocomplete="off" data-k="${k}" data-t="num" value="${esc(v(k) ?? '')}" placeholder="0"></div></div>`;
+function fStep(k, l, target) {
+  const n = +v(k) || 0;
+  const pips = target ? `<div class="pips" aria-hidden="true">${Array.from({ length: Math.max(target, Math.min(n, 6)) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>` : '';
+  return `<div class="f${ek(k)}" data-f="${k}"><span class="lab" id="l-${k}">${l}</span><div class="stp"><button type="button" data-act="dec" data-k="${k}" aria-label="Decrease">−</button><input inputmode="numeric" aria-labelledby="l-${k}" data-k="${k}" data-t="num" value="${n}"><button type="button" data-act="inc" data-k="${k}" aria-label="Increase">+</button></div>${pips}</div>`;
+}
+const fYN = (k, l, opts = [['yes', 'Yes'], ['no', 'No']]) => `<div class="f${ek(k)}" data-f="${k}"><span class="lab">${l}</span><div class="yn" role="group">${opts.map(([val, t]) => `<button type="button" data-act="yn" data-k="${k}" data-v="${val}" class="${v(k) === val ? 'on' : ''}" aria-pressed="${v(k) === val}">${t}</button>`).join('')}</div></div>`;
+const fChips = (k, l, list, hint) => `<div class="f${ek(k)}" data-f="${k}"><span class="lab">${l}${hint ? ` <span style="color:var(--dim)">${hint}</span>` : ''}</span><div class="chips">${list.map(o => { const on = (v(k) || []).includes(o); return `<button type="button" class="chip${on ? ' on' : ''}" data-act="chip" data-k="${k}" data-v="${esc(o)}" aria-pressed="${on}">${esc(o)}</button>`; }).join('')}</div></div>`;
+const fText = (k, l, ph = '', area, list) => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label>${area ? `<textarea class="inp" id="i-${k}" data-k="${k}" placeholder="${esc(ph)}">${esc(v(k) || '')}</textarea>` : `<input class="inp" id="i-${k}" data-k="${k}" autocomplete="off"${list ? ` list="${list}"` : ''} placeholder="${esc(ph)}" value="${esc(v(k) || '')}">`}</div>`;
+const fTime = (k, l) => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label><input type="time" class="inp" id="i-${k}" data-k="${k}" value="${esc(v(k) || '')}"></div>`;
+const fSel = (k, l, opts) => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label><select class="inp" id="i-${k}" data-k="${k}"><option value="">Choose</option>${opts.map(o => `<option${v(k) === o ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></div>`;
+const meter = (id, label) => `<div class="meter"><div class="top"><span>${label}</span><b id="${id}-v">—</b></div><div class="bar"><i id="${id}-b"></i><span class="mark" id="${id}-m" hidden></span></div><div class="msg" id="${id}-msg"></div></div>`;
+
+/* ════════════════ the six sections ════════════════ */
+const fDec = (k, l, ph = '0') => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label><input class="inp mono" id="i-${k}" inputmode="decimal" autocomplete="off" data-k="${k}" data-t="dec" value="${esc(v(k) ?? '')}" placeholder="${ph}"></div>`;
+const fVerd = k => `<div class="f${ek(k)}" data-f="${k}"><span class="lab">Verdict</span><div class="verd" role="group">${VERDICTS.map(o => `<button type="button" data-act="yn" data-k="${k}" data-v="${esc(o)}" class="${v(k) === o ? 'on' : ''}" style="--vc:${VCOL[o]}" aria-pressed="${v(k) === o}">${o}</button>`).join('')}</div></div>`;
+const fNum = (k, l, ph = '0') => `<div class="f${ek(k)}" data-f="${k}"><label for="i-${k}">${l}</label><input class="inp mono" id="i-${k}" inputmode="numeric" autocomplete="off" data-k="${k}" data-t="num" value="${esc(v(k) ?? '')}" placeholder="${ph}"></div>`;
+const fCell = (k, aria) => `<div class="f${ek(k)}" data-f="${k}"><input class="inp mono" aria-label="${esc(aria)}" inputmode="numeric" autocomplete="off" data-k="${k}" data-t="num" value="${esc(v(k) ?? '')}" placeholder="0"></div>`;
+const vchip = vd => vd ? `<span class="vchip" style="--vc:${VCOL[vd]}">${esc(vd)}</span>` : '';
+const blankAudit = () => ({ lead: '', stage: '', advisor: '', verdict: '', note: '' });
+const blankVOC = () => ({ lead: '', grade: '', eth: '', stage: '', feedback: '' });
+const blankOO = () => ({ counsellor: '', topic: '', email: '' });
+const MAXN = { audits: 10, voc: 10 };
+const nw = id => S.seen.has(id) ? '' : (S.seen.add(id), ' new');
+
+/* keeps the per-audit / per-VOC cards in step with the counts, and turns
+   every "Mis-sale identified" audit into a pre-filled mis-selling case */
+function normalize() {
+  F.demos = (+F.in_dc || 0) + (+F.ni_dc || 0); F.enrols = (+F.in_cl || 0) + (+F.ni_cl || 0);
+  const fit = (lk, n, blank) => { if (!Array.isArray(F[lk])) F[lk] = []; while (F[lk].length < n) F[lk].push(blank()); F[lk].length = n; };
+  fit('audit_list', Math.min(+F.audits || 0, MAXN.audits), blankAudit);
+  fit('voc_list', Math.min(+F.voc || 0, MAXN.voc), blankVOC);
+  if (F.oo === 'yes' && !(F.oo_list || []).length) F.oo_list = [blankOO()];
+  if (F.oo !== 'yes') F.oo_list = [];
+  const mis = F.cases.mis;
+  mis.items = mis.items.filter(c => c.fromAudit == null || (F.audit_list[c.fromAudit] && F.audit_list[c.fromAudit].verdict === 'Mis-sale identified'));
+  F.audit_list.forEach((a, i) => {
+    if (a.verdict !== 'Mis-sale identified') return;
+    let c = mis.items.find(x => x.fromAudit === i);
+    if (!c) { c = { ...CASES.mis.blank(), fromAudit: i }; mis.items.unshift(c); mis.none = false; }
+    if (!c.ref) c.ref = a.lead; if (!c.advisor) c.advisor = a.advisor;
+  });
+}
+
+const CASES = {
+  mis: { title: 'Mis-selling cases', kra: 'Zero tolerance. Log every L1 intervention.', none: 'No mis-selling seen', add: 'Log a case',
+    blank: () => ({ advisor: '', ref: '', issue: '', checks: [], esc: '', status: '' }),
+    fields: p => `<div class="grid">${fText(p + 'advisor', 'Advisor', 'Start typing', 0, 'advl')}${fText(p + 'ref', 'Lead ID or call ref', 'e.g. LD-10234')}${fSel(p + 'esc', 'Escalated?', ['No', 'L2', 'L3', 'Compliance'])}${fSel(p + 'status', 'Status', ['Open', 'In progress', 'Closed'])}</div><div class="grid w2" style="margin-top:12px">${fText(p + 'issue', 'What was misleading?', 'e.g. promised a guaranteed grade jump')}</div><div style="margin-top:12px">${fChips(p + 'checks', 'Steps done', ['Evidence verified', 'L1 intervention', 'Documented', 'Advisor coached'])}</div>`,
+    need: (c, p) => [['advisor', 'Name the advisor'], ['issue', 'Describe the issue'], ['esc', 'Choose escalation'], ['status', 'Choose a status']].filter(([f]) => !c[f]).map(([f, m]) => [p + f, m]) }
+};
+function casesBlock(g) {
+  const C = CASES[g], st = F.cases[g], err = S.showErr && S.errs.has('cases.' + g);
+  const flagged = F.audit_list.filter(a => a.verdict === 'Mis-sale identified').length;
+  return `<div class="blk"><h4>${C.title} <small>${C.kra}</small></h4>
+    ${flagged ? `<div class="warnline" style="margin:0 0 12px">${flagged} audit${flagged > 1 ? 's' : ''} marked “Mis-sale identified”, so ${flagged > 1 ? 'cases are' : 'a case is'} started below with the lead and advisor filled in.</div>` : ''}
+    <div class="chips">${flagged ? '' : `<button type="button" class="chip${st.none ? ' on' : ''}" data-act="case-none" data-g="${g}" aria-pressed="${st.none}">${C.none}</button>`}
+    <button type="button" class="btn btn-s" data-act="case-add" data-g="${g}">+ ${C.add}</button></div>
+    ${err ? `<div class="errs" style="margin-top:8px">Mark “${C.none.toLowerCase()}” or log at least one.</div>` : ''}
+    ${st.items.map((c, i) => `<div class="case${nw('m' + i)}"><div class="case-h"><span>Case ${i + 1}${c.fromAudit != null ? ' <small class="note">from audit ' + (c.fromAudit + 1) + '</small>' : ''}</span>${c.fromAudit != null ? '' : `<button type="button" class="link" data-act="case-del" data-g="${g}" data-i="${i}">Remove</button>`}</div>${C.fields(`cases.${g}.items.${i}.`)}</div>`).join('')}</div>`;
+}
+const advList = () => `<datalist id="advl">${(ADVISORS[meId()] || []).map(a => `<option value="${esc(a)}">`).join('')}</datalist>`;
+
+const STEPS = [
+  { t: 'Team, revenue & demos', s: 'Calls, revenue, RP, DC2E', why: 'Figures as of shift close. You work both sides, so fill revenue and RP units. Totals and attainment work themselves out as you type.',
+    body: () => `<div class="blk"><h4>Team & calls</h4><div class="grid">${fStep('members', 'Team members present')}${fNum('calls', 'Calls made')}${fText('avg_talk', 'Avg talk time (min:sec)', 'e.g. 4:30')}${fDec('talk_hrs', 'Total talk time (hours)', 'e.g. 38.5')}</div></div>
+      <div class="blk"><h4>Revenue</h4><div class="grid">${fMoney('rev_target', 'Today’s target')}${fMoney('rev_close', 'Actual at shift close')}</div></div>
+      <div class="blk"><h4>RP units</h4><div class="grid">${fDec('rp_target', 'Today’s RP units target')}${fDec('rp_close', 'RP units closed')}</div></div>
+      <div class="live">${meter('att', 'Revenue attainment')}${meter('rpa', 'RP units attainment')}</div>
+      ${short() ? `<div class="grid w2" style="margin-top:14px">${fText('recovery', 'Recovery plan for the gap', 'What you will do next shift to recover it')}</div>` : ''}
+      <div class="blk"><h4>Demo to enrolment</h4>
+      <div class="egrid" role="group" aria-label="Demo to enrolment by customer">
+        <span></span><span class="eh">Count</span><span class="eh">DC count</span><span class="eh">Closures</span>
+        ${[['in', 'Indian'], ['ni', 'Non-Indian']].map(([p, l]) => `<span class="pl">${l}</span>${fCell(p + '_cnt', l + ' count')}${fCell(p + '_dc', l + ' DC count')}${fCell(p + '_cl', l + ' closures')}`).join('')}
+        <span class="pl">Total</span><b class="et" id="eg-n">0</b><b class="et" id="eg-d">0</b><b class="et" id="eg-c">0</b>
+      </div>
+      <div class="live">${meter('dc', 'DC2E')}</div>
+      <div class="grid" style="margin-top:16px">${fNum('plan_m', 'Monthly count')}${fNum('plan_bm', 'Bi-monthly count')}</div>
+      <p class="note" id="plan-msg" style="margin-top:8px"></p></div>`,
+    need: f => { const e = [];
+      if (!(+f.members > 0)) e.push(['members', 'Add team members present']);
+      if (num(f.calls) == null) e.push(['calls', 'Enter calls made']);
+      if (!/^\d{1,3}:[0-5]\d$/.test(f.avg_talk || '')) e.push(['avg_talk', 'Avg talk time as min:sec, e.g. 4:30']);
+      if (num(f.talk_hrs) == null) e.push(['talk_hrs', 'Enter total talk time in hours']);
+      if (!(+f.rev_target > 0)) e.push(['rev_target', 'Enter today’s revenue target']); if (num(f.rev_close) == null) e.push(['rev_close', 'Enter the revenue actual']);
+      if (num(f.rp_target) == null) e.push(['rp_target', 'Enter the RP units target (0 if none)']); if (num(f.rp_close) == null) e.push(['rp_close', 'Enter RP units closed']);
+      [['in', 'Indian'], ['ni', 'Non-Indian']].forEach(([p, l]) => {
+        ['_cnt', '_dc', '_cl'].forEach(s => { if (num(f[p + s]) == null) e.push([p + s, `Fill the ${l} row (0 if none)`]); });
+        if (+f[p + '_cl'] > +f[p + '_dc']) e.push([p + '_cl', `${l} closures can’t exceed ${l} DC count`]); });
+      const cl = (+f.in_cl || 0) + (+f.ni_cl || 0);
+      if (num(f.plan_m) == null) e.push(['plan_m', 'Enter the monthly count (0 if none)']);
+      if (num(f.plan_bm) == null) e.push(['plan_bm', 'Enter the bi-monthly count (0 if none)']);
+      if (num(f.plan_m) != null && num(f.plan_bm) != null && +f.plan_m + +f.plan_bm !== cl) e.push(['plan_bm', `Monthly + bi-monthly should equal ${cl} closures`]);
+      if (short(f) && !f.recovery) e.push(['recovery', 'Add a recovery plan']); return e; } },
+  { t: 'Audits & customer voice', s: 'Demo audits, VOC forms', why: 'Pick how many you did, then fill one card for each. Standard: 2 audits and 2–3 VOC forms a day.',
+    body: () => `${advList()}<div class="blk"><h4>Demo audits <small>Target ${CFG.AUDITS} a day</small></h4><div class="grid">${fStep('audits', 'Audits completed', CFG.AUDITS)}</div>
+      ${F.audit_list.map((a, i) => { const p = `audit_list.${i}.`; return `<div class="case${nw('a' + i)}"><div class="case-h"><span>Audit ${i + 1}</span>${vchip(a.verdict)}</div><div class="grid">${fText(p + 'lead', 'Lead ID', 'e.g. LD-10234')}${fSel(p + 'stage', 'Stage of lead', STAGES)}${fText(p + 'advisor', 'Advisor', 'Start typing', 0, 'advl')}</div><div style="margin-top:12px">${fVerd(p + 'verdict')}</div><div class="grid w2" style="margin-top:12px">${fText(p + 'note', 'Note (optional)', 'What to fix, or what to replicate')}</div></div>`; }).join('')}</div>
+      <div class="blk"><h4>VOC forms <small>Target ${CFG.VOC}–3 a day</small></h4><div class="grid">${fStep('voc', 'VOC forms completed', CFG.VOC)}</div>
+      ${F.voc_list.map((c, i) => { const p = `voc_list.${i}.`; return `<div class="case${nw('v' + i)}"><div class="case-h"><span>VOC form ${i + 1}</span></div><div class="grid">${fText(p + 'lead', 'Lead ID', 'e.g. LD-10251')}${fSel(p + 'grade', 'Grade', GRADES)}${fSel(p + 'stage', 'Stage of lead', STAGES)}${fYN(p + 'eth', 'Customer', [['Indian', 'Indian'], ['Non-Indian', 'Non-Indian']])}</div><div class="grid w2" style="margin-top:12px">${fText(p + 'feedback', 'What the customer said', 'e.g. wants a trial first; worried about timing')}</div></div>`; }).join('')}</div>`,
+    need: f => { const e = [];
+      f.audit_list.forEach((a, i) => [['lead', 'Lead ID'], ['stage', 'stage'], ['advisor', 'advisor'], ['verdict', 'verdict']].forEach(([x, m]) => { if (!a[x]) e.push([`audit_list.${i}.${x}`, `Audit ${i + 1}: add the ${m}`]); }));
+      f.voc_list.forEach((c, i) => [['lead', 'Lead ID'], ['grade', 'grade'], ['stage', 'stage'], ['eth', 'customer type'], ['feedback', 'what the customer said']].forEach(([x, m]) => { if (!c[x]) e.push([`voc_list.${i}.${x}`, `VOC ${i + 1}: add the ${m}`]); }));
+      return e; } },
+  { t: 'Refresher & 1:1s', s: 'Team refresher, individual meetings', why: 'The 11 PM–12 AM refresher, and any one-to-one you had with a counsellor.',
+    body: () => `${advList()}<div class="blk"><h4>Team refresher <small>11:00 PM–12:00 AM sharp</small></h4><div class="grid">${fYN('ref_held', 'Refresher held?')}${F.ref_held === 'yes' ? fTime('ref_start', 'Started at') + fTime('ref_end', 'Ended at') + fStep('ref_present', 'Advisors present') : ''}</div>
+      ${F.ref_held === 'yes' ? `<div style="margin-top:14px">${fChips('topics', 'Topics covered', TOPICS, 'tap all that apply')}</div>${F.ref_start && F.ref_start > '23:00' && F.ref_start < '23:59' ? `<div class="warnline">Started after 11:00 PM, so it will show as late.</div>` : ''}` : ''}
+      ${F.ref_held === 'no' ? `<div class="grid w2" style="margin-top:14px">${fText('ref_reason', 'Why was it skipped?')}</div>` : ''}</div>
+      <div class="blk"><h4>Individual meetings</h4><div class="grid">${fYN('oo', 'Any 1:1 meeting taken?')}</div>
+      ${(F.oo_list || []).map((m, i) => { const p = `oo_list.${i}.`; return `<div class="case${nw('o' + i)}"><div class="case-h"><span>Meeting ${i + 1}</span>${i ? `<button type="button" class="link" data-act="oo-del" data-i="${i}">Remove</button>` : ''}</div><div class="grid w2">${fText(p + 'counsellor', 'Counsellor name', 'Start typing', 0, 'advl')}${fText(p + 'topic', 'Topic of discussion', 'e.g. pitch quality from audit')}</div><div style="margin-top:12px">${fYN(p + 'email', 'Feedback shared by email?')}</div></div>`; }).join('')}
+      ${F.oo === 'yes' ? '<button type="button" class="btn btn-s" style="margin-top:12px" data-act="oo-add">+ Add another meeting</button>' : ''}</div>`,
+    need: f => { const e = []; if (!f.ref_held) e.push(['ref_held', 'Choose yes or no']);
+      if (f.ref_held === 'yes' && !(f.topics || []).length) e.push(['topics', 'Pick at least one topic']);
+      if (f.ref_held === 'yes' && !(+f.ref_present > 0)) e.push(['ref_present', 'Add how many advisors attended']);
+      if (f.ref_held === 'no' && !f.ref_reason) e.push(['ref_reason', 'Add a reason']);
+      if (!f.oo) e.push(['oo', 'Choose yes or no']);
+      (f.oo_list || []).forEach((m, i) => [['counsellor', 'counsellor name'], ['topic', 'topic'], ['email', 'email feedback answer']].forEach(([x, t]) => { if (!m[x]) e.push([`oo_list.${i}.${x}`, `Meeting ${i + 1}: add the ${t}`]); }));
+      return e; } },
+  { t: 'CRM & pipeline', s: 'CRM hygiene, pipeline closures', why: 'Tap each CRM item that is clean. For the pipeline, enter what you have and what you closed; the totals add up for you.',
+    body: () => `<div class="blk"><h4>CRM hygiene</h4>${fChips('crm', 'Clean and current', CRM, `${(F.crm || []).length} of 5`)}
+      ${(F.crm || []).length < 5 ? `<div class="grid w2" style="margin-top:14px">${fText('crm_gaps', 'Gaps found and fix made', 'e.g. payment follow-up pending on 3 leads; fixed')}</div>` : ''}</div>
+      <div class="blk"><h4>Pipeline</h4>
+      <div class="pipe" aria-live="polite"><p class="pipe-h">You have <b id="pl-t">0</b> in your pipeline. <b id="pl-c" class="good">0</b> closed, <b id="pl-o">0</b> still open.</p><div class="pbar"><i id="pl-bar"></i></div></div>
+      <div class="prows"><div class="prow ph2"><span></span><span>In pipeline</span><span>Closed</span></div>
+      ${PIPE.map(([p, l]) => `<div class="prow"><span class="pl">${l}</span>${fStep(p, `<span class="sr">${l}, in pipeline</span>`)}${fStep(p + '_c', `<span class="sr">${l}, closed</span>`)}</div>`).join('')}</div></div>`,
+    need: f => { const e = []; if ((f.crm || []).length < 5 && !f.crm_gaps) e.push(['crm_gaps', 'Note the gaps']);
+      PIPE.forEach(([p, l]) => { if (+f[p + '_c'] > +f[p]) e.push([p + '_c', `${l}: closed can’t exceed the pipeline`]); });
+      if (!PIPE.some(([p]) => +f[p] > 0)) e.push(['pl_hi', 'Enter your pipeline']); return e; } },
+  { t: 'Mis-selling', s: 'Zero-tolerance cases', why: 'One tap if nothing was seen. Any audit marked “Mis-sale identified” appears here automatically.',
+    body: () => advList() + casesBlock('mis'),
+    need: f => { const e = [], st = f.cases.mis;
+      if (!st.none && !st.items.length) e.push(['cases.mis', 'Mark none or log one']);
+      if (!st.none) st.items.forEach((c, i) => e.push(...CASES.mis.need(c, `cases.mis.items.${i}.`))); return e; } },
+  { t: 'Review & submit', s: 'Check, then submit', why: 'Here’s everything you entered. Tap Edit on any part to change it, then submit to mark yourself present.',
+    body: () => summaryHTML(F, true),
+    need: f => STEPS.slice(0, 5).map((s, i) => s.need(f).length ? ['sec' + i, `“${s.t}” isn’t complete`] : null).filter(Boolean) }
+];
+const stepOK = i => STEPS[i].need(F).length === 0;
+function short(f = F) { return (num(f.rev_close) != null && +f.rev_target && +f.rev_close < +f.rev_target) || (num(f.rp_close) != null && +f.rp_target && +f.rp_close < +f.rp_target); }
+
+function summaryHTML(q, editable) {
+  const ed = i => editable ? `<button type="button" class="link" data-act="step" data-i="${i}">Edit</button>` : '';
+  const bad = i => editable && STEPS[i].need(q).length ? ' bad' : '';
+  const yn = x => x === 'yes' ? 'Yes' : x === 'no' ? 'No' : '—';
+  const pp = pipeOf(q);
+  const att = +q.rev_target ? (+q.rev_close || 0) / +q.rev_target : null, rpa = +q.rp_target ? (+q.rp_close || 0) / +q.rp_target : null;
+  const list = (arr, fn) => arr.length ? `<ul class="slist">${arr.map(fn).join('')}</ul>` : '';
+  return `<div class="sums">
+    <div class="scard${bad(0)}"><div class="sc-h"><b>Team, revenue & demos</b>${ed(0)}</div>
+      <div class="kv"><div><span>Team & calls</span><b>${q.members} present, ${fmtN(+q.calls)} calls, avg ${esc(q.avg_talk || '—')}, ${q.talk_hrs || 0} h</b></div><div><span>Revenue</span><b>${money(num(q.rev_close))} of ${money(num(q.rev_target))} · ${pct(att)}</b></div><div><span>RP units</span><b>${q.rp_close === '' ? '—' : q.rp_close} of ${q.rp_target === '' ? '—' : q.rp_target} · ${pct(rpa)}</b></div>
+      <div><span>DC2E</span><b>${q.enrols} of ${q.demos} demos · ${pct(+q.demos ? q.enrols / q.demos : null, 1)}</b></div><div><span>Indian count / DC / closures</span><b>${q.in_cnt || 0} / ${q.in_dc || 0} / ${q.in_cl || 0}</b></div><div><span>Non-Indian count / DC / closures</span><b>${q.ni_cnt || 0} / ${q.ni_dc || 0} / ${q.ni_cl || 0}</b></div><div><span>Monthly / bi-monthly</span><b>${q.plan_m || 0} / ${q.plan_bm || 0}</b></div>${q.recovery ? `<div><span>Recovery plan</span><b>${esc(q.recovery)}</b></div>` : ''}</div></div>
+    <div class="scard${bad(1)}"><div class="sc-h"><b>${q.audits} audit${q.audits == 1 ? '' : 's'}, ${q.voc} VOC form${q.voc == 1 ? '' : 's'}</b>${ed(1)}</div>
+      ${list(q.audit_list || [], a => `<li><span class="mono">${esc(a.lead || '—')}</span> ${esc(a.advisor || '—')} <span class="note">${esc(a.stage || '')}</span> ${vchip(a.verdict)}</li>`)}
+      ${list(q.voc_list || [], c => `<li><span class="mono">${esc(c.lead || '—')}</span> Grade ${esc(c.grade || '—')} · ${esc(c.eth || '—')} <span class="note">${esc(c.stage || '')}</span></li>`)}
+      ${!(+q.audits) && !(+q.voc) ? '<p class="note">None logged.</p>' : ''}</div>
+    <div class="scard${bad(2)}"><div class="sc-h"><b>Refresher & 1:1s</b>${ed(2)}</div>
+      <div class="kv"><div><span>Refresher</span><b>${q.ref_held === 'yes' ? `${q.ref_start}–${q.ref_end}, ${(q.topics || []).length} of 5 topics, ${q.ref_present} present` : q.ref_held === 'no' ? 'Not held: ' + esc(q.ref_reason || '—') : '—'}</b></div><div><span>1:1 meetings</span><b>${yn(q.oo)}${(q.oo_list || []).length ? ', ' + q.oo_list.length : ''}</b></div></div>
+      ${list(q.oo_list || [], m => `<li>${esc(m.counsellor || '—')}: ${esc(m.topic || '—')} <span class="note">${m.email === 'yes' ? 'emailed' : m.email === 'no' ? 'no email' : ''}</span></li>`)}</div>
+    <div class="scard${bad(3)}"><div class="sc-h"><b>CRM & pipeline</b>${ed(3)}</div>
+      <div class="kv"><div><span>CRM items clean</span><b>${(q.crm || []).length} of 5</b></div><div><span>Pipeline</span><b>${pp.total} in pipeline, ${pp.closed} closed, ${pp.open} open</b></div></div></div>
+    <div class="scard${bad(4)}"><div class="sc-h"><b>Mis-selling</b>${ed(4)}</div>
+      ${q.cases.mis.none ? '<p class="note">None seen.</p>' : list(q.cases.mis.items, c => `<li>${esc(c.advisor || '—')} <span class="mono">${esc(c.ref || '')}</span>: ${esc(c.issue || '—')} <span class="note">${esc(c.status || '')}${c.esc && c.esc !== 'No' ? ', escalated ' + esc(c.esc) : ''}</span></li>`) || '<p class="note">Not filled yet.</p>'}</div>
+  </div>`;
+}
+
+/* ════════════════ chrome ════════════════ */
+function viewsFor() {
+  if (role() === 'tl') return [['day', 'My day'], ['cal', 'My calendar'], ['floor', 'Floor']];
+  if (role() === 'mgr') return [['team', 'My team'], ['calls', 'Calls & headcount'], ['floor', 'Floor']];
+  return [['floor', 'Floor'], ['team', 'Teams'], ['calls', 'Calls & headcount']];
+}
+function chrome() {
+  const r = role();
+  const name = r === 'tl' ? me().name : r === 'mgr' ? MGRS[meId()].name : ADMIN.name;
+  const sub = r === 'tl' ? 'Team lead · reports to ' + MGRS[me().mgr].name : r === 'mgr' ? 'Manager · ' + TLS.filter(t => t.mgr === meId()).length + ' team leads' : 'Admin';
+  $('who').innerHTML = `<div class="who-t"><b>${esc(name)}</b><span>${esc(sub)}${IS_LIVE ? ' · <button class="link" data-act="signout">Sign out</button>' : ''}</span></div><div class="av">${initials(name)}</div>`;
+  if (IS_LIVE) document.querySelector('.proto').style.display = 'none';
+  const vs = viewsFor(); if (!vs.some(x => x[0] === S.view)) S.view = vs[0][0];
+  $('vtabs').innerHTML = vs.map(([id, l]) => `<button class="vtab${S.view === id ? ' on' : ''}" role="tab" aria-selected="${S.view === id}" data-act="view" data-v="${id}">${l}</button>`).join('');
+  const os = openShift();
+  const pend = r === 'tl' ? (['pending', 'progress'].includes(statusOf(meId(), os)) ? 1 : 0)
+    : TLS.filter(t => (r === 'admin' || t.mgr === meId()) && ['pending', 'progress'].includes(statusOf(t.id, os))).length;
+  $('pendBadge').hidden = !pend; $('pendBadge').textContent = pend;
+}
+function render(opt = {}) {
+  chrome();
+  ({ day: viewDay, cal: viewCal, team: viewTeam, floor: viewFloor, calls: viewCalls })[S.view](opt);
+  countUp();
+}
+
+/* ════════════════ MY DAY ════════════════ */
+function arc(r, a0, a1) {
+  const p = a => [100 + r * Math.cos(a * Math.PI / 180), 100 + r * Math.sin(a * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+function clockSVG(state) {
+  const C = 2 * Math.PI * 92;
+  const segs = STEPS.map((_, i) => `<path class="seg ${state.done[i] ? 'done' : ''}${state.cur === i ? ' cur' : ''}" d="${arc(74, i * 60 + 3, i * 60 + 57)}"/>`).join('');
+  return `<svg viewBox="0 0 200 200" aria-hidden="true"><circle class="trk" cx="100" cy="100" r="92"/><circle class="time" id="tarc" cx="100" cy="100" r="92" stroke-dasharray="${C}" stroke-dashoffset="${C}"/>${segs}</svg>
+    <div class="clock-c">${state.center}</div>`;
+}
+function heroFacts(id) {
+  const st = stats(id, monthOf(openShift())), sk = streak(id), os = openShift();
+  const days = Array.from({ length: 7 }, (_, i) => addDays(os, i - 6));
+  return `<div class="facts"><div class="fact"><b data-count="${sk}">${sk}</b><span>day streak</span></div>
+    <div class="fact"><b>${st.present}/${st.work}</b><span>working days present this month</span></div>
+    <div class="fact"><b class="${st.lop ? 'bad' : ''}">${st.lop}</b><span>LOP this month</span></div></div>
+    <div class="week" aria-label="Last 7 days">${days.map(k => { const s = statusOf(id, k); return `<div class="wd ${s}" title="${fmtDay(k)}: ${LABEL[s] || '—'}">${fmtDay(k).slice(0, 3)}<i></i></div>`; }).join('')}</div>`;
+}
+function viewDay(opt) {
+  const id = meId(), os = openShift(), s = statusOf(id, os), e = DB.days[id][os];
+  const closed = DB.cutoff[os];
+  let center, done = STEPS.map(() => false), cur = -1, headline, sub, cdHTML = '';
+  if (s === 'present' && !S.editing) { center = `<b>Done</b><span>${fmtTime(e.submittedAt)}</span>`; done = done.map(() => true); headline = 'You’re marked present'; sub = `Shift of ${fmtLong(os)}. You can still edit until 11:30 AM.`; }
+  else if (s === 'weekoff' || s === 'leave') { center = `<b>Off</b><span>${LABEL[s]}</span>`; headline = `${LABEL[s]} today`; sub = `Shift of ${fmtLong(os)}. No KRA needed. Changed plans? Clear it in your calendar.`; }
+  else if (s === 'lop') { center = `<b>LOP</b><span>missed</span>`; headline = 'This shift is closed'; sub = `The KRA for ${fmtLong(os)} wasn’t submitted by 11:30 AM.`; }
+  else {
+    const d = draft(); F = d.v; normalize();
+    done = STEPS.map((_, i) => d.visited.includes(i) && stepOK(i)); cur = S.step;
+    center = `<b>${done.filter(Boolean).length}/6</b><span>sections done</span>`;
+    headline = `Shift of ${fmtDay(os)}`; sub = S.editing ? 'Editing your submitted KRA. Save again before 11:30 AM.' : 'Fill all six sections and submit to mark yourself present. Your progress saves as you go.';
+  }
+  if (!closed && s !== 'lop') cdHTML = `<div class="cd" id="cd"><b id="cdv">--:--:--</b><span>left until the 11:30 AM IST cut-off on ${fmtDay(addDays(os, 1))}</span></div>`;
+  const hero = `<section class="panel hero"><div class="clock${s === 'present' && !S.editing ? ' allgood' : ''}" id="clock">${clockSVG({ done, cur, center })}</div>
+    <div><h2>${headline}</h2><p class="sub">${sub}</p>${cdHTML}${heroFacts(id)}</div></section>`;
+
+  let body;
+  if (s === 'present' && !S.editing) body = doneCard(id, os, e, opt.justSubmitted);
+  else if (s === 'weekoff' || s === 'leave') body = `<section class="panel done"><div class="stamp ${s}"><b>${s === 'weekoff' ? 'Week off' : 'Leave'}</b><span>${fmtDay(os)}</span></div><div><h3>Enjoy your ${s === 'weekoff' ? 'day off' : 'leave'}</h3><p>${e.reason ? 'Reason: ' + esc(e.reason) + '. ' : ''}Nothing to fill in for this shift.</p><div class="acts"><button class="btn" data-act="view" data-v="cal">Open my calendar</button></div></div></section>`;
+  else if (s === 'lop') body = `<section class="panel done"><div class="stamp lop"><b>LOP</b><span>${fmtDay(os)}</span></div><div><h3>Missed entries can’t be filled in later</h3><p>An email went to you and ${esc(MGRS[me().mgr].name)}. If this was your week off or an approved leave, mark it in your calendar by ${fmtDay(addDays(os, CFG.BACKDATE_DAYS))} and the LOP is reversed. The next shift opens at 11:30 AM.</p><div class="acts"><button class="btn btn-p" data-act="view" data-v="cal">Mark week off or leave</button></div></div></section>`;
+  else body = `<div class="flow"><aside class="panel rail" id="rail"></aside><section class="panel stage" id="stage"></section></div>`;
+  $('view').innerHTML = hero + body;
+  if ($('stage')) { railHTML(); stageHTML(true, opt.dir); }
+  tick();
+}
+function railHTML() {
+  const d = draft();
+  $('rail').innerHTML = STEPS.map((st, i) => { const ok = d.visited.includes(i) && stepOK(i), bad = S.showErr && d.visited.includes(i) && !stepOK(i);
+    return `<button class="rstep${S.step === i ? ' on' : ''}${ok ? ' ok' : ''}${bad ? ' bad' : ''}" data-act="step" data-i="${i}"><span class="rn">${ok ? '✓' : i + 1}</span><span class="rl">${st.t}<small>${st.s}</small></span></button>`; }).join('');
+}
+function stageHTML(enter, dir) {
+  normalize();
+  const st = STEPS[S.step], last = S.step === STEPS.length - 1;
+  S.errs = new Set(st.need(F).map(x => x[0]));
+  const errList = S.showErr ? st.need(F) : [];
+  $('stage').innerHTML = `<div class="stage-in${enter ? ' enter' : ''}${dir === 'back' ? ' back' : ''}"><h3>${st.t}</h3><p class="why">${st.why}</p>${st.body()}</div>
+    <div class="foot">${S.step ? '<button class="btn" data-act="back">Back</button>' : ''}<span class="sp"></span>
+    ${errList.length ? `<span class="errs">${errList.length === 1 ? errList[0][1] : errList.length + ' things to fix on this step'}</span>` : `<span class="saved">Saved as you type</span>`}
+    ${last ? `<button class="btn btn-go" data-act="submit">${S.editing ? 'Save changes' : 'Submit KRA and mark present'}</button>` : '<button class="btn btn-p" data-act="next">Next</button>'}</div>`;
+  live();
+}
+function refreshClock() {
+  const d = draft(), done = STEPS.map((_, i) => d.visited.includes(i) && stepOK(i));
+  $('clock').innerHTML = clockSVG({ done, cur: S.step, center: `<b>${done.filter(Boolean).length}/6</b><span>sections done</span>` });
+  tick();
+}
+function setMeter(id, ratio, txt, cls, mark, msg) {
+  if (!$(id + '-v')) return;
+  $(id + '-v').textContent = txt;
+  const b = $(id + '-b'); b.style.width = Math.max(0, Math.min(1, ratio || 0)) * 100 + '%'; b.className = cls || '';
+  if (mark != null) { $(id + '-m').hidden = false; $(id + '-m').style.left = mark * 100 + '%'; }
+  $(id + '-msg').textContent = msg || '';
+}
+let lastShift = null;
+function tick() {
+  const os = openShift();
+  if (lastShift && os !== lastShift) { lastShift = os; S.editing = false; S.step = 0; render(); return; }
+  lastShift = os;
+  const left = deadline(os) - Date.now();
+  if ($('cdv')) {
+    const h = Math.floor(left / 3600e3), m = Math.floor(left % 3600e3 / 60e3), s = Math.floor(left % 60e3 / 1e3);
+    $('cdv').textContent = [h, m, s].map(x => String(Math.max(0, x)).padStart(2, '0')).join(':');
+    $('cd').classList.toggle('hot', left < 2 * 3600e3);
+  }
+  const ta = $('tarc');
+  if (ta) { const C = 2 * Math.PI * 92; ta.style.strokeDashoffset = C * (1 - Math.max(0, Math.min(1, left / DAY))); }
+}
+setInterval(tick, 1000);
+
+/* ════════════════ MY CALENDAR ════════════════ */
+function viewCal() {
+  const id = meId(), today = istToday();
+  if (!S.calMonth) S.calMonth = monthOf(openShift());
+  const m = S.calMonth, first = m + '-01', lead = (dow(first) + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="cd2 blank"></div>');
+  for (let k = first; monthOf(k) === m; k = addDays(k, 1)) {
+    const s = statusOf(id, k), e = DB.days[id][k], c = canMarkOff(id, k), sel = S.sel.has(k);
+    const lbl = s === 'future' ? (k === addDays(openShift(), 0) ? '' : '') : LABEL[s];
+    cells.push(`<button class="cd2 ${s}${c.ok ? ' can' : ' lock'}${sel ? ' sel' : ''}" data-act="day" data-k="${k}" ${c.ok ? '' : `aria-disabled="true"`} title="${fmtLong(k)}${c.ok ? '' : ' · ' + c.why}" aria-pressed="${sel}">
+      <span class="dn">${+k.slice(8)}</span><span class="dl">${lbl}</span>${e && e.reversed ? '<span class="rv" title="LOP reversed">↺</span>' : ''}</button>`);
+  }
+  const st = stats(id, m);
+  const monthName = fromKey(first).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const selArr = [...S.sel].sort();
+  const allOff = selArr.length && selArr.every(k => ['weekoff', 'leave'].includes(statusOf(id, k)) && k >= openShift());
+  const side = selArr.length ? `<div class="ph"><h2>${selArr.length} day${selArr.length > 1 ? 's' : ''} selected</h2></div><div class="pb">
+      <div class="chips">${selArr.map(k => `<span class="st st-${statusOf(id, k)}">${fmtDay(k)}</span>`).join('')}</div>
+      ${selArr.some(k => statusOf(id, k) === 'lop') ? `<div class="warnline">Marking an LOP day as week off or leave reverses the LOP. ${esc(MGRS[me().mgr].name)} is emailed.</div>` : ''}
+      <button class="btn btn-p" style="width:100%" data-act="mark" data-type="weekoff">Mark as week off</button>
+      <div class="f"><label for="lvr">Leave reason</label><input class="inp" id="lvr" placeholder="e.g. medical, family function"></div>
+      <button class="btn" style="width:100%" data-act="mark" data-type="leave">Mark as leave</button>
+      ${allOff ? '<button class="btn" style="width:100%" data-act="clear-off">Remove week off / leave</button>' : ''}
+      <button class="link" data-act="clear-sel">Clear selection</button></div>`
+    : `<div class="ph"><h2>How it works</h2></div><div class="pb">
+      <p class="rule">Tap the days you’re off, then choose week off or leave.</p>
+      <p class="rule">You can mark days up to ${CFG.BACKDATE_DAYS} days back, so today you can go back to ${fmtDay(addDays(today, -CFG.BACKDATE_DAYS))}.</p>
+      <p class="rule">You work 6 days a week, so one week off per Monday–Sunday week.</p>
+      <p class="rule">A day without a KRA by 11:30 AM is LOP. Missed KRAs can’t be filled in later.</p></div>
+      <div class="ph"><h2>${monthName.split(' ')[0]} so far</h2></div><div class="pb"><div class="sumgrid" style="margin-top:0">
+      <div class="sum"><b class="good">${st.present}</b><span>present</span></div><div class="sum"><b class="${st.lop ? 'bad' : ''}">${st.lop}</b><span>LOP</span></div>
+      <div class="sum"><b>${st.weekoff}</b><span>week off</span></div><div class="sum"><b>${st.leave}</b><span>leave</span></div></div>
+      ${st.reversed ? `<p class="note" style="margin-top:10px">${st.reversed} LOP reversed by a later marking (↺).</p>` : ''}</div>`;
+  $('view').innerHTML = `<div class="calwrap"><section class="panel"><div class="calhead"><button class="btn btn-s" data-act="cal-mv" data-n="-1" aria-label="Previous month">‹</button><h2>${monthName}</h2><button class="btn btn-s" data-act="cal-mv" data-n="1" aria-label="Next month">›</button></div>
+    <div class="cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dh">${d}</div>`).join('')}${cells.join('')}</div>
+    <div class="legend"><span><i style="background:var(--pos)"></i>Present</span><span><i style="background:var(--neg)"></i>LOP</span><span><i style="background:var(--off)"></i>Week off</span><span><i style="background:var(--leave)"></i>Leave</span><span><i style="background:var(--warn)"></i>Open shift</span><span>↺ LOP reversed</span></div></section>
+    <aside class="panel side">${side}</aside></div>`;
+}
+function markOff(type) {
+  const id = meId(), t = me(), arr = [...S.sel].sort(), reason = ($('lvr') || {}).value || '';
+  if (type === 'leave' && !reason.trim()) { toast('Add a reason for the leave.'); $('lvr').focus(); return; }
+  if (type === 'weekoff') {
+    const weeks = {};
+    for (const k of arr) { const w = weekStart(k); if (weeks[w]) return toast(`${fmtDay(weeks[w])} and ${fmtDay(k)} fall in the same week. One week off per week.`); weeks[w] = k;
+      const c = weekOffClash(id, k); if (c && !S.sel.has(c)) return toast(`You already have a week off on ${fmtDay(c)} that week.`); }
+  }
+  if (IS_LIVE) {
+    api('markOff', { dates: arr, type, reason: reason.trim() }).then(r => {
+      if (!r.ok) return toast(r.message || 'Couldn’t save. Try again.');
+      Object.assign(DB.days[id], r.days); S.sel.clear(); render();
+      toast(`${arr.length} day${arr.length > 1 ? 's' : ''} marked as ${LABEL[type].toLowerCase()}${r.reversed ? `. ${r.reversed} LOP reversed and ${first(MGRS[t.mgr].name)} emailed` : ''}.`); });
+    return;
+  }
+  let reversed = 0;
+  for (const k of arr) {
+    if (!canMarkOff(id, k).ok) continue;
+    const was = statusOf(id, k), now = Date.now();
+    DB.days[id][k] = { off: type, reason: type === 'leave' ? reason.trim() : '', markedAt: now, backdated: k < openShift(), reversed: was === 'lop' };
+    if (was === 'lop') { reversed++; DB.mails.unshift(mailReversed(t, k, type, now)); }
+  }
+  S.sel.clear(); render();
+  toast(`${arr.length} day${arr.length > 1 ? 's' : ''} marked as ${LABEL[type].toLowerCase()}${reversed ? `. ${reversed} LOP reversed and ${first(MGRS[t.mgr].name)} emailed` : ''}.`);
+}
+
+function live() {
+  const t = +F.rev_target, c = num(F.rev_close);
+  if (t && c != null) { const a = c / t; setMeter('att', a / 1.25, pct(a), a >= 1 ? 'good' : a >= .85 ? 'mid' : 'bad', 1 / 1.25, a >= 1 ? 'Target met' : money(t - c) + ' short of target'); }
+  else setMeter('att', 0, '—', '', 1 / 1.25, 'Enter target and actual');
+  const rt = num(F.rp_target), rc = num(F.rp_close);
+  if (rt && rc != null) { const a = rc / rt; setMeter('rpa', a / 1.25, pct(a), a >= 1 ? 'good' : a >= .85 ? 'mid' : 'bad', 1 / 1.25, a >= 1 ? 'Target met' : +(rt - rc).toFixed(1) + ' units short'); }
+  else setMeter('rpa', 0, rt === 0 ? 'No target' : '—', '', 1 / 1.25, rt === 0 ? 'RP target is 0 today' : 'Enter target and units closed');
+  const N = x => +F[x] || 0, dm = N('in_dc') + N('ni_dc'), en = N('in_cl') + N('ni_cl');
+  if ($('eg-n')) { $('eg-n').textContent = N('in_cnt') + N('ni_cnt'); $('eg-d').textContent = dm; $('eg-c').textContent = en; }
+  if ($('plan-msg')) { const pm = num(F.plan_m), pb = num(F.plan_bm); const ok = pm != null && pb != null && pm + pb === en;
+    $('plan-msg').innerHTML = pm == null && pb == null ? `Split your ${en} closures by plan.` : ok ? `<span class="good">Adds up to all ${en} closures.</span>` : `<span class="mid">${(pm || 0) + (pb || 0)} of ${en} closures split so far.</span>`; }
+  const dcMsg = dm ? `${en} of ${dm} demos enrolled · Indian ${pct(N('in_dc') ? N('in_cl') / N('in_dc') : null, 1)} · Non-Indian ${pct(N('ni_dc') ? N('ni_cl') / N('ni_dc') : null, 1)}` : 'Fill the DC counts above';
+  setMeter('dc', dm ? en / dm / .5 : 0, dm ? pct(en / dm, 1) : '—', 'good', null, dcMsg);
+  if ($('pl-t')) {
+    const pp = pipeOf(F);
+    $('pl-t').textContent = pp.total; $('pl-c').textContent = pp.closed; $('pl-o').textContent = Math.max(0, pp.open);
+    $('pl-bar').style.width = (pp.total ? Math.min(1, pp.closed / pp.total) : 0) * 100 + '%';
+  }
+}
+function doneCard(id, os, e, anim) {
+  const q = e.kra, pp = pipeOf(q);
+  const sums = [[fmtN(+q.calls), `calls, ${q.members} present, avg ${q.avg_talk}`], [money(q.rev_close), 'revenue, ' + pct(q.rev_close / q.rev_target) + ' of target'], [q.rp_close + ' / ' + q.rp_target, 'RP units vs target'], [pct(q.demos ? q.enrols / q.demos : null, 1), 'DC2E'],
+    [q.audits + ' / ' + q.voc, 'audits / VOC forms'], [pp.open + ' open', `pipeline (${pp.closed} of ${pp.total} closed)`]];
+  const canEdit = !DB.cutoff[os];
+  return `<section class="panel done"><div class="stamp${anim ? ' anim' : ''}"><b>Present</b><span>${fmtDay(os)}</span><span>${fmtTime(e.submittedAt)}</span></div>
+    <div><h3>${anim ? 'Submitted. Nice work.' : 'Your KRA is in'}</h3><p>${e.editedAt ? 'Last edited ' + fmtStamp(e.editedAt) + '. ' : ''}${esc(MGRS[TL(id).mgr].name)} can see it in their team view.${canEdit ? ' You can edit it until 11:30 AM.' : ''}</p>
+    <div class="sumgrid">${sums.map(([b, s]) => `<div class="sum"><b>${b}</b><span>${s}</span></div>`).join('')}</div>
+    <div class="acts">${canEdit ? '<button class="btn" data-act="edit">Edit my KRA</button>' : ''}<button class="btn" data-act="view" data-v="floor">See the floor</button>${IS_LIVE ? '' : '<button class="btn" data-act="fresh" style="border-style:dashed">Start a fresh entry (prototype only)</button>'}</div></div></section>`;
+}
+
+/* ════════════════ MY TEAM (manager) ════════════════ */
+function teamRows(list) {
+  const os = openShift(), m = monthOf(os);
+  return list.map(t => { const s = stats(t.id, m), td = statusOf(t.id, os), L = latestKRA(t.id), pp = L ? pipeOf(L.e.kra) : null;
+    const cls = a => a == null ? '' : a >= 1 ? 'good' : a < .85 ? 'bad' : 'mid';
+    return `<tr class="click" data-act="tl" data-id="${t.id}" tabindex="0"><td><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span></td><td>${chip(td)}</td>
+      <td class="n"><span class="flame">${streak(t.id)}</span></td><td class="n">${s.present}/${s.work}</td><td class="n ${s.lop ? 'bad' : ''}">${s.lop}</td><td class="n">${s.weekoff} / ${s.leave}</td>
+      <td class="n ${cls(s.att)}">${pct(s.att)}</td><td class="n ${cls(s.rpAtt)}">${pct(s.rpAtt)}</td><td class="n">${pct(s.dc2e, 1)}</td>
+      <td class="n ${s.apd < CFG.AUDITS ? 'mid' : ''}">${s.apd == null ? '—' : s.apd.toFixed(1)}</td><td class="n">${s.vpd == null ? '—' : s.vpd.toFixed(1)}</td><td class="n">${s.oo}</td>
+      <td class="n"><b>${pp ? pp.open : '—'}</b></td><td class="n ${s.openCases ? 'bad' : ''}">${s.openCases}</td></tr>`; }).join('');
+}
+function teamAgg(list) {
+  const m = monthOf(openShift());
+  const a = list.map(t => stats(t.id, m)).reduce((a, s) => { for (const k of ['present', 'lop', 'work', 'tgt', 'close', 'rpT', 'rpC', 'demos', 'enrols']) a[k] = (a[k] || 0) + s[k]; return a; }, {});
+  a.pipe = list.reduce((x, t) => { const L = latestKRA(t.id); if (L) { const p = pipeOf(L.e.kra); x.total += p.total; x.closed += p.closed; x.open += p.open; } return x; }, { total: 0, closed: 0, open: 0 });
+  return a;
+}
+function teamKPIs(list) {
+  const os = openShift(), m = monthOf(os);
+  const due = list.filter(t => !['weekoff', 'leave'].includes(statusOf(t.id, os)));
+  const sub = due.filter(t => statusOf(t.id, os) === 'present').length, agg = teamAgg(list);
+  return `<div class="kpis"><div class="kpi ${sub === due.length ? 'pos' : ''}"><span>Submitted tonight</span><b><span data-count="${sub}">${sub}</span> of ${due.length}</b><small>${list.length - due.length} off</small></div>
+    <div class="kpi"><span>KRA compliance, ${fromKey(m + '-01').toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })}</span><b>${pct(agg.work ? agg.present / agg.work : null)}</b><small>present ÷ working days</small></div>
+    <div class="kpi ${agg.lop ? 'neg' : ''}"><span>LOP days this month</span><b data-count="${agg.lop}">${agg.lop}</b><small>after reversals</small></div>
+    <div class="kpi"><span>Revenue attainment</span><b>${pct(agg.tgt ? agg.close / agg.tgt : null)}</b><small>${money(agg.close)} of ${money(agg.tgt)}</small></div>
+    <div class="kpi"><span>RP units attainment</span><b>${pct(agg.rpT ? agg.rpC / agg.rpT : null)}</b><small>${fmtN(agg.rpC)} of ${fmtN(agg.rpT)} units</small></div>
+    <div class="kpi"><span>Open pipeline</span><b data-count="${agg.pipe.open}">${agg.pipe.open}</b><small>${agg.pipe.closed} of ${agg.pipe.total} closed in latest KRAs</small></div></div>`;
+}
+const TH = `<tr><th>Team lead</th><th>Tonight</th><th class="n">Streak</th><th class="n">Present</th><th class="n">LOP</th><th class="n">Off / leave</th><th class="n">Revenue</th><th class="n">RP units</th><th class="n">DC2E</th><th class="n">Audits/day</th><th class="n">VOC/day</th><th class="n">1:1s</th><th class="n">Open pipeline</th><th class="n">Open mis-sell</th></tr>`;
+function protoControls() {
+  if (IS_LIVE) return '';
+  return `<section class="panel" style="margin-top:18px;border-style:dashed"><div class="ph"><h2>Try the automation</h2><p>Prototype only. In the live build these run by themselves.</p></div>
+    <div class="pb" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-act="remind">Send the 10:30 AM reminder</button><button class="btn btn-p" data-act="cutoff">Run the 11:30 AM cut-off now</button>
+    <button class="btn" data-act="mails">Open mail log (${DB.mails.length})</button><button class="btn" data-act="reset">Reset sample data</button></div></section>`;
+}
+function pipelinePanel(list, title) {
+  const rows = list.map(t => { const L = latestKRA(t.id); return { t, L, p: L ? pipeOf(L.e.kra) : null }; });
+  const agg = rows.reduce((a, r) => { if (r.p) { a.total += r.p.total; a.closed += r.p.closed; r.p.cats.forEach((c, j) => { a.cats[j].t += c.t; a.cats[j].c += c.c; }); } return a; }, { total: 0, closed: 0, cats: PIPE.map(([p, l]) => ({ l, t: 0, c: 0 })) });
+  const max = Math.max(1, ...rows.map(r => r.p ? r.p.total : 0));
+  return `<section class="panel" style="margin-top:18px"><div class="ph"><h2>${title}</h2><p>From each team lead’s latest KRA</p></div><div class="pb">
+    <p class="pipe-big"><b data-count="${agg.total - agg.closed}">${agg.total - agg.closed}</b> open cases available, out of <b>${agg.total}</b> in pipeline. <b class="good">${agg.closed}</b> closed.</p>
+    <div class="pcats">${agg.cats.map(c => `<div class="pcat"><span>${c.l}</span><b>${c.t - c.c}</b><small>open of ${c.t}</small></div>`).join('')}</div>
+    <div class="pteam">${rows.map(r => `<div class="ptr"><span class="tl-n"><span class="av">${initials(r.t.name)}</span>${esc(r.t.name)}</span>
+      ${r.p ? `<div class="ptrack" title="${r.p.closed} closed, ${r.p.open} open"><i class="pc" style="--w:${r.p.closed / max * 100}%"></i><i class="po" style="--w:${r.p.open / max * 100}%"></i></div><span class="mono pnum"><b>${r.p.open}</b> open · ${r.p.closed}/${r.p.total} closed <span class="note">${fmtDay(r.L.k)}</span></span>` : '<span class="note">No KRA yet</span><span></span>'}</div>`).join('')}</div>
+    <div class="legend" style="padding:10px 0 0"><span><i style="background:var(--pos)"></i>Closed</span><span><i style="background:var(--accent-line)"></i>Still open</span></div></div></section>`;
+}
+function verdictPanel(list) {
+  const m = monthOf(openShift()), rows = list.map(t => ({ t, v: stats(t.id, m).verdicts }));
+  const tot = {}; rows.forEach(r => VERDICTS.forEach(x => tot[x] = (tot[x] || 0) + (r.v[x] || 0)));
+  return `<section class="panel" style="margin-top:18px"><div class="ph"><h2>Audit verdicts this month</h2><p>${VERDICTS.map(x => `${tot[x] || 0} ${x.toLowerCase()}`).join(' · ')}</p></div><div class="pb"><div class="pteam">
+    ${rows.map(({ t, v: vv }) => { const n = VERDICTS.reduce((a, x) => a + (vv[x] || 0), 0); return `<div class="ptr"><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span>
+      <div class="ptrack">${VERDICTS.map(x => vv[x] ? `<i style="--w:${vv[x] / Math.max(1, n) * 100}%;background:${VCOL[x]}" title="${x}: ${vv[x]}"></i>` : '').join('')}</div><span class="mono pnum">${n} audits${vv['Mis-sale identified'] ? ` · <b class="bad">${vv['Mis-sale identified']} mis-sale</b>` : ''}</span></div>`; }).join('')}</div>
+    <div class="legend" style="padding:10px 0 0">${VERDICTS.map(x => `<span><i style="background:${VCOL[x]}"></i>${x}</span>`).join('')}</div></div></section>`;
+}
+function viewTeam() {
+  const mid = role() === 'mgr' ? meId() : S.mgr, list = TLS.filter(t => t.mgr === mid), os = openShift();
+  const late = [];
+  list.forEach(t => Object.entries(DB.days[t.id]).forEach(([k, e]) => { if (e.off && (e.backdated || e.reversed) && k >= addDays(os, -30)) late.push({ t, k, e }); }));
+  late.sort((a, b) => b.e.markedAt - a.e.markedAt);
+  $('view').innerHTML = `${role() === 'admin' ? `<div style="margin-bottom:14px"><label class="note">Team of <select class="inp" style="width:auto;display:inline-block;margin-left:6px" data-act-change="mgr">${Object.entries(MGRS).map(([k, m]) => `<option value="${k}"${k === mid ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label></div>` : ''}
+    ${teamKPIs(list)}
+    <section class="panel"><div class="ph"><h2>${role() === 'mgr' ? 'Your team leads' : esc(MGRS[mid].name) + '’s team leads'}</h2><p>Shift of ${fmtDay(os)} · click a row for the full KRA</p></div><div class="pb tw"><table>${TH}${teamRows(list)}</table></div></section>
+    ${pipelinePanel(list, role() === 'mgr' ? 'Your team’s pipeline' : 'Team pipeline')}
+    ${verdictPanel(list)}
+    <section class="panel" style="margin-top:18px"><div class="ph"><h2>Marked after the day</h2><p>Week offs and leave marked once the day had passed. ↺ means it reversed an LOP.</p></div><div class="pb">
+    ${late.length ? `<div class="tw"><table><tr><th>Team lead</th><th>Day</th><th>Marked as</th><th>Reason</th><th>Marked on</th></tr>${late.map(({ t, k, e }) => `<tr><td>${esc(t.name)}</td><td>${fmtDay(k)} ${e.reversed ? '<span class="tag rev">↺ LOP reversed</span>' : ''}</td><td>${chip(e.off)}</td><td style="white-space:normal">${esc(e.reason || '—')}</td><td>${fmtStamp(e.markedAt)}</td></tr>`).join('')}</table></div>` : '<p class="note">Nothing marked after the day in the last 30 days.</p>'}</div></section>
+    ${protoControls()}`;
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.ptrack i').forEach(i => i.classList.add('in'))));
+}
+
+/* ════════════════ FLOOR ════════════════ */
+function viewFloor() {
+  const os = openShift(), m = monthOf(os), mine = role() === 'tl' ? meId() : null;
+  const groups = Object.entries(MGRS).map(([mid, mg]) => { const list = TLS.filter(t => t.mgr === mid);
+    return `<div class="grp"><div class="grp-h"><b>${esc(mg.name)}</b> · ${list.filter(t => statusOf(t.id, os) === 'present').length} of ${list.length} submitted</div><div class="board">${list.map(t => {
+      const s = statusOf(t.id, os), e = DB.days[t.id][os];
+      const front = s === 'lop' ? 'lopf' : s === 'weekoff' ? 'offf' : s === 'leave' ? 'lvf' : '';
+      return `<div class="tile" data-present="${s === 'present'}" data-id="${t.id}"><div class="tile-in">
+        <div class="face ${front}"><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}${t.id === mine ? ' <small class="note">(you)</small>' : ''}</span><div class="meta">${chip(s)}<span class="flame">${streak(t.id)}-day streak</span></div></div>
+        <div class="face back"><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span><div class="meta"><span>Submitted ${e && e.submittedAt ? fmtTime(e.submittedAt) : ''}</span><span class="flame">${streak(t.id)}-day streak</span></div></div></div></div>`; }).join('')}</div></div>`; }).join('');
+  const days = []; for (let k = m + '-01'; monthOf(k) === m; k = addDays(k, 1)) days.push(k);
+  const heat = `<div class="heat" style="grid-template-columns:minmax(120px,auto) repeat(${days.length},minmax(11px,1fr))"><span></span>${days.map(k => `<span class="hd">${+k.slice(8) % 5 === 1 || days.length < 16 ? +k.slice(8) : ''}</span>`).join('')}
+    ${TLS.map(t => `<span class="hn">${esc(t.name)}</span>${days.map(k => { const s = statusOf(t.id, k), e = DB.days[t.id][k]; return `<span class="hc ${s}${e && e.reversed ? ' rv' : ''}" title="${esc(t.name)} · ${fmtDay(k)}: ${LABEL[s] || 'upcoming'}${e && e.reversed ? ' (LOP reversed)' : ''}"></span>`; }).join('')}`).join('')}</div>`;
+  const ranked = TLS.map(t => ({ t, s: stats(t.id, m), k: streak(t.id) })).sort((a, b) => (b.s.comp ?? 0) - (a.s.comp ?? 0) || b.k - a.k);
+  const lb = `<div class="lb">${ranked.map((r, i) => `<div class="lbr"><span class="rk">${i + 1}</span><div><div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.t.name)}</span><span class="flame">${r.k}-day streak</span></div><div class="bar"><i class="${r.s.comp >= .95 ? 'good' : r.s.comp >= .85 ? 'mid' : 'bad'}" data-w="${(r.s.comp || 0) * 100}"></i></div></div><span class="v">${pct(r.s.comp)}</span></div>`).join('')}</div>`;
+  $('view').innerHTML = `${teamKPIs(TLS)}<section class="panel"><div class="ph"><h2>Tonight’s board</h2><p>Shift of ${fmtDay(os)} · cut-off 11:30 AM IST on ${fmtDay(addDays(os, 1))}</p></div><div class="pb">${groups}</div></section>
+    ${pipelinePanel(TLS, 'Floor pipeline')}
+    <div class="two"><section class="panel"><div class="ph"><h2>${fromKey(m + '-01').toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })} attendance</h2><p>Every team lead, every day</p></div><div class="pb tw">${heat}
+      <div class="legend" style="padding:12px 0 0"><span><i style="background:var(--pos)"></i>Present</span><span><i style="background:var(--neg)"></i>LOP</span><span><i style="background:var(--off);opacity:.5"></i>Week off</span><span><i style="background:var(--leave);opacity:.75"></i>Leave</span><span><i style="background:repeating-linear-gradient(45deg,var(--leave) 0 3px,var(--neg) 3px 6px)"></i>LOP reversed</span></div></div></section>
+    <section class="panel"><div class="ph"><h2>KRA consistency</h2><p>Present ÷ working days this month</p></div><div class="pb">${lb}</div></section></div>
+    ${role() === 'tl' ? '' : protoControls()}`;
+  /* the one orchestrated moment: tiles flip in, one by one */
+  const tiles = [...document.querySelectorAll('.tile[data-present="true"]')];
+  tiles.forEach((el, i) => REDUCED ? el.classList.add('flip') : setTimeout(() => el.classList.add('flip'), 250 + i * 120));
+  requestAnimationFrame(() => requestAnimationFrame(() => { document.querySelectorAll('.lb .bar i').forEach(i => i.style.width = i.dataset.w + '%'); document.querySelectorAll('.ptrack i').forEach(i => i.classList.add('in')); }));
+}
+
+/* ════════════════ CALLS & HEADCOUNT (managers, admin) ════════════════ */
+const tsec = s => { const m = /^(\d{1,3}):([0-5]\d)$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
+const fmtDur = s => s == null || !isFinite(s) ? '—' : Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
+function callsOf(q) { return { members: +q.members || 0, calls: +q.calls || 0, avg: tsec(q.avg_talk), hrs: +q.talk_hrs || 0 }; }
+function callsAgg(recs) {
+  const a = { n: 0, members: 0, calls: 0, hrs: 0, wsec: 0, wcalls: 0 };
+  recs.forEach(q => { const c = callsOf(q); a.n++; a.members += c.members; a.calls += c.calls; a.hrs += c.hrs; if (c.avg != null) { a.wsec += c.avg * c.calls; a.wcalls += c.calls; } });
+  a.avg = a.wcalls ? a.wsec / a.wcalls : null; return a;
+}
+function viewCalls() {
+  const os = openShift(), m = monthOf(os);
+  const scopeMgr = role() === 'mgr' ? meId() : (S.callMgr || 'all');
+  const list = TLS.filter(t => scopeMgr === 'all' || t.mgr === scopeMgr);
+  const tonight = list.map(t => ({ t, e: DB.days[t.id][os] })).filter(x => x.e && x.e.submittedAt);
+  const T = callsAgg(tonight.map(x => x.e.kra));
+  const monthRecs = t => { const r = []; for (let k = m + '-01'; monthOf(k) === m && k <= os; k = addDays(k, 1)) { const e = DB.days[t.id][k]; if (e && e.submittedAt) r.push(e.kra); } return r; };
+  const due = list.filter(t => !['weekoff', 'leave'].includes(statusOf(t.id, os))).length;
+  /* last 14 shifts, whole scope */
+  const days = Array.from({ length: 14 }, (_, i) => addDays(os, i - 13));
+  const series = days.map(k => callsAgg(list.map(t => DB.days[t.id][k]).filter(e => e && e.submittedAt).map(e => e.kra)));
+  const maxC = Math.max(1, ...series.map(s => s.calls));
+  const rows = list.map(t => { const e = DB.days[t.id][os], q = e && e.submittedAt ? callsOf(e.kra) : null, M = callsAgg(monthRecs(t));
+    return `<tr class="click" data-act="tl" data-id="${t.id}" tabindex="0"><td><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span></td><td>${chip(statusOf(t.id, os))}</td>
+      <td class="n">${q ? q.members : '—'}</td><td class="n">${q ? fmtN(q.calls) : '—'}</td><td class="n">${q ? fmtDur(q.avg) : '—'}</td><td class="n">${q ? q.hrs.toFixed(1) : '—'}</td><td class="n">${q && q.members ? (q.calls / q.members).toFixed(1) : '—'}</td>
+      <td class="n">${M.n ? fmtN(M.calls / M.n) : '—'}</td><td class="n">${fmtDur(M.avg)}</td><td class="n">${M.n ? (M.hrs / M.n).toFixed(1) : '—'}</td><td class="n">${M.n ? (M.members / M.n).toFixed(1) : '—'}</td></tr>`; }).join('');
+  $('view').innerHTML = `${role() === 'admin' ? `<div style="margin-bottom:14px"><label class="note">Showing <select class="inp" style="width:auto;display:inline-block;margin-left:6px" data-act-change="callmgr"><option value="all">The whole floor</option>${Object.entries(MGRS).map(([k, mg]) => `<option value="${esc(k)}"${k === scopeMgr ? ' selected' : ''}>${esc(mg.name)}’s team</option>`).join('')}</select></label></div>` : ''}
+    <div class="kpis"><div class="kpi"><span>Team members present</span><b data-count="${T.members}">${T.members}</b><small>tonight, from ${T.n} of ${due} KRAs in</small></div>
+      <div class="kpi"><span>Calls made</span><b data-count="${T.calls}">${fmtN(T.calls)}</b><small>${T.members ? (T.calls / T.members).toFixed(1) + ' per member' : 'per member —'}</small></div>
+      <div class="kpi"><span>Avg talk time</span><b>${fmtDur(T.avg)}</b><small>min:sec, weighted by calls</small></div>
+      <div class="kpi"><span>Total talk time</span><b>${T.hrs.toFixed(1)} h</b><small>${T.members ? (T.hrs / T.members).toFixed(1) + ' h per member' : '—'}</small></div></div>
+    <section class="panel"><div class="ph"><h2>Calls by team lead</h2><p>Shift of ${fmtDay(os)}, and daily averages for ${fromKey(m + '-01').toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })}</p></div><div class="pb tw"><table>
+      <tr><th>Team lead</th><th>Tonight</th><th class="n">Members</th><th class="n">Calls</th><th class="n">Avg talk</th><th class="n">Talk hrs</th><th class="n">Calls/member</th><th class="n">Calls/day (month)</th><th class="n">Avg talk (month)</th><th class="n">Talk hrs/day</th><th class="n">Members/day</th></tr>${rows}</table></div></section>
+    <section class="panel" style="margin-top:18px"><div class="ph"><h2>Last 14 shifts</h2><p>Calls made (bars) and total talk hours, across ${scopeMgr === 'all' ? 'the floor' : 'the team'}</p></div><div class="pb">
+      <div class="trend">${series.map((s, i) => `<div class="tcol" title="${fmtDay(days[i])}: ${fmtN(s.calls)} calls, ${s.hrs.toFixed(1)} talk hrs, avg ${fmtDur(s.avg)}"><span class="tv">${s.calls ? fmtN(s.calls) : ''}</span><i style="--h:${s.calls / maxC * 100}%"></i><span class="th">${s.hrs ? s.hrs.toFixed(0) + 'h' : ''}</span><span class="td">${fmtDay(days[i]).slice(0, 3)} ${+days[i].slice(8)}</span></div>`).join('')}</div></div></section>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.tcol i').forEach(i => i.classList.add('in'))));
+}
+
+/* ════════════════ LIVE MODE ════════════════
+   Paste the two values below to go live. Left blank, the page runs as the
+   prototype on sample data. */
+const LIVE = {
+  ENDPOINT: '',   // your KRA Apps Script web app URL, ending in /exec
+  CLIENT_ID: ''   // your Google OAuth client ID, ending in .apps.googleusercontent.com
+};
+const IS_LIVE = !!LIVE.ENDPOINT;
+const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del: k => { try { localStorage.removeItem(k); } catch (e) { } } };
+let SESSION = IS_LIVE ? store.get('kra.session') : null;
+
+async function api(action, payload = {}) {
+  let res;
+  try {
+    const r = await fetch(LIVE.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, session: SESSION, ...payload }) });
+    res = await r.json();
+  } catch (e) { return { ok: false, message: 'Couldn’t reach the KRA server. Check your connection and try again.' }; }
+  if (res && res.auth === false) { signOut(true); }
+  return res || { ok: false, message: 'Empty reply from the server.' };
+}
+function applyBoot(b) {
+  TLS.length = 0; b.tls.forEach(t => TLS.push({ id: t.email, name: t.name, email: t.email, mgr: t.mgr }));
+  for (const k in MGRS) delete MGRS[k]; b.mgrs.forEach(m => MGRS[m.email] = { name: m.name, email: m.email });
+  for (const k in ADVISORS) delete ADVISORS[k]; Object.assign(ADVISORS, b.advisors || {});
+  Object.assign(CFG, b.cfg || {});
+  DB.days = {}; TLS.forEach(t => DB.days[t.id] = (b.days || {})[t.id] || {});
+  DB.mails = (b.mails || []); DB.cutoff = {};
+  ADMIN.name = b.me.name; ADMIN.email = b.me.email;
+  S.as = b.me.role + ':' + b.me.email;
+  if (!MGRS[S.mgr]) S.mgr = Object.keys(MGRS)[0];
+  if (b.me.role === 'tl') { const d = store.get('kra.draft.' + b.me.email); if (d && d.k === openShift()) DB.drafts[b.me.email] = d; }
+}
+function saveDraft() { if (!IS_LIVE || role() !== 'tl') return; const d = DB.drafts[meId()]; if (d) store.set('kra.draft.' + meId(), d); }
+let saveT; function saveDraftSoon() { clearTimeout(saveT); saveT = setTimeout(saveDraft, 400); }
+
+function signInScreen(msg) {
+  $('who').innerHTML = ''; $('vtabs').innerHTML = ''; $('pendBadge').hidden = true;
+  $('view').innerHTML = `<section class="panel signin"><div class="stamp" style="border-color:var(--accent);color:var(--accent)"><b>KRA</b><span>daily</span></div>
+    <div><h2>Sign in with your work account</h2><p class="note">Use your @expinfi.com Google account. Team leads fill tonight’s KRA here; managers see their team.</p>
+    <div id="gbtn" style="margin-top:18px;min-height:44px"></div>${msg ? `<p class="errs" style="margin-top:12px">${esc(msg)}</p>` : ''}</div></section>`;
+  const go = () => { google.accounts.id.initialize({ client_id: LIVE.CLIENT_ID, callback: r => login(r.credential), hd: 'expinfi.com', auto_select: true });
+    google.accounts.id.renderButton($('gbtn'), { theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'pill' }); google.accounts.id.prompt(); };
+  if (window.google && google.accounts) go();
+  else { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = go; s.onerror = () => toast('Couldn’t load Google sign-in. Check your connection.'); document.head.appendChild(s); }
+}
+async function login(idToken) {
+  $('gbtn') && ($('gbtn').innerHTML = '<p class="note">Signing you in…</p>');
+  const r = await api('login', { idToken });
+  if (!r.ok) return signInScreen(r.message || 'Sign-in failed.');
+  SESSION = r.session; store.set('kra.session', SESSION);
+  applyBoot(r.boot); S.view = viewsFor()[0][0]; render();
+}
+function signOut(expired) { SESSION = null; store.del('kra.session'); if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); signInScreen(expired ? 'Your session ended. Sign in again; your draft is kept on this device.' : ''); }
+async function liveBoot() {
+  if (!SESSION) return signInScreen();
+  $('view').innerHTML = '<p class="note" style="padding:40px 0;text-align:center">Loading your KRA…</p>';
+  const r = await api('bootstrap');
+  if (!r.ok) return SESSION ? signInScreen(r.message) : null;
+  applyBoot(r.boot); S.view = viewsFor()[0][0]; render();
+  setInterval(async () => { if (document.hidden || !SESSION || (S.view === 'day' && role() === 'tl')) return; const x = await api('bootstrap'); if (x.ok) { const keep = S.as; applyBoot(x.boot); S.as = keep; if (!$('overlay').innerHTML) render(); } }, 5 * 60000);
+}
+
+/* ════════════════ overlays ════════════════ */
+function modal(title, body) { $('overlay').innerHTML = `<div class="scrim" data-act="close-bg"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mh"><h2>${title}</h2><button class="x" data-act="close" aria-label="Close">×</button></div><div class="mb">${body}</div></div></div>`; const x = document.querySelector('.mh .x'); x && x.focus(); }
+function closeModal() { $('overlay').innerHTML = ''; }
+function mailLog() {
+  const ms = DB.mails, sel = ms[S.mailSel] || ms[0];
+  const tag = { lop: '<span class="tag lop">LOP</span>', rev: '<span class="tag rev">Reversed</span>', rem: '<span class="tag rem">Reminder</span>' };
+  modal('Mail log', !ms.length ? '<p class="note">No mails yet. Run the cut-off to generate some.</p>' : `<p class="note" style="margin-bottom:14px">Sent from ${CFG.SENDER}. The team lead is in To and their manager in Cc.</p><div class="mails"><div class="mlist">${ms.map((m, i) => `<button class="mi${m === sel ? ' on' : ''}" data-act="mail" data-i="${i}"><b>${esc(TLS.find(t => t.email === m.to).name)}${tag[m.type]}</b><span>${fmtStamp(m.at)}</span></button>`).join('')}</div>
+    <div class="mail"><div class="hdr"><div><span>From</span>${CFG.SENDER}</div><div><span>To</span>${esc(sel.to)}</div>${sel.cc ? `<div><span>Cc</span>${esc(sel.cc)}</div>` : ''}<div><span>Sent</span>${fmtStamp(sel.at)}</div><div class="subj">${esc(sel.subject)}</div></div><div class="bd">${esc(sel.body)}</div></div></div>`);
+}
+function tlDrawer(id) {
+  const t = TL(id), os = openShift(), s = stats(id, monthOf(os)), L = latestKRA(id);
+  modal(esc(t.name), `<div class="sumgrid" style="margin-top:0"><div class="sum"><b>${s.present}/${s.work}</b><span>present this month</span></div><div class="sum"><b class="${s.lop ? 'bad' : ''}">${s.lop}</b><span>LOP</span></div><div class="sum"><b>${pct(s.att)}</b><span>revenue attainment</span></div><div class="sum"><b>${pct(s.rpAtt)}</b><span>RP units attainment</span></div><div class="sum"><b>${pct(s.dc2e, 1)}</b><span>DC2E</span></div><div class="sum"><b>${streak(id)}</b><span>day streak</span></div></div>
+    ${L ? `<p class="note" style="margin-top:16px">Latest KRA: shift of ${fmtLong(L.k)}, submitted ${fmtStamp(L.e.submittedAt)}${L.e.editedAt ? ', edited ' + fmtStamp(L.e.editedAt) : ''}.</p>${summaryHTML(L.e.kra, false)}` : '<p class="note" style="margin-top:16px">No KRA in the last 10 days.</p>'}`);
+}
+let toastT;
+function toast(msg) { clearTimeout(toastT); const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg; document.querySelectorAll('.toast').forEach(x => x.remove()); document.body.appendChild(el); toastT = setTimeout(() => el.remove(), 4200); }
+function countUp() {
+  if (REDUCED) return;
+  document.querySelectorAll('[data-count]').forEach(el => { const to = +el.dataset.count; if (!to) return; const t0 = performance.now();
+    const step = t => { const p = Math.min(1, (t - t0) / 700); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
+}
+function confetti() {
+  if (REDUCED) return;
+  const c = $('confetti'), x = c.getContext('2d'), W = c.width = innerWidth, H = c.height = innerHeight;
+  const cols = ['#0d7550', '#1668b3', '#a4640f', '#6f4e9c', '#a8cbe9'];
+  const ps = Array.from({ length: 110 }, () => ({ x: W / 2 + (Math.random() - .5) * 200, y: H * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 4, s: 4 + Math.random() * 5, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function fr(t) { x.clearRect(0, 0, W, H); ps.forEach(p => { p.vy += .42; p.x += p.vx; p.y += p.vy; p.vx *= .99; p.r += p.vr; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); });
+    if (t - t0 < 2200) requestAnimationFrame(fr); else x.clearRect(0, 0, W, H); })(t0);
+}
+
+/* ════════════════ actions ════════════════ */
+function goStep(i, dir) {
+  const d = draft(); if (!d.visited.includes(S.step)) d.visited.push(S.step);
+  S.step = Math.max(0, Math.min(STEPS.length - 1, i)); d.step = S.step; S.showErr = false;
+  railHTML(); stageHTML(true, dir); refreshClock(); window.scrollTo({ top: $('rail').getBoundingClientRect().top + scrollY - 150, behavior: REDUCED ? 'auto' : 'smooth' });
+}
+function submit() {
+  const d = draft(); STEPS.forEach((_, i) => { if (!d.visited.includes(i)) d.visited.push(i); });
+  const bad = STEPS.findIndex((_, i) => !stepOK(i));
+  if (bad >= 0) { S.step = bad; S.showErr = true; railHTML(); stageHTML(true); refreshClock(); toast(`“${STEPS[bad].t}” needs a few more details.`); return; }
+  const id = meId(), os = openShift(), prev = DB.days[id][os];
+  if (IS_LIVE) return submitLive(id, os);
+  DB.days[id][os] = { kra: JSON.parse(JSON.stringify(F)), submittedAt: prev && prev.submittedAt ? prev.submittedAt : Date.now(), editedAt: S.editing ? Date.now() : undefined };
+  delete DB.drafts[id];
+  const wasEdit = S.editing; S.editing = false; S.step = 0; S.showErr = false;
+  render({ justSubmitted: !wasEdit }); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+  if (!wasEdit) setTimeout(confetti, 250); else toast('Changes saved.');
+}
+async function submitLive(id, os) {
+  const btn = document.querySelector('[data-act="submit"]'); if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+  const wasEdit = S.editing;
+  const r = await api('submit', { k: os, kra: F });
+  if (!r.ok) { if (btn) { btn.disabled = false; btn.textContent = wasEdit ? 'Save changes' : 'Submit KRA and mark present'; } toast(r.message || 'Couldn’t submit. Try again.'); return; }
+  DB.days[id][os] = r.day; delete DB.drafts[id]; store.del('kra.draft.' + id);
+  S.editing = false; S.step = 0; S.showErr = false;
+  render({ justSubmitted: !wasEdit }); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+  if (!wasEdit) setTimeout(confetti, 250); else toast('Changes saved.');
+}
+function runCutoff() {
+  const os = openShift(), hit = [];
+  TLS.forEach(t => { if (['pending', 'progress'].includes(statusOf(t.id, os))) hit.push(t); });
+  DB.cutoff[os] = true;
+  hit.forEach(t => { DB.mails.unshift(mailLOP(t, os, Math.max(Date.now(), deadline(os) + 60000))); delete DB.drafts[t.id]; });
+  render(); S.mailSel = 0;
+  toast(hit.length ? `${hit.length} team lead${hit.length > 1 ? 's' : ''} marked LOP for ${fmtDay(os)}. Emails sent with managers in Cc.` : 'Everyone had submitted or was off. No LOP today.');
+  if (hit.length) setTimeout(mailLog, 500);
+}
+function runReminder() {
+  const os = openShift(), hit = TLS.filter(t => ['pending', 'progress'].includes(statusOf(t.id, os)));
+  hit.forEach(t => DB.mails.unshift(mailReminder(t, os)));
+  S.mailSel = 0; render();
+  toast(hit.length ? `Reminder sent to ${hit.length} team lead${hit.length > 1 ? 's' : ''} who haven’t submitted.` : 'Everyone has submitted. No reminders needed.');
+  if (hit.length) setTimeout(mailLog, 500);
+}
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  if (S.view === 'day') saveDraftSoon();
+  const a = el.dataset.act, k = el.dataset.k;
+  if (a === 'close-bg' && ev.target !== el) return;
+  switch (a) {
+    case 'view': S.view = el.dataset.v; S.sel.clear(); closeModal(); render(); window.scrollTo(0, 0); break;
+    case 'inc': case 'dec': setP(F, k, Math.min(MAXN[k] || 999, Math.max(0, (+v(k) || 0) + (a === 'inc' ? 1 : -1)))); stageHTML(false); refreshClock(); railHTML(); break;
+    case 'yn': setP(F, k, el.dataset.v); stageHTML(false); refreshClock(); railHTML(); break;
+    case 'chip': { const arr = [...(v(k) || [])], o = el.dataset.v, i = arr.indexOf(o); i >= 0 ? arr.splice(i, 1) : arr.push(o); setP(F, k, arr); stageHTML(false); refreshClock(); railHTML(); break; }
+    case 'case-none': { const st = F.cases[el.dataset.g]; st.none = !st.none; if (st.none) st.items = []; stageHTML(false); refreshClock(); railHTML(); break; }
+    case 'case-add': { const g = el.dataset.g, st = F.cases[g]; st.none = false; st.items.push(CASES[g].blank()); stageHTML(false); refreshClock(); railHTML(); break; }
+    case 'case-del': F.cases[el.dataset.g].items.splice(+el.dataset.i, 1); stageHTML(false); refreshClock(); railHTML(); break;
+    case 'oo-add': F.oo_list.push(blankOO()); stageHTML(false); refreshClock(); railHTML(); break;
+    case 'oo-del': F.oo_list.splice(+el.dataset.i, 1); stageHTML(false); refreshClock(); railHTML(); break;
+    case 'fresh': { const id = meId(), os = openShift(); delete DB.days[id][os]; delete DB.drafts[id]; S.seen.clear(); S.step = 0; S.editing = false; render(); toast('Fresh entry started for ' + first(me().name) + '.'); break; }
+    case 'signout': signOut(); break;
+    case 'step': goStep(+el.dataset.i, +el.dataset.i < S.step ? 'back' : ''); break;
+    case 'next': { if (!stepOK(S.step)) { S.showErr = true; stageHTML(false); const d = draft(); if (!d.visited.includes(S.step)) d.visited.push(S.step); railHTML(); const f = document.querySelector('.f.err .inp,.f.err input,.f.err button'); f && f.focus(); return; } goStep(S.step + 1); break; }
+    case 'back': goStep(S.step - 1, 'back'); break;
+    case 'submit': submit(); break;
+    case 'edit': { const id = meId(), os = openShift(); DB.drafts[id] = { k: os, v: JSON.parse(JSON.stringify(DB.days[id][os].kra)), step: 0, visited: [0, 1, 2, 3, 4, 5] }; S.editing = true; S.step = 0; render(); break; }
+    case 'cal-mv': { const d = fromKey(S.calMonth + '-01'); d.setUTCMonth(d.getUTCMonth() + +el.dataset.n); S.calMonth = key(d).slice(0, 7); S.sel.clear(); render(); break; }
+    case 'day': { if (el.getAttribute('aria-disabled')) { toast(el.title.split(' · ')[1] || 'This day can’t be changed.'); break; } S.sel.has(k) ? S.sel.delete(k) : S.sel.add(k); render(); break; }
+    case 'mark': markOff(el.dataset.type); break;
+    case 'clear-off': if (IS_LIVE) { const id = meId(), ds = [...S.sel]; api('clearOff', { dates: ds }).then(r => { if (!r.ok) return toast(r.message); ds.forEach(k => delete DB.days[id][k]); S.sel.clear(); render(); toast('Marking removed.'); }); break; } { const id = meId(); [...S.sel].forEach(k => { delete DB.days[id][k]; }); S.sel.clear(); render(); toast('Marking removed.'); break; }
+    case 'clear-sel': S.sel.clear(); render(); break;
+    case 'tl': tlDrawer(el.dataset.id); break;
+    case 'mails': S.mailSel = 0; mailLog(); break;
+    case 'mail': S.mailSel = +el.dataset.i; mailLog(); break;
+    case 'cutoff': runCutoff(); break;
+    case 'remind': runReminder(); break;
+    case 'reset': Object.assign(DB, { days: {}, cutoff: {}, mails: [], drafts: {} }); seed(); S.editing = false; S.step = 0; render(); toast('Sample data reset.'); break;
+    case 'close': case 'close-bg': closeModal(); break;
+  }
+});
+document.addEventListener('input', ev => {
+  const el = ev.target; if (!el.dataset || !el.dataset.k || S.view !== 'day') return;
+  const k = el.dataset.k;
+  let val = el.value;
+  if (el.dataset.t === 'num') { val = val.replace(/[^\d]/g, ''); if (MAXN[k] && +val > MAXN[k]) val = String(MAXN[k]); if (el.value !== val) el.value = val; val = val === '' ? '' : +val; }
+  if (el.dataset.t === 'dec') { val = val.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1'); if (el.value !== val) el.value = val; val = val === '' || val === '.' ? '' : val.endsWith('.') ? val : +val; }
+  setP(F, k, val); normalize(); saveDraftSoon();
+  const wrap = el.closest('.f'); if (wrap) wrap.classList.remove('err');
+  live();
+  /* conditional fields depend on these, so redraw the step (keeping focus) */
+  if (['rev_close', 'rev_target', 'rp_close', 'rp_target', 'ref_start', 'audits', 'voc', 'in_dc', 'in_cl', 'ni_dc', 'ni_cl', 'plan_m', 'plan_bm', 'in_cnt', 'ni_cnt'].includes(k) && S.showErr || ['rev_close', 'rev_target', 'rp_close', 'rp_target', 'ref_start', 'audits', 'voc'].includes(k) || el.tagName === 'SELECT') {
+    const pos = el.selectionStart; stageHTML(false); const n = document.querySelector(`[data-k="${k}"]`); if (n && n.tagName !== 'SELECT') { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { } }
+  }
+  if (el.closest('.stp')) { const pips = el.closest('.f').querySelectorAll('.pips i'); pips.forEach((p, i) => p.classList.toggle('on', i < (+val || 0))); }
+  refreshClock(); railHTML();
+});
+document.addEventListener('change', ev => {
+  if (ev.target.dataset.actChange === 'mgr') { S.mgr = ev.target.value; render(); }
+  if (ev.target.dataset.actChange === 'callmgr') { S.callMgr = ev.target.value; render(); }
+  if (ev.target.id === 'asUser') { S.seen.clear(); S.as = ev.target.value; S.view = viewsFor()[0][0]; S.step = role() === 'tl' && DB.drafts[meId()] ? DB.drafts[meId()].step || 0 : 0; S.editing = false; S.sel.clear(); S.showErr = false; closeModal(); render(); window.scrollTo(0, 0); }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && $('overlay').innerHTML) closeModal();
+  if (ev.key === 'Enter' && ev.target.matches('tr[data-act="tl"]')) tlDrawer(ev.target.dataset.id);
+});
+
+/* ════════════════ boot ════════════════ */
+$('asUser').innerHTML = `<optgroup label="Team leads">${TLS.map(t => `<option value="tl:${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>
+  <optgroup label="Managers">${Object.entries(MGRS).map(([k, m]) => `<option value="mgr:${k}">${esc(m.name)}</option>`).join('')}</optgroup>
+  <optgroup label="Admin"><option value="admin:bc">${esc(ADMIN.name)}</option></optgroup>`;
+if (IS_LIVE) { document.querySelector('.proto').style.display = 'none'; liveBoot(); } else { seed(); render(); }
+</script>
+</body></html>
