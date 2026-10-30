@@ -1221,8 +1221,8 @@ function viewCalls() {
    Paste the two values below to go live. Left blank, the page runs as the
    prototype on sample data. */
 const LIVE = {
-  ENDPOINT: '',   // your KRA Apps Script web app URL, ending in /exec
-  CLIENT_ID: ''   // your Google OAuth client ID, ending in .apps.googleusercontent.com
+  ENDPOINT: 'https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec',   // your KRA Apps Script web app URL, ending in /exec
+  CLIENT_ID: '677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com'   // your Google OAuth client ID, ending in .apps.googleusercontent.com
 };
 const IS_LIVE = !!LIVE.ENDPOINT;
 const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
