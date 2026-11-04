@@ -786,7 +786,7 @@ const STEPS = [
         <span class="pl">Total</span><b class="et" id="eg-n">0</b><b class="et" id="eg-d">0</b><b class="et" id="eg-c">0</b>
       </div>
       <div class="live">${meter('dc', 'DC2E')}</div>
-      <div class="grid" style="margin-top:16px">${fNum('plan_m', 'Monthly count')}${fNum('plan_bm', 'Bi-monthly count')}</div>
+      <div class="grid" style="margin-top:16px">${fNum('plan_m', 'Monthly count (optional)')}${fNum('plan_bm', 'Bi-monthly count (optional)')}</div>
       <p class="note" id="plan-msg" style="margin-top:8px"></p></div>`,
     need: f => { const e = [];
       if (!(+f.members > 0)) e.push(['members', 'Add team members present']);
@@ -799,9 +799,6 @@ const STEPS = [
         ['_cnt', '_dc', '_cl'].forEach(s => { if (num(f[p + s]) == null) e.push([p + s, `Fill the ${l} row (0 if none)`]); });
         if (+f[p + '_cl'] > +f[p + '_dc']) e.push([p + '_cl', `${l} closures can’t exceed ${l} DC count`]); });
       const cl = (+f.in_cl || 0) + (+f.ni_cl || 0);
-      if (num(f.plan_m) == null) e.push(['plan_m', 'Enter the monthly count (0 if none)']);
-      if (num(f.plan_bm) == null) e.push(['plan_bm', 'Enter the bi-monthly count (0 if none)']);
-      if (num(f.plan_m) != null && num(f.plan_bm) != null && +f.plan_m + +f.plan_bm !== cl) e.push(['plan_bm', `Monthly + bi-monthly should equal ${cl} closures`]);
       if (short(f) && !f.recovery) e.push(['recovery', 'Add a recovery plan']); return e; } },
   { t: 'Audits & customer voice', s: 'Demo audits, VOC forms', why: 'Pick how many you did, then fill one card for each. Standard: 2 audits and 2–3 VOC forms a day.',
     body: () => `${advList()}<div class="blk"><h4>Demo audits <small>Target ${CFG.AUDITS} a day</small></h4><div class="grid">${fStep('audits', 'Audits completed', CFG.AUDITS)}</div>
@@ -1221,8 +1218,8 @@ function viewCalls() {
    Paste the two values below to go live. Left blank, the page runs as the
    prototype on sample data. */
 const LIVE = {
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec',   // your KRA Apps Script web app URL, ending in /exec
-  CLIENT_ID: '677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com'   // your Google OAuth client ID, ending in .apps.googleusercontent.com
+  ENDPOINT: '',   // your KRA Apps Script web app URL, ending in /exec
+  CLIENT_ID: ''   // your Google OAuth client ID, ending in .apps.googleusercontent.com
 };
 const IS_LIVE = !!LIVE.ENDPOINT;
 const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
