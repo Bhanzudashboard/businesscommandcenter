@@ -894,7 +894,7 @@ function mail(type, ic, k, x) {
 </script>
 <script>
 /* ════════════════ state & chrome ════════════════ */
-const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'all', bsale: 'all', bctry: 'all', bprod: 'all', typeF: 'all', tlF: 'all', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
+const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'Math', bsale: 'all', bctry: 'all', bprod: 'Math', typeF: 'all', tlF: 'all', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
 const role = () => S.as.split(':')[0];
 const meId = () => S.as.split(':')[1];
 const isPhone = () => S.phone || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
@@ -1441,7 +1441,7 @@ function periods() {
 const rowKey = r => MO[r[0]] + '-' + pad2(r[1]);
 let PER = null;   // periods for the view being drawn
 const mLabel = i => PER.list[i].label;
-Object.assign(S, { dfrom: null, dto: null, dpre: 'all', msale: 'all', mctry: 'all', mprod: 'all', mm: 'smdc', mdim: 'eth', mF: 'all', rw: null, pst: 'active' });
+Object.assign(S, { dfrom: null, dto: null, dpre: 'all', msale: 'all', mctry: 'all', mprod: 'Math', mm: 'smdc', mdim: 'eth', mF: 'all', rw: null, pst: 'active' });
 const MDIM = { eth: ['Ethnicity', 5, 9], source: ['Source', 6, 10], country: ['Country', 8, 12], grade: ['Grade', 9, 13], subj: ['Subject', 10, 14], team: ['RP / OTP', 11, 15], lead: ['Lead month', 4, 8] };
 function momFilter() {
   const r = role();
