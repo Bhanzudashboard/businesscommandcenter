@@ -521,6 +521,7 @@ tr.click:hover td{background:var(--paper)}
 .fbar .fl:first-child{margin-left:0}
 .kpi .usplit{display:flex;gap:14px;margin-top:6px;}
 .kpi .usplit b{display:inline;margin-top:0;font-size:15px;font-family:var(--mono,inherit);margin-right:3px}
+.exportbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
 .tlpick-wrap{display:inline-flex;align-items:center;gap:8px;position:relative}
 .tlpick{position:relative}
 .tlpick>summary{list-style:none;cursor:pointer;width:auto;min-width:170px;padding-right:30px;position:relative;user-select:none}
@@ -1253,6 +1254,7 @@ function vTeamNums() {
       <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small class="usplit"><span><b>${fmt1(f.rp)}</b> RP</span><span><b>${fmt1(f.otpU)}</b> OTP</span></small><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
       <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>${filterNote()}</small></div>
       <div class="kpi"><span>RP units</span><b>${fmt1(f.rp)}</b></div><div class="kpi"><span>OTP revenue</span><b>${lakh(f.otp)}</b></div></div>
+    ${role() === 'admin' && IS_LIVE ? `<div class="exportbar"><button class="btn btn-s" data-act="demoExport">Download counted demos (Excel)</button><span class="note">Admins only · every demo this month with Lead ID, as counted here, plus the rows not counted and why</span></div>` : ''}
     <section class="panel"><div class="ph"><h2>By team member</h2><p>Target progress uses all sales; demos and DC2E follow the filters · click a row for detail</p></div><div class="pb tw"><table>
       <tr><th class="n">#</th><th>Name</th><th>Team lead</th><th>Type</th><th class="n">Target</th><th class="n">Achieved</th><th>Target achieved</th><th class="n">Demos</th><th class="n">Units</th><th class="n">DC2E</th><th class="n">Same-month DC2E</th><th>Audits (Daily KRA)</th></tr>
       ${list.map(ic => ({ ic, q: numsOf(ic), f: agg([ic]) })).sort((a, b) => (a.ic.isNR - b.ic.isNR) || (a.ic.isTL - b.ic.isTL) || (b.q.att || 0) - (a.q.att || 0)).map((r, i) => r.ic.isNR ? nrRowHTML(r, i) : `<tr class="click" data-act="ic" data-id="${r.ic.id}"><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}${r.ic.isTL ? ' <small class="note">TL</small>' : ''}</span></td><td>${esc(TL(r.ic.tl).name)}</td>${r.ic.isTL ? `<td>Team lead</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td><td class="note">Own demos and sales · counted in the team total</td>` : `<td>${r.q.type}</td>
@@ -1844,6 +1846,22 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
   const P = id => PERSON(id);
   switch (a) {
     case 'signout': stop(); return tsignOut();
+    case 'demoExport': { stop(); if (role() !== 'admin') return;
+      el.disabled = true; const was = el.textContent; el.textContent = 'Preparing… (this can take up to a minute)';
+      const r = await tapi('team.demoExport'); el.disabled = false; el.textContent = was;
+      if (!r.ok) return toast(r.message || 'Could not prepare the list.');
+      if (!window.XLSX) return toast('The Excel library did not load. Refresh the page and try again.');
+      const wb = XLSX.utils.book_new(), add = (name, t, w) => { const ws = XLSX.utils.aoa_to_sheet([t.head].concat(t.rows)); ws['!cols'] = t.head.map((h, i) => ({ wch: w[i] || 14 })); ws['!autofilter'] = { ref: ws['!ref'] }; XLSX.utils.book_append_sheet(wb, ws, name); };
+      add('Counted demos', r.counted, [14, 12, 8, 9, 12, 24, 24, 22, 22, 9, 22, 9, 14, 14, 14]);
+      add('Not counted', r.skipped, [8, 10, 14, 12, 24, 22, 70]);
+      const nMath = r.counted.rows.filter(x => x[4] === 'Yes').length;
+      const read = XLSX.utils.aoa_to_sheet([['Demos for ' + r.month + ', as the Team page counts them'], ['Prepared ' + new Date(r.built).toLocaleString('en-IN')], [],
+        ['Counted demos', r.counted.rows.length], ['of which Math (in the All and Math demo count)', nMath], ['of which English only', r.counted.rows.length - nMath], ['Rows not counted', r.skipped.rows.length], [],
+        ['How a demo is counted'], ['One demo per student, per day, per subject. A repeat row is listed under Not counted.'], ['The date is DC Date, or the scheduled date when DC Date is blank.'],
+        ['A row with no Lead ID in the first column is not read.'], ['Every DC-ENG row is English. A DC row is English only when its opportunity name says English or Wordsmith without Math or Wizard.'],
+        ['The whole floor is listed. Filter the Team lead column to match the Team lead filter on the page.']]);
+      read['!cols'] = [{ wch: 60 }, { wch: 10 }]; XLSX.utils.book_append_sheet(wb, read, 'Read me'); wb.SheetNames.unshift(wb.SheetNames.pop());
+      XLSX.writeFile(wb, 'Team_demos_' + r.month + '.xlsx'); return toast('Downloaded ' + r.counted.rows.length + ' demos and ' + r.skipped.rows.length + ' rows not counted.'); }
     case 'me': stop(); return liveMe(el.dataset.x, el.dataset.m);
     case 'fixIn': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, mode: $('cm').value }), 'Clocked in.');
     case 'fixTimes': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, clockOut: $('co').value }), 'Times saved.');
