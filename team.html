@@ -519,6 +519,8 @@ tr.click:hover td{background:var(--paper)}
 .fbar{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
 .fbar .fl{font-size:12px;color:var(--mute);margin-left:6px}
 .fbar .fl:first-child{margin-left:0}
+.kpi .usplit{display:flex;gap:14px;margin-top:6px;}
+.kpi .usplit b{display:inline;margin-top:0;font-size:15px;font-family:var(--mono,inherit);margin-right:3px}
 .tlpick-wrap{display:inline-flex;align-items:center;gap:8px;position:relative}
 .tlpick{position:relative}
 .tlpick>summary{list-style:none;cursor:pointer;width:auto;min-width:170px;padding-right:30px;position:relative;user-select:none}
@@ -1093,7 +1095,7 @@ function agg(list, f) {
   /* demos: Math demos (a bundle demo is a Math demo) for All, Math and Bundle; English demos only for English */
   const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math');
   const src = srcSet(f.src), okSrc = i => !src || src.has(i);
-  const o = { demos: 0, units: 0, bun: 0, smu: 0, rp: 0, otp: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
+  const o = { demos: 0, units: 0, bun: 0, smu: 0, rp: 0, otp: 0, otpU: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
   DIMK.forEach(k => o.dims[k] = {});
   list.forEach(ic => {
     ic.d.D.forEach(r => {   /* Math / English: that subject’s demos. Bundle: all demos, since a bundle can follow either */
@@ -1105,11 +1107,11 @@ function agg(list, f) {
       const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci) || !okSrc(r[6 + DI('source')])) return;
       const un = r[2] * w, rv = r[3] * w;
       o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[5]) o.smu += un; if (r[4] === 2) o.bun += un;
-      if (V.team[r[6 + DI('team')]] === 'RP') o.rp += un; else o.otp += rv;
+      if (V.team[r[6 + DI('team')]] === 'RP') o.rp += un; else { o.otp += rv; o.otpU += un; }
       DIMK.forEach((k, j) => { const v = V[k][r[6 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[1] += un; });
     });
   });
-  const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.en = r2(o.en); o.u = o.u.map(r2);
+  const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.otpU = r2(o.otpU); o.en = r2(o.en); o.u = o.u.map(r2);
   o.dc2e = o.demos ? o.units / o.demos : null;
   return o;
 }
@@ -1178,7 +1180,7 @@ function vNums() {
     <section class="panel"><div class="ph"><h2>My performance</h2><p>${filterNote()}</p></div><div class="pb">${filterBar({ prod: true, sale: true, ctry: true, extra: srcFilter() })}
       <div class="kpis" style="margin:16px 0 6px">
         <div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${f.demos}</b></div>
-        <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
+        <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small class="usplit"><span><b>${fmt1(f.rp)}</b> RP</span><span><b>${fmt1(f.otpU)}</b> OTP</span></small><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
         <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>units ÷ demos</small></div>
         <div class="kpi"><span>RP units / OTP revenue</span><b style="font-size:19px">${fmt1(f.rp)} · ${lakh(f.otp)}</b></div></div>
       ${trendSVG(f)}</div></section>
@@ -1248,7 +1250,7 @@ function vTeamNums() {
   $('view').innerHTML = `${liveNote()}
     ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() + srcFilter() })}<div style="margin-top:14px">${club(list)}</div>
     <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL && !x.isNR).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}${list.some(x => x.isNR) ? ' + not on roster' : ''}</small></div>
-      <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
+      <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small class="usplit"><span><b>${fmt1(f.rp)}</b> RP</span><span><b>${fmt1(f.otpU)}</b> OTP</span></small><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
       <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>${filterNote()}</small></div>
       <div class="kpi"><span>RP units</span><b>${fmt1(f.rp)}</b></div><div class="kpi"><span>OTP revenue</span><b>${lakh(f.otp)}</b></div></div>
     <section class="panel"><div class="ph"><h2>By team member</h2><p>Target progress uses all sales; demos and DC2E follow the filters · click a row for detail</p></div><div class="pb tw"><table>
