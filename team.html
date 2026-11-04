@@ -519,6 +519,19 @@ tr.click:hover td{background:var(--paper)}
 .fbar{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
 .fbar .fl{font-size:12px;color:var(--mute);margin-left:6px}
 .fbar .fl:first-child{margin-left:0}
+.tlpick-wrap{display:inline-flex;align-items:center;gap:8px;position:relative}
+.tlpick{position:relative}
+.tlpick>summary{list-style:none;cursor:pointer;width:auto;min-width:170px;padding-right:30px;position:relative;user-select:none}
+.tlpick>summary::-webkit-details-marker{display:none}
+.tlpick>summary::after{content:"";position:absolute;right:12px;top:50%;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-70%) rotate(45deg);opacity:.6}
+.tlpick[open]>summary::after{transform:translateY(-20%) rotate(-135deg)}
+.tlpick>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tlpick-menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:240px;max-height:320px;overflow:auto;background:var(--raised);border:1px solid var(--line2);border-radius:10px;padding:6px;box-shadow:0 10px 28px rgba(0,0,0,.14)}
+.tlpick-menu label{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;cursor:pointer;color:var(--ink,inherit);white-space:nowrap}
+.tlpick-menu label:hover{background:var(--accent-soft)}
+.tlpick-menu input{accent-color:var(--accent);width:15px;height:15px;margin:0}
+.tlpick-all{border-bottom:1px solid var(--line2);border-radius:7px 7px 0 0 !important;margin-bottom:4px;font-weight:600}
+.tlpick-clear{display:block;width:100%;margin-top:4px;padding:7px 9px;border:0;border-top:1px solid var(--line2);background:none;color:var(--accent);text-align:left;cursor:pointer;font:inherit}
 tr.dim td{color:var(--mute)}
 /* targets */
 .tin{width:110px;text-align:right;font-family:var(--mono)}
@@ -573,10 +586,23 @@ tr.dim td{color:var(--mute)}
    ════════════════════════════════════════════════════════════════════ */
 /* ── go live: paste the same two values as in kra.html. Blank = prototype on sample data. ── */
 const LIVE = {
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec',   // your Apps Script web app URL, ending in /exec (same as kra.html)
-  CLIENT_ID: '677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com'   // your Google OAuth client ID (same as kra.html)
+  ENDPOINT: '',   // your Apps Script web app URL, ending in /exec (same as kra.html)
+  CLIENT_ID: ''   // your Google OAuth client ID (same as kra.html)
 };
-const IS_LIVE = !!LIVE.ENDPOINT;
+/* If the two values above are left blank, borrow them from kra.html on the same site,
+   so the Team page keeps working even when a fresh copy is uploaded without them. */
+if (!LIVE.ENDPOINT && /^https?:$/.test(location.protocol)) {
+  try {
+    const x = new XMLHttpRequest(); x.open('GET', 'kra.html?k=' + Date.now(), false); x.send();
+    if (x.status === 200) {
+      const ep = /ENDPOINT:\s*'([^']+)'/.exec(x.responseText), ci = /CLIENT_ID:\s*'([^']+)'/.exec(x.responseText);
+      if (ep && /\/exec\s*$/.test(ep[1])) LIVE.ENDPOINT = ep[1].trim();
+      if (ci) LIVE.CLIENT_ID = ci[1].trim();
+    }
+  } catch (e) { console.warn('Could not read the keys from kra.html', e); }
+}
+const KEYS_MISSING = /^https?:$/.test(location.protocol) && !(LIVE.ENDPOINT && LIVE.CLIENT_ID);
+const IS_LIVE = !!LIVE.ENDPOINT && !KEYS_MISSING;
 let LIVE_OFF = 0;
 const liveNote = () => IS_LIVE ? `<p class="note" style="margin-bottom:12px">From the US MASTER DB${typeof NUM_BUILT !== 'undefined' && NUM_BUILT ? ', updated ' + fmtT(NUM_BUILT) : ''} · refreshed every 15 minutes · a bundle counts as 1 sale</p>` : '<p class="note" style="margin-bottom:12px">Prototype: real numbers from your US Master DB, shown as this month.</p>';
 const DATA = {"people":[],"tls":[],"mgrs":[],"months":["2026-01"],"cur":0,"thru":1,"own":[],"tlb":[],"DM":[],"EM":[],"vocab":{"eth":[],"source":[],"utm":[],"country":[],"grade":[],"subj":[],"team":[]},"dims":[["eth","Ethnicity"],["source","Source"],["utm","UTM"],["country","Country"],["grade","Grade"],["subj","Subject"],["team","RP / OTP"]],"prod":["Math","English","Bundle"],"stages":[]};
@@ -887,13 +913,28 @@ function scopeTLs() {
 }
 function scope() {
   if (role() === 'ic') return [IC(meId())];
-  const tls = scopeTLs().filter(t => S.tlF === 'all' || t.id === S.tlF);
+  const tls = scopeTLs().filter(t => tlOn(t.id));
   return ICS.filter(x => x.active && tls.some(t => t.id === x.tl) && (S.typeF === 'all' || typeOf(x) === S.typeF));
 }
+/* team numbers: the team members, plus each team lead's own demos and sales */
+function numScope() {
+  const list = scope(); if (role() === 'ic') return list;
+  const tls = scopeTLs().filter(t => tlOn(t.id) && (S.typeF === 'all' || t.team === S.typeF));
+  return list.concat(TLP.filter(tp => tls.some(t => t.id === tp.tl) && (tp.d.D.length || tp.d.E.length)));
+}
+/* Team lead filter: 'all', or an array of the team lead ids that are ticked */
+function tlOn(id) { return S.tlF === 'all' || (Array.isArray(S.tlF) && S.tlF.includes(id)); }
 function tlFilter() {
   if (!['mgr', 'admin'].includes(role())) return '';
-  const tls = scopeTLs();
-  return `<label class="note" style="display:inline-flex;align-items:center;gap:8px">Team lead <select class="inp" style="width:auto" data-chg="tlF"><option value="all">All ${role() === 'admin' ? 'team leads' : 'my team leads'}</option>${tls.map(t => `<option value="${t.id}"${S.tlF === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>`;
+  const tls = scopeTLs(), all = S.tlF === 'all' || !S.tlF.length;
+  const picked = all ? [] : tls.filter(t => S.tlF.includes(t.id));
+  const label = all ? `All ${role() === 'admin' ? 'team leads' : 'my team leads'}` : picked.length === 1 ? picked[0].name : picked.length + ' team leads';
+  return `<div class="note tlpick-wrap">Team lead <details class="tlpick"${S.tlOpen ? ' open' : ''}><summary class="inp">${esc(label)}</summary>
+    <div class="tlpick-menu" role="group" aria-label="Team leads">
+      <label class="tlpick-all"><input type="checkbox" data-tlc="all"${all ? ' checked' : ''}> All ${role() === 'admin' ? 'team leads' : 'my team leads'}</label>
+      ${tls.map(t => `<label><input type="checkbox" data-tlc="${t.id}"${!all && S.tlF.includes(t.id) ? ' checked' : ''}> ${esc(t.name)}</label>`).join('')}
+      ${all ? '' : `<button type="button" class="tlpick-clear" data-tlc-clear="1">Clear selection</button>`}
+    </div></details></div>`;
 }
 function chrome() {
   const r = role(); let name, sub;
@@ -1087,7 +1128,7 @@ function evenSplit(tlId) {
   L.filter(x => !tg.tl[tlId][tg.ic[x.id].type === 'RP' ? 'rp' : 'otp']).forEach(x => tg.ic[x.id].v = 0);
 }
 const splitOf = (tlId, type) => icsOf(tlId).filter(x => DB.targets.ic[x.id].type === type).reduce((a, x) => a + (+DB.targets.ic[x.id].v || 0), 0);
-const achOf = (tlId, type) => icsOf(tlId).reduce((a, x) => { const g = agg([x], ALL); return a + (type === 'RP' ? g.rp : g.otp); }, 0);
+const achOf = (tlId, type) => icsOf(tlId).concat(TLP.filter(tp => tp.tl === tlId)).reduce((a, x) => { const g = agg([x], ALL); return a + (type === 'RP' ? g.rp : g.otp); }, 0);
 const splitOK = tlId => Math.abs(splitOf(tlId, 'RP') - DB.targets.tl[tlId].rp) < .01 && Math.abs(splitOf(tlId, 'OTP') - DB.targets.tl[tlId].otp) < 1;
 
 /* ════════════════ filter bars ════════════════ */
@@ -1173,17 +1214,17 @@ function vBoard() {
 
 /* ════════════════ leaders: team numbers ════════════════ */
 function vTeamNums() {
-  const list = scope(), f = agg(list);
+  const list = numScope(), f = agg(list);
   $('view').innerHTML = `${liveNote()}
     ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() })}<div style="margin-top:14px">${club(list)}</div>
-    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${list.length} people</small></div>
+    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}</small></div>
       <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
       <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>${filterNote()}</small></div>
       <div class="kpi"><span>RP units</span><b>${fmt1(f.rp)}</b></div><div class="kpi"><span>OTP revenue</span><b>${lakh(f.otp)}</b></div></div>
     <section class="panel"><div class="ph"><h2>By team member</h2><p>Target progress uses all sales; demos and DC2E follow the filters · click a row for detail</p></div><div class="pb tw"><table>
       <tr><th class="n">#</th><th>Name</th><th>Team lead</th><th>Type</th><th class="n">Target</th><th class="n">Achieved</th><th>Target achieved</th><th class="n">Demos</th><th class="n">Units</th><th class="n">DC2E</th><th class="n">Same-month DC2E</th><th>Audits (Daily KRA)</th></tr>
-      ${list.map(ic => ({ ic, q: numsOf(ic), f: agg([ic]) })).sort((a, b) => (b.q.att || 0) - (a.q.att || 0)).map((r, i) => `<tr class="click" data-act="ic" data-id="${r.ic.id}"><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}</span></td><td>${esc(TL(r.ic.tl).name)}</td><td>${r.q.type}</td>
-        <td class="n">${fmtV(r.q.type, r.q.tgt)}</td><td class="n">${fmtV(r.q.type, r.q.ach)}</td><td><div class="dbar"><div class="bar"><i class="${r.q.att >= 1 ? 'good' : r.q.att >= .8 ? 'mid' : 'bad'}" style="width:${Math.min(100, (r.q.att || 0) * 100)}%"></i></div><span class="mono" style="width:44px;text-align:right">${pct(r.q.att)}</span></div></td>
+      ${list.map(ic => ({ ic, q: numsOf(ic), f: agg([ic]) })).sort((a, b) => (b.q.att || 0) - (a.q.att || 0)).map((r, i) => `<tr class="click" data-act="ic" data-id="${r.ic.id}"><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}${r.ic.isTL ? ' <small class="note">TL</small>' : ''}</span></td><td>${esc(TL(r.ic.tl).name)}</td>${r.ic.isTL ? `<td>Team lead</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td><td class="note">Own demos and sales · counted in the team total</td>` : `<td>${r.q.type}</td>
+        <td class="n">${fmtV(r.q.type, r.q.tgt)}</td><td class="n">${fmtV(r.q.type, r.q.ach)}</td><td><div class="dbar"><div class="bar"><i class="${r.q.att >= 1 ? 'good' : r.q.att >= .8 ? 'mid' : 'bad'}" style="width:${Math.min(100, (r.q.att || 0) * 100)}%"></i></div><span class="mono" style="width:44px;text-align:right">${pct(r.q.att)}</span></div></td>`}
         <td class="n">${r.f.demos}</td><td class="n">${fmt1(r.f.units)}</td><td class="n">${pct(r.f.dc2e, 1)}</td><td class="n ${r.q.smdc >= .35 ? 'good' : 'bad'}">${pct(r.q.smdc, 1)}</td><td>${auditChips(auditSum(r.ic))}</td></tr>`).join('')}</table></div></section>
     ${coachPanel(list)}
     <section class="panel" style="margin-top:18px"><div class="ph"><h2>Day by day</h2><p>${filterNote()}</p></div><div class="pb">${trendSVG(f)}</div></section>
@@ -1407,8 +1448,8 @@ function momFilter() {
   if (r === 'ic') { const me = IC(meId()); return x => x[2] === me.own; }
   return x => { const b = DATA.tlb[x[3]];
     if (r === 'tl') return b.tl === meId();
-    if (r === 'mgr') return b.mgr === meId() && (S.tlF === 'all' || b.tl === S.tlF);
-    return b.kind !== 'Not this floor' && (S.mF === 'all' || b.mgr === S.mF) && (S.tlF === 'all' || b.tl === S.tlF); };
+    if (r === 'mgr') return b.mgr === meId() && tlOn(b.tl);
+    return b.kind !== 'Not this floor' && (S.mF === 'all' || b.mgr === S.mF) && tlOn(b.tl); };
 }
 function momAgg(group) {
   const V = DATA.vocab, ci = S.mctry === 'all' ? -1 : V.country.indexOf(S.mctry);
@@ -1544,7 +1585,7 @@ function rosterModal(tlId) {
 /* ════════════════ PEOPLE (BM, admin) ════════════════ */
 function vPeople() {
   const tls = scopeTLs(), ids = new Set(tls.map(t => t.id));
-  const list = ICS.filter(x => ids.has(x.tl) || (!x.tl && role() === 'admin')).filter(x => (S.tlF === 'all' || x.tl === S.tlF) && (S.pst === 'all' || (S.pst === 'active') === x.active));
+  const list = ICS.filter(x => ids.has(x.tl) || (!x.tl && role() === 'admin')).filter(x => tlOn(x.tl) && (S.pst === 'all' || (S.pst === 'active') === x.active));
   const tlOpts = sel => tls.map(t => `<option value="${t.id}"${sel === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('');
   $('view').innerHTML = `<div class="fbar"><span class="fl">Show</span><div class="segs">${[['active', 'Active'], ['inactive', 'Inactive'], ['all', 'All']].map(([v, l]) => `<button class="${S.pst === v ? 'on' : ''}" data-act="pst" data-v="${v}">${l}</button>`).join('')}</div>${tlFilter()}
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-p" data-act="padd">+ Add SM</button><button class="btn" data-act="tadd">+ Add TL</button></span></div>
@@ -1713,6 +1754,10 @@ function applyNumbers(n2) {
   ICS.forEach(ic => { const o = ownBy[ic.email] != null ? ownBy[ic.email] : -1; ic.own = o; const D = [], E = [];
     if (o >= 0) { DATA.DM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) D.push([r[1], r[4], ...r.slice(5, 12)]); }); DATA.EM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); }); }
     ic.d = { D, E, F: fu[ic.email] || [] }; });
+  /* team leads also take demos and close sales: give them their own rows, so team totals include them */
+  TLP.forEach(tp => { const o = ownBy[tp.email] != null ? ownBy[tp.email] : -1; const D = [], E = [];
+    if (o >= 0) { DATA.DM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) D.push([r[1], r[4], ...r.slice(5, 12)]); }); DATA.EM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); }); }
+    tp.own = o; tp.d = { D, E, F: [] }; });
   const T = n2.targets || { tl: {}, sm: {} };
   DB.targets = { tl: {}, ic: {}, hist: (n2.hist || []).slice().reverse() };
   TLS.forEach(t => DB.targets.tl[t.id] = T.tl[t.email] || { rp: 0, dc2e: 35, otp: 0 });
@@ -1825,7 +1870,7 @@ function tile(ic, i) {
 function vNow() {
   const list = scope(), c = {};
   list.forEach(ic => { const n = tonight(ic), k = n.st === 'working' ? (n.s.mode === 'wfh' ? 'wfh' : 'office') : n.st; c[k] = (c[k] || 0) + 1; });
-  const tls = scopeTLs().filter(t => S.tlF === 'all' || t.id === S.tlF);
+  const tls = scopeTLs().filter(t => tlOn(t.id));
   const K = (l, v, cls = '', sm = '') => `<div class="kpi ${cls}"><span>${l}</span><b>${v || 0}</b><small>${sm}</small></div>`;
   $('view').innerHTML = `${filterBar({ type: true, extra: tlFilter() })}
     <div class="kpis" style="margin-top:14px">${K('In office', c.office, 'pos')}${K('Working from home', c.wfh)}${K('On break', (c.break || 0) + (c.overrun || 0), c.overrun ? 'neg' : '', c.overrun ? c.overrun + ' over 1 hour' : 'within 1 hour')}${K('Not in yet', (c.notin || 0) + (c.lop || 0), (c.notin || c.lop) ? 'neg' : '')}${K('Done', (c.done || 0) + (c.short || 0) + (c.excused || 0), c.short ? 'neg' : '', c.short ? c.short + ' short' : '')}${K('Leave / week off', (c.leave || 0) + (c.weekoff || 0) + (c.holiday || 0))}</div>
@@ -2009,9 +2054,19 @@ document.addEventListener('input', ev => {
     $('sums').innerHTML = sumLines(meId()); $('saveSplit').disabled = !splitOK(meId());
   }
 });
+document.addEventListener('click', ev => {
+  if (ev.target.closest && ev.target.closest('[data-tlc-clear]')) { S.tlF = 'all'; S.tlOpen = true; render(); S.tlOpen = false; return; }
+  document.querySelectorAll('details.tlpick[open]').forEach(d => { if (!d.contains(ev.target)) d.removeAttribute('open'); });
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') document.querySelectorAll('details.tlpick[open]').forEach(d => d.removeAttribute('open')); });
 document.addEventListener('change', ev => {
   if (ev.target.id === 'asUser') { S.as = ev.target.value; S.view = null; S.tlF = 'all'; S.typeF = 'all'; S.lbType = null; closeModal(); render(); scrollTo(0, 0); }
-  if (ev.target.dataset.chg === 'tlF') { S.tlF = ev.target.value; render(); }
+  if (ev.target.dataset.tlc) {
+    const id = ev.target.dataset.tlc;
+    if (id === 'all') S.tlF = 'all';
+    else { let cur = S.tlF === 'all' ? [] : S.tlF.slice(); cur = ev.target.checked ? cur.concat(id) : cur.filter(x => x !== id); S.tlF = cur.length && cur.length < scopeTLs().length ? cur : 'all'; }
+    S.tlOpen = true; render(); S.tlOpen = false;
+  }
   if (ev.target.dataset.tt) { const tg = DB.targets.ic[ev.target.dataset.tt]; tg.type = ev.target.value; tg.v = 0; render(); toast('Target type changed. Re-enter the target or use Split evenly.'); }
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeModal(); });
@@ -2029,7 +2084,16 @@ setInterval(() => {
 }, 1000);
 
 /* boot */
-if (IS_LIVE) tliveBoot(); else {
+if (!IS_LIVE && !ICS.length && !KEYS_MISSING) {
+  /* opened outside the website (a preview or a downloaded copy): there is no sample data to show */
+  document.querySelector('.proto').style.display = 'none';
+  $('view').innerHTML = `<section class="panel" style="max-width:620px;margin:40px auto"><div class="ph"><h2>Open this page from the website</h2></div><div class="pb">
+    <p>This is the live Team page. It only works when opened from bhanzudashboard.github.io/businesscommandcenter/team.html, where it connects to your sheet and asks you to sign in. A preview or a copy opened from your computer has no data to show.</p></div></section>`;
+} else if (KEYS_MISSING) {
+  document.querySelector('.proto').style.display = 'none';
+  $('view').innerHTML = `<section class="panel" style="max-width:620px;margin:40px auto"><div class="ph"><h2>The Team page can’t connect yet</h2></div><div class="pb">
+    <p>It couldn’t find the web app link and sign-in ID it needs. Open <b>team.html</b> on GitHub, click the pencil, search for <b>const LIVE</b>, and paste the same two values that are in kra.html between the quotes after <b>ENDPOINT:</b> and <b>CLIENT_ID:</b>. Then commit, wait two minutes and press Cmd + Shift + R.</p></div></section>`;
+} else if (IS_LIVE) tliveBoot(); else {
 seed();
 const sagar = ICS.find(x => /^Sagar/.test(x.name)) || icsOf('prabhu')[0];
 const otpIC = icsOf('umar')[0], slow = icsOf('prabhu').filter(x => x !== sagar).find(x => paceOf(x).behind && tonight(x).st === 'working');
