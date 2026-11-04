@@ -624,6 +624,7 @@ const ICS = DATA.people.map(p => {
 }).sort((a, b) => a.name.localeCompare(b.name));
 const IC = id => ICS.find(x => x.id === id);
 const TLP = TLS.map(t => ({ id: 'tl-' + t.id, name: t.name, email: t.email, tl: t.id, isTL: true, home: 'TL', d: { D: [], E: [], F: [] } }));
+const NRP = [];   // per team lead: demos and sales under that team whose owner is not on the Team Roster
 const PERSON = id => IC(id) || TLP.find(p => p.id === id);
 const ACTIVE = () => ICS.filter(x => x.active);
 const PEOPLE = () => ICS.filter(x => x.active).concat(TLP);
@@ -894,7 +895,7 @@ function mail(type, ic, k, x) {
 </script>
 <script>
 /* ════════════════ state & chrome ════════════════ */
-const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'Math', bsale: 'all', bctry: 'all', bprod: 'Math', typeF: 'all', tlF: 'all', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
+const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'Math', bsale: 'all', bctry: 'all', bprod: 'Math', typeF: 'all', tlF: 'all', srcF: 'all', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
 const role = () => S.as.split(':')[0];
 const meId = () => S.as.split(':')[1];
 const isPhone = () => S.phone || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
@@ -920,7 +921,26 @@ function scope() {
 function numScope() {
   const list = scope(); if (role() === 'ic') return list;
   const tls = scopeTLs().filter(t => tlOn(t.id) && (S.typeF === 'all' || t.team === S.typeF));
-  return list.concat(TLP.filter(tp => tls.some(t => t.id === tp.tl) && (tp.d.D.length || tp.d.E.length)));
+  const has = x => x.d.D.length || x.d.E.length;
+  return list.concat(TLP.filter(tp => tls.some(t => t.id === tp.tl) && has(tp)), NRP.filter(x => tls.some(t => t.id === x.tl) && has(x)));
+}
+/* Source filter: 'all', or an array of source names */
+function srcSet(sel) { if (!sel || sel === 'all' || !sel.length) return null; const V = DATA.vocab.source || []; return new Set(sel.map(n => V.indexOf(n)).filter(i => i >= 0)); }
+function srcList() {
+  const V = DATA.vocab, si = DI('source'), n = {};
+  DATA.DM.forEach(r => { if (r[0] === DATA.cur) n[r[6]] = (n[r[6]] || 0) + 1; });
+  return Object.keys(n).map(Number).sort((a, b) => n[b] - n[a]).map(i => V.source[i]).filter(x => x != null);
+}
+function srcFilter() {
+  const all = S.srcF === 'all' || !S.srcF.length, L = srcList();
+  if (!L.length) return '';
+  const label = all ? 'All sources' : S.srcF.length === 1 ? S.srcF[0] : S.srcF.length + ' sources';
+  return `<div class="note tlpick-wrap">Source <details class="tlpick"${S.srcOpen ? ' open' : ''}><summary class="inp">${esc(label)}</summary>
+    <div class="tlpick-menu" role="group" aria-label="Sources">
+      <label class="tlpick-all"><input type="checkbox" data-srcc="all"${all ? ' checked' : ''}> All sources</label>
+      ${L.map(v => `<label><input type="checkbox" data-srcc="${esc(v)}"${!all && S.srcF.includes(v) ? ' checked' : ''}> ${esc(v)}</label>`).join('')}
+      ${all ? '' : `<button type="button" class="tlpick-clear" data-srcc-clear="1">Clear selection</button>`}
+    </div></details></div>`;
 }
 /* Team lead filter: 'all', or an array of the team lead ids that are ticked */
 function tlOn(id) { return S.tlF === 'all' || (Array.isArray(S.tlF) && S.tlF.includes(id)); }
@@ -1066,20 +1086,23 @@ const typeOf = ic => (DB.targets && DB.targets.ic[ic.id] && DB.targets.ic[ic.id]
    English shows standalone English sales only, so Math + English = all sales */
 const saleW = (pi, prod) => pi < 0 ? 1 : pi === 2 ? (prod === 2 ? 1 : 0) : pi === 0 ? (prod === 0 || prod === 2 ? 1 : 0) : (prod === 1 ? 1 : 0);
 function agg(list, f) {
-  f = f || { sale: S.sale, ctry: S.ctry, prod: S.prod };
+  f = f || { sale: S.sale, ctry: S.ctry, prod: S.prod, src: S.srcF };
   const V = DATA.vocab, ci = !f.ctry || f.ctry === 'all' ? -1 : V.country.indexOf(f.ctry);
   const pi = !f.prod || f.prod === 'all' ? -1 : DATA.prod.indexOf(f.prod), si = pi >= 0 && pi < 2 ? V.subj.indexOf(f.prod) : -1;
   const okS = x => !f.sale || f.sale === 'all' || (f.sale === 'sm' ? x === 1 : x === 0);
+  /* demos: Math demos (a bundle demo is a Math demo) for All, Math and Bundle; English demos only for English */
+  const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math');
+  const src = srcSet(f.src), okSrc = i => !src || src.has(i);
   const o = { demos: 0, units: 0, bun: 0, smu: 0, rp: 0, otp: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
   DIMK.forEach(k => o.dims[k] = {});
   list.forEach(ic => {
     ic.d.D.forEach(r => {   /* Math / English: that subject’s demos. Bundle: all demos, since a bundle can follow either */
-      if (!okS(r[1]) || (ci >= 0 && r[2 + DI('country')] !== ci) || (si >= 0 && r[2 + DI('subj')] !== si)) return;
+      if (!okS(r[1]) || (ci >= 0 && r[2 + DI('country')] !== ci) || r[2 + DI('subj')] !== dsi || !okSrc(r[2 + DI('source')])) return;
       o.demos++; o.d[r[0] - 1]++;
       DIMK.forEach((k, j) => { const v = V[k][r[2 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[0]++; });
     });
     ic.d.E.forEach(r => {
-      const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci)) return;
+      const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci) || !okSrc(r[6 + DI('source')])) return;
       const un = r[2] * w, rv = r[3] * w;
       o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[5]) o.smu += un; if (r[4] === 2) o.bun += un;
       if (V.team[r[6 + DI('team')]] === 'RP') o.rp += un; else o.otp += rv;
@@ -1095,7 +1118,7 @@ const ALL = { sale: 'all', ctry: 'all' }, SM = { sale: 'sm', ctry: 'all' };
 function numsOf(ic) {
   const a = agg([ic], ALL), type = typeOf(ic), t = DB.targets.ic[ic.id] || { v: 0 };
   const ach = type === 'RP' ? a.rp : a.otp;
-  let daysLeft = 0; for (let k = TODAY; k.slice(0, 7) === MONTH; k = addDays(k, 1)) if (workingDay(ic, k)) daysLeft++;
+  let daysLeft = 0; if (!ic.isNR) for (let k = TODAY; k.slice(0, 7) === MONTH; k = addDays(k, 1)) if (workingDay(ic, k)) daysLeft++;
   return { type, demos: a.demos, units: a.units, rp: a.rp, otp: a.otp, rev: a.rev, dc2e: a.dc2e, smdc: a.demos ? a.smu / a.demos : null, smDemos: a.demos, tgt: t.v, ach,
     att: t.v ? ach / t.v : null, daysLeft, perDay: daysLeft ? Math.max(0, t.v - ach) / daysLeft : 0 };
 }
@@ -1128,7 +1151,7 @@ function evenSplit(tlId) {
   L.filter(x => !tg.tl[tlId][tg.ic[x.id].type === 'RP' ? 'rp' : 'otp']).forEach(x => tg.ic[x.id].v = 0);
 }
 const splitOf = (tlId, type) => icsOf(tlId).filter(x => DB.targets.ic[x.id].type === type).reduce((a, x) => a + (+DB.targets.ic[x.id].v || 0), 0);
-const achOf = (tlId, type) => icsOf(tlId).concat(TLP.filter(tp => tp.tl === tlId)).reduce((a, x) => { const g = agg([x], ALL); return a + (type === 'RP' ? g.rp : g.otp); }, 0);
+const achOf = (tlId, type) => icsOf(tlId).concat(TLP.filter(tp => tp.tl === tlId), NRP.filter(x => x.tl === tlId)).reduce((a, x) => { const g = agg([x], ALL); return a + (type === 'RP' ? g.rp : g.otp); }, 0);
 const splitOK = tlId => Math.abs(splitOf(tlId, 'RP') - DB.targets.tl[tlId].rp) < .01 && Math.abs(splitOf(tlId, 'OTP') - DB.targets.tl[tlId].otp) < 1;
 
 /* ════════════════ filter bars ════════════════ */
@@ -1140,7 +1163,7 @@ function filterBar(o) {
     ${o.sale ? `<span class="fl">Lead</span>${seg(K.sale, [['all', 'All leads'], ['sm', 'This month’s leads'], ['roll', 'Older leads']])}` : ''}
     ${o.ctry ? `<span class="fl">Country</span>${seg(K.ctry, [['all', 'US + CA'], ['US', 'US'], ['CA', 'CA']])}` : ''}${o.extra || ''}</div>`;
 }
-const filterNote = (p = '') => `${{ all: 'All subjects', Math: 'Math, including bundles', English: 'standalone English only (bundles are in Math)', Bundle: 'Math + English bundles only (DC2E over all demos)' }[S[p + 'prod']]} · ${{ all: 'all leads', sm: 'leads from this month', roll: 'older leads' }[S[p + 'sale']]} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
+const filterNote = (p = '') => `${{ all: 'all sales over Math demos', Math: 'Math, including bundles', English: 'standalone English only (bundles are in Math)', Bundle: 'Math + English bundles over Math demos' }[S[p + 'prod']]}${S.srcF !== 'all' ? ' · ' + (S.srcF.length === 1 ? S.srcF[0] : S.srcF.length + ' sources') : ''} · ${{ all: 'all leads', sm: 'leads from this month', roll: 'older leads' }[S[p + 'sale']]} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
 const BKEYS = { sale: 'bsale', ctry: 'bctry', prod: 'bprod' };
 
 /* ════════════════ IC: my numbers ════════════════ */
@@ -1152,7 +1175,7 @@ function vNums() {
       <div class="kpi att">${ringSVG(q.att, q.att >= 1 ? 'var(--pos)' : 'var(--accent)')}<div><span>${q.type === 'RP' ? 'RP units' : 'OTP revenue'} vs target</span><b>${q.type === 'RP' ? fmt1(q.ach) + ' / ' + fmt1(q.tgt) : lakh(q.ach)}</b><small>${q.type === 'RP' ? 'units' : 'of ' + lakh(q.tgt)}</small></div></div>
       <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>demo and sale both this month · target 35%</small></div></div>
       <div class="kpi"><span>Needed per working day</span><b>${fmtV(q.type, q.perDay)}</b><small>${q.daysLeft} working day${q.daysLeft === 1 ? '' : 's'} left this month</small></div></div>
-    <section class="panel"><div class="ph"><h2>My performance</h2><p>${filterNote()}</p></div><div class="pb">${filterBar({ prod: true, sale: true, ctry: true })}
+    <section class="panel"><div class="ph"><h2>My performance</h2><p>${filterNote()}</p></div><div class="pb">${filterBar({ prod: true, sale: true, ctry: true, extra: srcFilter() })}
       <div class="kpis" style="margin:16px 0 6px">
         <div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${f.demos}</b></div>
         <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
@@ -1179,7 +1202,7 @@ function trendSVG(f) {
     <div class="tleg"><span><i style="background:var(--accent-line)"></i>Demos per day</span><span><i style="background:var(--pos)"></i>Units enrolled per day</span></div>`;
 }
 function breakdown(list) {
-  const f = agg(list, { sale: S.bsale, ctry: S.bctry, prod: S.bprod });
+  const f = agg(list, { sale: S.bsale, ctry: S.bctry, prod: S.bprod, src: S.srcF });
   const arr = Object.entries(f.dims[S.dim] || {}).sort((a, b) => b[1][0] - a[1][0]), tot = sum(arr.map(r => r[1][0]));
   return `${filterBar({ prod: true, sale: true, ctry: true, keys: BKEYS })}
     <div style="margin-top:12px"><span class="fl note" style="margin-right:8px">Break down by</span><div class="segs" role="group" aria-label="Break down by">${DATA.dims.map(([id, l]) => `<button class="${S.dim === id ? 'on' : ''}" data-act="dim" data-v="${id}">${l}</button>`).join('')}</div></div>
@@ -1213,17 +1236,24 @@ function vBoard() {
 }
 
 /* ════════════════ leaders: team numbers ════════════════ */
+/* a team's demos and sales whose owner is not on the Team Roster: shown so the team total adds up */
+function nrRowHTML(r, i) {
+  const who = Object.entries(r.ic.owners).sort((a, b) => b[1].d + b[1].u - a[1].d - a[1].u).map(([n, c]) => `${esc(n)} (${[c.d ? c.d + ' demo' + (c.d === 1 ? '' : 's') : '', c.u ? fmt1(c.u) + ' unit' + (c.u === 1 ? '' : 's') : ''].filter(Boolean).join(', ')})`).join(' · ');
+  return `<tr><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av" style="background:var(--warn-bg);color:var(--warn)">?</span>Not on roster</span></td><td>${esc(TL(r.ic.tl).name)}</td><td>—</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td>
+    <td class="note" style="white-space:normal;min-width:240px">${who || '—'}<br><small>Add them to the Team Roster, or fix their CRM Owner Name, to count them under a person</small></td>
+    <td class="n">${r.f.demos}</td><td class="n">${fmt1(r.f.units)}</td><td class="n">${pct(r.f.dc2e, 1)}</td><td class="n">—</td><td></td></tr>`;
+}
 function vTeamNums() {
   const list = numScope(), f = agg(list);
   $('view').innerHTML = `${liveNote()}
-    ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() })}<div style="margin-top:14px">${club(list)}</div>
-    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}</small></div>
+    ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() + srcFilter() })}<div style="margin-top:14px">${club(list)}</div>
+    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL && !x.isNR).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}${list.some(x => x.isNR) ? ' + not on roster' : ''}</small></div>
       <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
       <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>${filterNote()}</small></div>
       <div class="kpi"><span>RP units</span><b>${fmt1(f.rp)}</b></div><div class="kpi"><span>OTP revenue</span><b>${lakh(f.otp)}</b></div></div>
     <section class="panel"><div class="ph"><h2>By team member</h2><p>Target progress uses all sales; demos and DC2E follow the filters · click a row for detail</p></div><div class="pb tw"><table>
       <tr><th class="n">#</th><th>Name</th><th>Team lead</th><th>Type</th><th class="n">Target</th><th class="n">Achieved</th><th>Target achieved</th><th class="n">Demos</th><th class="n">Units</th><th class="n">DC2E</th><th class="n">Same-month DC2E</th><th>Audits (Daily KRA)</th></tr>
-      ${list.map(ic => ({ ic, q: numsOf(ic), f: agg([ic]) })).sort((a, b) => (b.q.att || 0) - (a.q.att || 0)).map((r, i) => `<tr class="click" data-act="ic" data-id="${r.ic.id}"><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}${r.ic.isTL ? ' <small class="note">TL</small>' : ''}</span></td><td>${esc(TL(r.ic.tl).name)}</td>${r.ic.isTL ? `<td>Team lead</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td><td class="note">Own demos and sales · counted in the team total</td>` : `<td>${r.q.type}</td>
+      ${list.map(ic => ({ ic, q: numsOf(ic), f: agg([ic]) })).sort((a, b) => (a.ic.isNR - b.ic.isNR) || (a.ic.isTL - b.ic.isTL) || (b.q.att || 0) - (a.q.att || 0)).map((r, i) => r.ic.isNR ? nrRowHTML(r, i) : `<tr class="click" data-act="ic" data-id="${r.ic.id}"><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}${r.ic.isTL ? ' <small class="note">TL</small>' : ''}</span></td><td>${esc(TL(r.ic.tl).name)}</td>${r.ic.isTL ? `<td>Team lead</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td><td class="note">Own demos and sales · counted in the team total</td>` : `<td>${r.q.type}</td>
         <td class="n">${fmtV(r.q.type, r.q.tgt)}</td><td class="n">${fmtV(r.q.type, r.q.ach)}</td><td><div class="dbar"><div class="bar"><i class="${r.q.att >= 1 ? 'good' : r.q.att >= .8 ? 'mid' : 'bad'}" style="width:${Math.min(100, (r.q.att || 0) * 100)}%"></i></div><span class="mono" style="width:44px;text-align:right">${pct(r.q.att)}</span></div></td>`}
         <td class="n">${r.f.demos}</td><td class="n">${fmt1(r.f.units)}</td><td class="n">${pct(r.f.dc2e, 1)}</td><td class="n ${r.q.smdc >= .35 ? 'good' : 'bad'}">${pct(r.q.smdc, 1)}</td><td>${auditChips(auditSum(r.ic))}</td></tr>`).join('')}</table></div></section>
     ${coachPanel(list)}
@@ -1375,6 +1405,7 @@ function coachGap(ic) {
   return (_gapCache[ic.id] = best);
 }
 function coachPanel(list) {
+  list = list.filter(x => !x.isNR && !x.isTL);   // coaching is for team members
   const rows = list.map(ic => ({ ic, g: coachGap(ic), a: auditSum(ic) })).filter(x => x.g).sort((a, b) => b.g.score - a.g.score);
   return `<section class="panel" style="margin-top:18px"><div class="ph"><h2>Coaching gaps</h2><p>Each person’s weakest segment against their own team’s average (at least 6 of their demos in it)</p></div><div class="pb tw"><table>
     <tr><th>Team member</th><th>Team lead</th><th>Weakest segment</th><th class="n">Their DC2E</th><th class="n">Team DC2E</th><th class="n">Their demos</th><th>Audit quality</th></tr>
@@ -1455,10 +1486,11 @@ function momAgg(group) {
   const V = DATA.vocab, ci = S.mctry === 'all' ? -1 : V.country.indexOf(S.mctry);
   const pi = S.mprod === 'all' ? -1 : DATA.prod.indexOf(S.mprod), si = pi === 0 || pi === 1 ? V.subj.indexOf(S.mprod) : -1;
   const okS = x => S.msale === 'all' || (S.msale === 'sm' ? x === 1 : x === 0), F = momFilter(), out = {};
+  const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math'), src = srcSet(S.srcF), okSrc = i => !src || src.has(i);
   const cell = (k, m) => (out[k] = out[k] || PER.list.map(() => ({ d: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 })))[m];
   const at = r => PER.of(rowKey(r));
-  DATA.DM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || !okS(r[4]) || (ci >= 0 && r[8] !== ci) || (si >= 0 && r[10] !== si)) return; cell(group(r, 'd'), p).d++; });
-  DATA.EM.forEach(r => { const p = at(r), w = saleW(pi, r[6]); if (p < 0 || !w || !F(r) || !okS(r[8]) || (ci >= 0 && r[12] !== ci)) return;
+  DATA.DM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || !okS(r[4]) || (ci >= 0 && r[8] !== ci) || r[10] !== dsi || !okSrc(r[6])) return; cell(group(r, 'd'), p).d++; });
+  DATA.EM.forEach(r => { const p = at(r), w = saleW(pi, r[6]); if (p < 0 || !w || !F(r) || !okS(r[8]) || (ci >= 0 && r[12] !== ci) || !okSrc(r[10])) return;
     const c = cell(group(r, 'e'), p), un = r[4] * w, rv = r[5] * w; c.u += un; c.rev += rv; if (r[7]) c.smu += un; if (V.team[r[15]] === 'RP') c.rp += un; else c.otp += rv; });
   return out;
 }
@@ -1502,7 +1534,7 @@ function vMoM() {
   const [dl, di, ei] = MDIM[S.mdim], V = DATA.vocab, lab = (t, v) => S.mdim === 'lead' ? (v ? 'This month’s leads' : 'Older leads') : V[S.mdim][v];
   const bd = momAgg((x, t) => lab(t, x[t === 'd' ? di : ei]));
   const bdRows = Object.entries(bd).filter(([k, a]) => k !== 'Unknown' && sum(a.map(c => c.d)) >= 20).sort((x, y) => sum(y[1].map(c => c.d)) - sum(x[1].map(c => c.d)));
-  $('view').innerHTML = `${rangeBar}${filterBar({ prod: true, sale: true, ctry: true, keys: { sale: 'msale', ctry: 'mctry', prod: 'mprod' }, extra: mgrSel + tlFilter() })}
+  $('view').innerHTML = `${rangeBar}${filterBar({ prod: true, sale: true, ctry: true, keys: { sale: 'msale', ctry: 'mctry', prod: 'mprod' }, extra: mgrSel + tlFilter() + srcFilter() })}
     <div class="kpis" style="margin-top:14px">${['d', 'u', 'smdc', r === 'ic' ? (typeOf(IC(meId())) === 'RP' ? 'rp' : 'otp') : 'dc2e'].map(kpi).join('')}</div>
     <section class="panel"><div class="ph"><h2>${r === 'ic' ? 'Your ' + unit + 's' : (PER.weekly ? 'Week by week' : 'Month by month')}</h2><p>${sd(PER.a)} – ${sd(PER.b)} · completed months come from the monthly snapshots</p></div><div class="pb">${momChart(tot)}<div style="margin-top:14px">${table}</div></div></section>
     ${compare}
@@ -1711,7 +1743,7 @@ function applyTeamBoot(b) {
   for (const k in MGRS) delete MGRS[k]; b.people.filter(p => p.r === 'mgr').forEach(p => MGRS[pid(p.e)] = { name: p.n, email: p.e, emp: p.emp });
   ADMINS.length = 0; b.people.filter(p => (p.r === 'admin' || p.r === 'sup') && p.a).sort((x, y) => (y.r === 'sup') - (x.r === 'sup')).forEach(p => ADMINS.push({ id: pid(p.e), name: p.n, email: p.e, sup: p.r === 'sup' }));
   if (ADMINS[0]) Object.assign(ADMIN, ADMINS[0]);
-  TLS.length = 0; b.people.filter(p => p.r === 'tl' && p.a).forEach(p => TLS.push({ id: pid(p.e), email: p.e, name: p.n, emp: p.emp, mgr: pid(p.m), team: 'RP', active: true }));
+  TLS.length = 0; b.people.filter(p => p.r === 'tl' && p.a).forEach(p => TLS.push({ id: pid(p.e), email: p.e, name: p.n, emp: p.emp, mgr: pid(p.m), team: p.t === 'OTP' ? 'OTP' : 'RP', active: true }));
   ICS.length = 0; b.people.filter(p => p.r === 'sm').forEach(p => ICS.push({ id: pid(p.e), name: p.n, email: p.e, emp: p.emp, crm: p.crm, own: -1, tl: pid(p.tl), home: p.t, active: p.a, d: { D: [], E: [], F: [] } }));
   ICS.sort((x, y) => x.name.localeCompare(y.name));
   TLP.length = 0; TLS.forEach(t => TLP.push({ id: 'tl-' + t.id, name: t.name, email: t.email, tl: t.id, isTL: true, home: 'TL', d: { D: [], E: [], F: [] } }));
@@ -1758,6 +1790,14 @@ function applyNumbers(n2) {
   TLP.forEach(tp => { const o = ownBy[tp.email] != null ? ownBy[tp.email] : -1; const D = [], E = [];
     if (o >= 0) { DATA.DM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) D.push([r[1], r[4], ...r.slice(5, 12)]); }); DATA.EM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); }); }
     tp.own = o; tp.d = { D, E, F: [] }; });
+  /* demos and sales under a current team lead's team whose owner is not an active team member or team lead */
+  const onRoster = new Set(); ICS.forEach(ic => { if (ic.active && ic.own >= 0) onRoster.add(ic.own); }); TLP.forEach(tp => { if (tp.own >= 0) onRoster.add(tp.own); });
+  NRP.length = 0; const nrOf = {};
+  TLS.forEach(t => { const x = { id: 'nr-' + t.id, name: 'Not on roster', email: '', tl: t.id, isNR: true, home: 'NR', active: false, owners: {}, d: { D: [], E: [], F: [] } }; nrOf[t.id] = x; NRP.push(x); });
+  const nrRow = r => { if (r[0] !== DATA.cur || onRoster.has(r[2])) return null; const b = DATA.tlb[r[3]]; return b && b.tl && nrOf[b.tl] ? nrOf[b.tl] : null; };
+  const who = (x, r, k) => { const n = (DATA.own[r[2]] || {}).n || 'Unknown'; (x.owners[n] = x.owners[n] || { d: 0, u: 0 })[k] += k === 'd' ? 1 : r[4]; };
+  DATA.DM.forEach(r => { const x = nrRow(r); if (x) { x.d.D.push([r[1], r[4], ...r.slice(5, 12)]); who(x, r, 'd'); } });
+  DATA.EM.forEach(r => { const x = nrRow(r); if (x) { x.d.E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); who(x, r, 'u'); } });
   const T = n2.targets || { tl: {}, sm: {} };
   DB.targets = { tl: {}, ic: {}, hist: (n2.hist || []).slice().reverse() };
   TLS.forEach(t => DB.targets.tl[t.id] = T.tl[t.email] || { rp: 0, dc2e: 35, otp: 0 });
@@ -2056,11 +2096,18 @@ document.addEventListener('input', ev => {
 });
 document.addEventListener('click', ev => {
   if (ev.target.closest && ev.target.closest('[data-tlc-clear]')) { S.tlF = 'all'; S.tlOpen = true; render(); S.tlOpen = false; return; }
+  if (ev.target.closest && ev.target.closest('[data-srcc-clear]')) { S.srcF = 'all'; S.srcOpen = true; render(); S.srcOpen = false; return; }
   document.querySelectorAll('details.tlpick[open]').forEach(d => { if (!d.contains(ev.target)) d.removeAttribute('open'); });
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') document.querySelectorAll('details.tlpick[open]').forEach(d => d.removeAttribute('open')); });
 document.addEventListener('change', ev => {
   if (ev.target.id === 'asUser') { S.as = ev.target.value; S.view = null; S.tlF = 'all'; S.typeF = 'all'; S.lbType = null; closeModal(); render(); scrollTo(0, 0); }
+  if (ev.target.dataset.srcc) {
+    const v = ev.target.dataset.srcc;
+    if (v === 'all') S.srcF = 'all';
+    else { let cur = S.srcF === 'all' ? [] : S.srcF.slice(); cur = ev.target.checked ? cur.concat(v) : cur.filter(x => x !== v); S.srcF = cur.length && cur.length < srcList().length ? cur : 'all'; }
+    S.srcOpen = true; render(); S.srcOpen = false;
+  }
   if (ev.target.dataset.tlc) {
     const id = ev.target.dataset.tlc;
     if (id === 'all') S.tlF = 'all';
