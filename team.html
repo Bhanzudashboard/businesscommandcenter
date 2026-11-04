@@ -573,8 +573,8 @@ tr.dim td{color:var(--mute)}
    ════════════════════════════════════════════════════════════════════ */
 /* ── go live: paste the same two values as in kra.html. Blank = prototype on sample data. ── */
 const LIVE = {
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec',   // your Apps Script web app URL, ending in /exec (same as kra.html)
-  CLIENT_ID: '677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com'   // your Google OAuth client ID (same as kra.html)
+  ENDPOINT: '',   // your Apps Script web app URL, ending in /exec (same as kra.html)
+  CLIENT_ID: ''   // your Google OAuth client ID (same as kra.html)
 };
 const IS_LIVE = !!LIVE.ENDPOINT;
 let LIVE_OFF = 0;
@@ -1021,6 +1021,8 @@ function vMyAtt() {
 /* ════════════════ numbers: one aggregator, every filter ════════════════ */
 const DIMK = DATA.dims.map(d => d[0]), DI = k => DIMK.indexOf(k);
 const typeOf = ic => (DB.targets && DB.targets.ic[ic.id] && DB.targets.ic[ic.id].type) || ic.home;
+/* bundle rule (Option A): a bundle is 1 sale overall, half in Math and half in English */
+const saleW = (pi, prod) => pi < 0 ? 1 : pi === 2 ? (prod === 2 ? 1 : 0) : prod === pi ? 1 : prod === 2 ? 0.5 : 0;
 function agg(list, f) {
   f = f || { sale: S.sale, ctry: S.ctry, prod: S.prod };
   const V = DATA.vocab, ci = !f.ctry || f.ctry === 'all' ? -1 : V.country.indexOf(f.ctry);
@@ -1035,10 +1037,11 @@ function agg(list, f) {
       DIMK.forEach((k, j) => { const v = V[k][r[2 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[0]++; });
     });
     ic.d.E.forEach(r => {
-      if (!okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci) || (pi >= 0 && r[4] !== pi)) return;
-      o.units += r[2]; o.rev += r[3]; o.en += r[2]; o.u[r[0] - 1] += r[2]; if (r[5]) o.smu += r[2];
-      if (V.team[r[6 + DI('team')]] === 'RP') o.rp += r[2]; else o.otp += r[3];
-      DIMK.forEach((k, j) => { const v = V[k][r[6 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[1] += r[2]; });
+      const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci)) return;
+      const un = r[2] * w, rv = r[3] * w;
+      o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[5]) o.smu += un;
+      if (V.team[r[6 + DI('team')]] === 'RP') o.rp += un; else o.otp += rv;
+      DIMK.forEach((k, j) => { const v = V[k][r[6 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[1] += un; });
     });
   });
   const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.en = r2(o.en); o.u = o.u.map(r2);
@@ -1095,7 +1098,7 @@ function filterBar(o) {
     ${o.sale ? `<span class="fl">Lead</span>${seg(K.sale, [['all', 'All leads'], ['sm', 'This month’s leads'], ['roll', 'Older leads']])}` : ''}
     ${o.ctry ? `<span class="fl">Country</span>${seg(K.ctry, [['all', 'US + CA'], ['US', 'US'], ['CA', 'CA']])}` : ''}${o.extra || ''}</div>`;
 }
-const filterNote = (p = '') => `${{ all: 'All subjects', Math: 'Math only', English: 'English only', Bundle: 'Math + English bundles (DC2E over all demos)' }[S[p + 'prod']]} · ${{ all: 'all leads', sm: 'leads from this month', roll: 'older leads' }[S[p + 'sale']]} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
+const filterNote = (p = '') => `${{ all: 'All subjects', Math: 'Math (bundles count half)', English: 'English (bundles count half)', Bundle: 'Math + English bundles only (DC2E over all demos)' }[S[p + 'prod']]} · ${{ all: 'all leads', sm: 'leads from this month', roll: 'older leads' }[S[p + 'sale']]} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
 const BKEYS = { sale: 'bsale', ctry: 'bctry', prod: 'bprod' };
 
 /* ════════════════ IC: my numbers ════════════════ */
@@ -1413,8 +1416,8 @@ function momAgg(group) {
   const cell = (k, m) => (out[k] = out[k] || PER.list.map(() => ({ d: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 })))[m];
   const at = r => PER.of(rowKey(r));
   DATA.DM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || !okS(r[4]) || (ci >= 0 && r[8] !== ci) || (si >= 0 && r[10] !== si)) return; cell(group(r, 'd'), p).d++; });
-  DATA.EM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || !okS(r[8]) || (ci >= 0 && r[12] !== ci) || (pi >= 0 && r[6] !== pi)) return;
-    const c = cell(group(r, 'e'), p); c.u += r[4]; c.rev += r[5]; if (r[7]) c.smu += r[4]; if (V.team[r[15]] === 'RP') c.rp += r[4]; else c.otp += r[5]; });
+  DATA.EM.forEach(r => { const p = at(r), w = saleW(pi, r[6]); if (p < 0 || !w || !F(r) || !okS(r[8]) || (ci >= 0 && r[12] !== ci)) return;
+    const c = cell(group(r, 'e'), p), un = r[4] * w, rv = r[5] * w; c.u += un; c.rev += rv; if (r[7]) c.smu += un; if (V.team[r[15]] === 'RP') c.rp += un; else c.otp += rv; });
   return out;
 }
 const MET = { d: ['Demos', c => c.d, fmtN], u: ['Units', c => c.u, fmt1], dc2e: ['DC2E', c => c.d ? c.u / c.d : null, v => pct(v, 1)], smdc: ['Same-month DC2E', c => c.d ? c.smu / c.d : null, v => pct(v, 1)], rp: ['RP units', c => c.rp, fmt1], otp: ['OTP revenue', c => c.otp, lakh] };
