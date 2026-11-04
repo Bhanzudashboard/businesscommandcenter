@@ -573,11 +573,12 @@ tr.dim td{color:var(--mute)}
    ════════════════════════════════════════════════════════════════════ */
 /* ── go live: paste the same two values as in kra.html. Blank = prototype on sample data. ── */
 const LIVE = {
-  ENDPOINT: 'https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec',   // your Apps Script web app URL, ending in /exec (same as kra.html)
-  CLIENT_ID: '677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com'   // your Google OAuth client ID (same as kra.html)
+  ENDPOINT: '',   // your Apps Script web app URL, ending in /exec (same as kra.html)
+  CLIENT_ID: ''   // your Google OAuth client ID (same as kra.html)
 };
 const IS_LIVE = !!LIVE.ENDPOINT;
 let LIVE_OFF = 0;
+const liveNote = () => IS_LIVE ? `<p class="note" style="margin-bottom:12px">From the US MASTER DB${typeof NUM_BUILT !== 'undefined' && NUM_BUILT ? ', updated ' + fmtT(NUM_BUILT) : ''} · refreshed every 15 minutes · a bundle counts as 1 sale</p>` : '<p class="note" style="margin-bottom:12px">Prototype: real numbers from your US Master DB, shown as this month.</p>';
 const DATA = {"people":[],"tls":[],"mgrs":[],"months":["2026-01"],"cur":0,"thru":1,"own":[],"tlb":[],"DM":[],"EM":[],"vocab":{"eth":[],"source":[],"utm":[],"country":[],"grade":[],"subj":[],"team":[]},"dims":[["eth","Ethnicity"],["source","Source"],["utm","UTM"],["country","Country"],["grade","Grade"],["subj","Subject"],["team","RP / OTP"]],"prod":["Math","English","Bundle"],"stages":[]};
 const RULES = { LATE_MIN: 15, LATE_MAIL_AT: 2, DEV_AT: 0.8, DEV_CHECK_MIN: 90, REM_FIRST: '00:20', REM_EVERY_H: 3, REM_MGR: '07:00', SHIFT_MIN: 9 * 60, BREAK_MIN: 60, AUTO_OUT_MIN: 10 * 60, LOP_AT: '11:30', DC2E_TARGET: 0.35, WARN_BELOW: 0.45, IDLE_FLAG_MIN: 30 };
 const MGRS = Object.fromEntries(DATA.mgrs.map(m => [m.id, { name: m.name, email: m.email, emp: m.emp }]));
@@ -965,7 +966,7 @@ function vShift() {
       ${n.st === 'working' || n.st === 'break' ? `<p class="hb">Keep this tab open on your laptop. It checks in every 5 minutes so your TL can see you’re active.</p>` : ''}
       ${done && !IS_LIVE ? '<div class="acts"><button class="btn" data-act="me" data-x="reset" style="border-style:dashed">Start this shift again (prototype only)</button></div>' : ''}
     </div></section>
-    ${isTL || IS_LIVE ? '' : `<div class="kpis" style="margin-top:18px">${quickNums(ic)}</div>`}
+    ${isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : `<div class="kpis" style="margin-top:18px">${quickNums(ic)}</div>`}
     ${weekStrip(ic)}`;
 }
 
@@ -1101,7 +1102,7 @@ const BKEYS = { sale: 'bsale', ctry: 'bctry', prod: 'bprod' };
 function vNums() {
   if (role() !== 'ic') return vTeamNums();
   const ic = IC(meId()), q = numsOf(ic), f = agg([ic]);
-  $('view').innerHTML = `<p class="note" style="margin-bottom:12px">Prototype: real numbers from your command centre’s August extract, shown as this month.</p>
+  $('view').innerHTML = `${liveNote()}
     <div class="kpis">
       <div class="kpi att">${ringSVG(q.att, q.att >= 1 ? 'var(--pos)' : 'var(--accent)')}<div><span>${q.type === 'RP' ? 'RP units' : 'OTP revenue'} vs target</span><b>${q.type === 'RP' ? fmt1(q.ach) + ' / ' + fmt1(q.tgt) : lakh(q.ach)}</b><small>${q.type === 'RP' ? 'units' : 'of ' + lakh(q.tgt)}</small></div></div>
       <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>demo and sale both this month · target 35%</small></div></div>
@@ -1169,7 +1170,7 @@ function vBoard() {
 /* ════════════════ leaders: team numbers ════════════════ */
 function vTeamNums() {
   const list = scope(), f = agg(list);
-  $('view').innerHTML = `<p class="note" style="margin-bottom:12px">Prototype: real numbers from your command centre’s August extract, shown as this month.</p>
+  $('view').innerHTML = `${liveNote()}
     ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() })}<div style="margin-top:14px">${club(list)}</div>
     <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${list.length} people</small></div>
       <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small>a bundle counts as 1</small></div>
@@ -1258,7 +1259,7 @@ function vFollow() {
       <div class="kpi"><span>Warm</span><b>${all.filter(x => HEAT(x.r[2]) === 'warm').length}</b><small>demo done, may buy later, reactivation</small></div>
       <div class="kpi"><span>Cold</span><b>${all.filter(x => HEAT(x.r[2]) === 'cold').length}</b><small>WIP, attempted, reattempt</small></div></div>
     <section class="panel"><div class="ph"><h2>${mine ? 'Your open demos by stage' : 'Open demos by stage'}</h2><p>Hottest first · click a stage to see the lead IDs</p></div><div class="pb"><div class="fugrid">${STG.map(card).join('')}</div></div></section>
-    ${people}<p class="note" style="margin-top:12px">Prototype: real open demos from your command centre extract. In the live version this list refreshes with the command centre feed.</p>`;
+    ${people}<p class="note" style="margin-top:12px">${IS_LIVE ? 'Open demos from the US MASTER DB this month, refreshed every 15 minutes.' : 'Prototype: real open demos from your command centre extract.'}</p>`;
   countUp();
 }
 function fuModal(o) {
@@ -1645,6 +1646,7 @@ document.addEventListener('change', ev => {
    With LIVE.ENDPOINT filled in, the page signs people in with Google and talks to
    Team.gs. Numbers, targets, follow-ups and month-on-month arrive in Phase 2. */
 const LIVE_VIEWS = new Set(['shift', 'myatt', 'now', 'roster', 'rosters', 'att', 'people', 'exc', 'hol', 'rules']);
+const NUMBER_VIEWS = ['nums', 'mom', 'fu', 'board', 'targets'];   // Phase 2: shown once the numbers load
 const tstore = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del: k => { try { localStorage.removeItem(k); } catch (e) { } } };
 let TSESSION = IS_LIVE ? tstore.get('team.session') : null, LAST_BOOT = 0;
 const DEVICE = (() => { if (!IS_LIVE) return ''; let d = tstore.get('team.device'); if (!d) { d = 'L-' + Math.random().toString(36).slice(2) + Date.now().toString(36); tstore.set('team.device', d); } return d; })();
@@ -1686,9 +1688,41 @@ function applyTeamBoot(b) {
   DB.plog = b.log.map(x => ({ at: x.at, by: x.by, text: x.action + ': ' + x.text }));
   DB.targets = { tl: {}, ic: {}, hist: [] }; ICS.forEach(x => DB.targets.ic[x.id] = { type: x.home, v: 0 }); TLS.forEach(t => DB.targets.tl[t.id] = { rp: 0, dc2e: 35, otp: 0 });
   DB.audits = {}; DB.shout = {}; DB.esc = {}; DB.nudged = null;
+  applyNumbers(b.n2);
   const rl = { sm: 'ic', tl: 'tl', mgr: 'mgr', admin: 'admin', sup: 'admin' }[b.me.role];
   S.as = rl + ':' + pid(b.me.email); if (!MGRS[S.mgr]) S.mgr = Object.keys(MGRS)[0];
 }
+/* Phase 2: numbers, targets, follow-ups, history */
+function applyNumbers(n2) {
+  const okN = !!(n2 && n2.data && n2.data.months && n2.data.months.length);
+  NUMBER_VIEWS.forEach(v => okN ? LIVE_VIEWS.add(v) : LIVE_VIEWS.delete(v));
+  if (!okN) { if (n2 && n2.error) setTimeout(() => toast(n2.error), 600); return; }
+  const d = n2.data, put = (arr, v) => { arr.length = 0; v.forEach(x => arr.push(x)); };
+  put(DATA.months, d.months); DATA.cur = d.cur; DATA.thru = d.thru;
+  put(DATA.own, d.own); put(DATA.tlb, d.tlb.map(t => ({ n: t.n, tl: t.tl ? pid(t.tl) : '', mgr: t.mgr ? pid(t.mgr) : '', kind: t.kind })));
+  Object.keys(DATA.vocab).forEach(k => delete DATA.vocab[k]); Object.assign(DATA.vocab, d.vocab);
+  put(DATA.DM, d.DM); put(DATA.EM, d.EM); put(DATA.stages, ['Payment Link Sent', 'Partial Payment / Downpayment', 'AD Positive', 'Demo Completed', 'AD May Buy Later', 'AD Reactivation', 'AD-WIP', 'AD Attempted', 'AD- Reattempt', 'Future Prospect']);
+  const curM = DATA.months[DATA.cur]; DATA_THROUGH = curM + '-' + String(DATA.thru).padStart(2, '0');
+  MDAYS = new Date(Date.UTC(+curM.slice(0, 4), +curM.slice(5, 7), 0)).getUTCDate();
+  const ownBy = {}; DATA.own.forEach((o, i) => { if (o.e) ownBy[o.e] = i; });
+  const fu = {}; d.fu.forEach(f => (fu[f[0]] = fu[f[0]] || []).push(f.slice(1)));
+  ICS.forEach(ic => { const o = ownBy[ic.email] != null ? ownBy[ic.email] : -1; ic.own = o; const D = [], E = [];
+    if (o >= 0) { DATA.DM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) D.push([r[1], r[4], ...r.slice(5, 12)]); }); DATA.EM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); }); }
+    ic.d = { D, E, F: fu[ic.email] || [] }; });
+  const T = n2.targets || { tl: {}, sm: {} };
+  DB.targets = { tl: {}, ic: {}, hist: (n2.hist || []).slice().reverse() };
+  TLS.forEach(t => DB.targets.tl[t.id] = T.tl[t.email] || { rp: 0, dc2e: 35, otp: 0 });
+  ICS.forEach(ic => DB.targets.ic[ic.id] = T.sm[ic.email] ? { type: T.sm[ic.email].type, v: T.sm[ic.email].v } : { type: ic.home, v: 0 });
+  const byE = {}; ICS.forEach(ic => byE[ic.email] = ic.id);
+  DB.audits = {}; Object.keys(n2.audits || {}).forEach(e => { if (byE[e]) DB.audits[byE[e]] = n2.audits[e].slice().sort((a, b) => b.k.localeCompare(a.k)); });
+  DB.shout = {}; Object.keys(n2.shout || {}).forEach(e => { if (byE[e]) DB.shout[byE[e]] = n2.shout[e]; });
+  DB.esc = {}; Object.keys(n2.esc || {}).forEach(e => { if (byE[e]) DB.esc[byE[e]] = n2.esc[e]; });
+  DB.nudged = n2.pace ? n2.pace.at : null; DB.behind = new Set(((n2.pace || {}).behind || []).map(e => byE[e]).filter(Boolean));
+  if (n2.dc2e) RULES.DC2E_TARGET = n2.dc2e; if (n2.warnBelow) RULES.WARN_BELOW = n2.warnBelow;
+  for (const k in _gapCache) delete _gapCache[k];
+  NUM_BUILT = d.built || 0;
+}
+let NUM_BUILT = 0;
 function tsignIn(msg) {
   $('who').innerHTML = ''; $('vtabs').innerHTML = '';
   $('view').innerHTML = `<section class="panel shift" style="max-width:720px;margin:40px auto"><div class="ring" style="width:120px;height:120px"><div class="ring-c" style="border:4px double var(--accent);border-radius:50%;color:var(--accent)"><b style="font-size:22px;font-family:var(--display)">Team</b></div></div>
@@ -1738,6 +1772,10 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
     case 'rsave': { stop(); const rules = {}; document.querySelectorAll('[data-rule]').forEach(i => { if (i.dataset.rule !== 'WARN_BELOW') rules[i.dataset.rule] = +i.value; }); return done(await tapi('team.rules', { rules }), 'Rules saved. They apply from the next check.', false); }
     case 'holAdd': { stop(); const k = $('hk').value, n = $('hn').value.trim(); if (!k || !n) return toast('Add a date and a name.'); return done(await tapi('team.holidays', { k, name: n }), n + ' added.', false); }
     case 'holDel': stop(); return done(await tapi('team.holidays', { op: 'remove', k: el.dataset.k }), 'Holiday removed.', false);
+    case 'saveSplit': { stop(); const t = TL(meId()); const items = icsOf(t.id).map(ic => ({ email: ic.email, type: DB.targets.ic[ic.id].type, v: +DB.targets.ic[ic.id].v || 0 }));
+      return done(await tapi('team.targetsSM', { items }), `Saved. ${items.length} team members emailed their targets.`, false); }
+    case 'saveTL': { stop(); const items = scopeTLs().map(t => ({ tl: t.email, rp: +((document.querySelector(`[data-tlr="${t.id}"]`) || {}).value) || 0, dc2e: +((document.querySelector(`[data-tld="${t.id}"]`) || {}).value) || 35, otp: +((document.querySelector(`[data-tlo="${t.id}"]`) || {}).value) || 0 }));
+      const r = await tapi('team.targetsTL', { items }); return done(r, r.ok ? (r.sent ? `Saved. ${r.sent} team lead${r.sent > 1 ? 's' : ''} emailed their new targets.` : 'No changes to save.') : '', false); }
   }
 }, true);
 if (IS_LIVE) document.addEventListener('change', async ev => {
@@ -1857,12 +1895,12 @@ function icDrawer(id) {
     <div class="dr-sec"><h4>Tonight ${chip(n.st)}</h4>${s && s.inT ? timeline(s, true) + `<div class="stats"><div class="stat"><b>${fmtT(s.inT)}</b><span>clocked in ${s.modes[0].m === 'wfh' ? '(from home)' : ''}</span></div><div class="stat"><b>${fmtDur(s.credited)}</b><span>credited of 9:00</span></div><div class="stat"><b class="${s.brMs > RULES.BREAK_MIN * MIN ? 'bad' : ''}">${fmtDur(s.brMs)}</b><span>break of 1:00</span></div><div class="stat"><b>${s.outT ? fmtT(s.outT) : '—'}</b><span>${s.auto ? 'auto clock-out' : 'clocked out'}</span></div></div>` : `<p class="note">${n.a && n.a.reason ? 'Reason: ' + esc(n.a.reason) : 'No clock-in yet.'}</p>`}</div>
     <div class="dr-sec"><h4>Correct tonight</h4>${acts || '<p class="note">Nothing to correct.</p>'}
       <div class="formrow" style="margin-top:12px"><div class="f"><label for="xr">Mark tonight as</label><select class="inp" id="xr">${canExcuse ? '<option value="ex:Approved half day">Excused: approved half day</option><option value="ex:Medical">Excused: medical</option><option value="ex:System outage">Excused: system outage</option>' : ''}<option value="leave">Leave</option><option value="weekoff">Week off</option></select></div><div class="f" style="flex:1"><label for="xn">Note (optional)</label><input class="inp" id="xn"></div><button class="btn" data-act="mark" data-id="${id}" data-k="${SHIFT}">Apply</button></div></div>
-    ${ic.isTL || IS_LIVE ? '' : (() => { const p = paceOf(ic), g = coachGap(ic), au = auditSum(ic), F = ic.d.F || [];
+    ${ic.isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : (() => { const p = paceOf(ic), g = coachGap(ic), au = auditSum(ic), F = ic.d.F || [];
       return `<div class="dr-sec"><h4>Pace and follow-ups</h4><p>${fmtV(p.type, p.ach)} of ${fmtV(p.type, p.exp)} expected by today${p.behind ? ` · <b class="bad">${fmtV(p.type, p.gap)} behind</b>` : ' · <b class="good">on pace</b>'} · ${F.filter(r => r[2] <= 2).length} hot and ${F.length} open follow-ups <button class="link" data-act="fu" data-ic="${ic.id}">see lead IDs</button></p></div>
       <div class="dr-sec"><h4>Coaching gap</h4>${g ? `<p><b>${esc(g.seg)}</b>: ${pct(g.me)} DC2E against ${pct(g.team)} for the team, over ${g.n} demos.</p>` : '<p class="note">No segment more than 8 points below the team.</p>'}</div>
       <div class="dr-sec"><h4>Audit quality (from Daily KRA)</h4>${au.n ? `<div class="tw"><table><tr><th>Date</th><th>Lead</th><th>Verdict</th><th>Audited by</th></tr>${au.L.map(x => `<tr><td>${fmtDay(x.k)}</td><td class="mono">${esc(x.lead)}</td><td>${vchip(x.verdict)}</td><td>${esc(x.by)}</td></tr>`).join('')}</table></div>` : '<p class="note">No audits this month.</p>'}</div>`; })()}
     ${ic.isTL ? '' : `<div class="dr-sec"><h4>Attendance laptop</h4><p>${DB.dev[ic.id] ? `Registered ${fmtDay(DB.dev[ic.id])}. ` : 'Not registered yet. '}<button class="link" data-act="resetDev" data-id="${ic.id}">Reset laptop</button> <span class="note">if they’ve changed laptops; the next laptop they mark present from is registered.</span></p></div>`}
-    ${ic.isTL || IS_LIVE ? '' : `<div class="dr-sec"><h4>This month</h4><div class="sumgrid" style="margin-top:0"><div class="sum"><b>${fmtV(q.type, q.ach)}</b><span>${q.type} achieved of ${fmtV(q.type, q.tgt)} (${pct(q.att)})</span></div><div class="sum"><b>${pct(q.smdc, 1)}</b><span>same-month DC2E</span></div><div class="sum"><b>${q.demos}</b><span>demos</span></div>
+    ${ic.isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : `<div class="dr-sec"><h4>This month</h4><div class="sumgrid" style="margin-top:0"><div class="sum"><b>${fmtV(q.type, q.ach)}</b><span>${q.type} achieved of ${fmtV(q.type, q.tgt)} (${pct(q.att)})</span></div><div class="sum"><b>${pct(q.smdc, 1)}</b><span>same-month DC2E</span></div><div class="sum"><b>${q.demos}</b><span>demos</span></div>
       <div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'short').length}</b><span>short shifts</span></div><div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'lop').length}</b><span>LOP days</span></div></div></div>`}`);
 }
 function dayDrawer(id, k) {
