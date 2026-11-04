@@ -868,7 +868,7 @@ function mail(type, ic, k, x) {
 </script>
 <script>
 /* ════════════════ state & chrome ════════════════ */
-const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'all', bsale: 'all', bctry: 'all', bprod: 'all', typeF: 'all', tlF: '[]', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
+const S = { as: null, view: null, dim: 'eth', lb: 'team', lbType: null, sale: 'all', ctry: 'all', prod: 'all', bsale: 'all', bctry: 'all', bprod: 'all', typeF: 'all', tlF: 'all', mgr: 'akash', phone: false, mailSel: 0, sig: '' };
 const role = () => S.as.split(':')[0];
 const meId = () => S.as.split(':')[1];
 const isPhone = () => S.phone || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.userAgentData && navigator.userAgentData.mobile);
