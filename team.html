@@ -919,7 +919,7 @@ function scopeTLs() {
 function scope() {
   if (role() === 'ic') return [IC(meId())];
   const tls = scopeTLs().filter(t => tlOn(t.id));
-  return ICS.filter(x => x.active && tls.some(t => t.id === x.tl) && (S.typeF === 'all' || typeOf(x) === S.typeF));
+  return ICS.filter(x => x.active && tls.some(t => t.id === x.tl && (S.typeF === 'all' || t.team === S.typeF)));   // RP / OTP: the team's type, so a team's numbers stay whole
 }
 /* team numbers: the team members, plus each team lead's own demos and sales */
 function numScope() {
@@ -1163,7 +1163,7 @@ const splitOK = tlId => Math.abs(splitOf(tlId, 'RP') - DB.targets.tl[tlId].rp) <
 function filterBar(o) {
   const K = o.keys || { sale: 'sale', ctry: 'ctry', prod: 'prod' };
   const seg = (key, opts) => `<div class="segs">${opts.map(([v, l]) => `<button class="${S[key] === v ? 'on' : ''}" data-act="flt" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  return `<div class="fbar">${o.type ? `<span class="fl">Team members</span>${seg('typeF', [['all', 'All'], ['RP', 'RP'], ['OTP', 'OTP']])}` : ''}
+  return `<div class="fbar">${o.type ? `<span class="fl">Teams</span>${seg('typeF', [['all', 'All'], ['RP', 'RP teams'], ['OTP', 'OTP teams']])}` : ''}
     ${o.prod ? `<span class="fl">Subject</span>${seg(K.prod, [['all', 'All'], ['Math', 'Math'], ['English', 'English'], ['Bundle', 'Math + English bundle']])}` : ''}
     ${o.sale ? `<span class="fl">Lead</span>${seg(K.sale, [['all', 'All leads'], ['sm', 'This month’s leads'], ['roll', 'Older leads']])}` : ''}
     ${o.ctry ? `<span class="fl">Country</span>${seg(K.ctry, [['all', 'US + CA'], ['US', 'US'], ['CA', 'CA']])}` : ''}${o.extra || ''}</div>`;
