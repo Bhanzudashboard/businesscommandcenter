@@ -628,6 +628,7 @@ const ICS = DATA.people.map(p => {
 const IC = id => ICS.find(x => x.id === id);
 const TLP = TLS.map(t => ({ id: 'tl-' + t.id, name: t.name, email: t.email, tl: t.id, isTL: true, home: 'TL', d: { D: [], E: [], F: [] } }));
 const NRP = [];   // per team lead: demos and sales under that team whose owner is not on the Team Roster
+const FRP = [];   // demos and sales under a former team lead or a BM-led team (no current team lead)
 const PERSON = id => IC(id) || TLP.find(p => p.id === id);
 const ACTIVE = () => ICS.filter(x => x.active);
 const PEOPLE = () => ICS.filter(x => x.active).concat(TLP);
@@ -925,7 +926,8 @@ function numScope() {
   const list = scope(); if (role() === 'ic') return list;
   const tls = scopeTLs().filter(t => tlOn(t.id) && (S.typeF === 'all' || t.team === S.typeF));
   const has = x => x.d.D.length || x.d.E.length;
-  return list.concat(TLP.filter(tp => tls.some(t => t.id === tp.tl) && has(tp)), NRP.filter(x => tls.some(t => t.id === x.tl) && has(x)));
+  const fr = S.tlF === 'all' && S.typeF === 'all' && ['admin', 'mgr'].includes(role()) ? FRP.filter(x => has(x) && (role() === 'admin' || x.mgr === meId())) : [];   // only with every team lead ticked
+  return list.concat(TLP.filter(tp => tls.some(t => t.id === tp.tl) && has(tp)), NRP.filter(x => tls.some(t => t.id === x.tl) && has(x)), fr);
 }
 /* Source filter: 'all', or an array of source names */
 function srcSet(sel) { if (!sel || sel === 'all' || !sel.length) return null; const V = DATA.vocab.source || []; return new Set(sel.map(n => V.indexOf(n)).filter(i => i >= 0)); }
@@ -1242,15 +1244,15 @@ function vBoard() {
 /* a team's demos and sales whose owner is not on the Team Roster: shown so the team total adds up */
 function nrRowHTML(r, i) {
   const who = Object.entries(r.ic.owners).sort((a, b) => b[1].d + b[1].u - a[1].d - a[1].u).map(([n, c]) => `${esc(n)} (${[c.d ? c.d + ' demo' + (c.d === 1 ? '' : 's') : '', c.u ? fmt1(c.u) + ' unit' + (c.u === 1 ? '' : 's') : ''].filter(Boolean).join(', ')})`).join(' · ');
-  return `<tr><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av" style="background:var(--warn-bg);color:var(--warn)">?</span>Not on roster</span></td><td>${esc(TL(r.ic.tl).name)}</td><td>—</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td>
-    <td class="note" style="white-space:normal;min-width:240px">${who || '—'}<br><small>Add them to the Team Roster, or fix their CRM Owner Name, to count them under a person</small></td>
+  return `<tr><td class="n">${i + 1}</td><td><span class="tl-n"><span class="av" style="background:var(--warn-bg);color:var(--warn)">?</span>${r.ic.isFormer ? 'Former team' : 'Not on roster'}</span></td><td>${r.ic.isFormer ? esc(r.ic.label) : esc(TL(r.ic.tl).name)}</td><td>—</td><td class="n note">—</td><td class="n">${r.f.rp ? fmt1(r.f.rp) + ' units' : ''}${r.f.rp && r.f.otp ? ' · ' : ''}${r.f.otp ? lakh(r.f.otp) : ''}</td>
+    <td class="note" style="white-space:normal;min-width:240px">${who || '—'}<br><small>${r.ic.isFormer ? 'This team has no current team lead. Shown only when all team leads are selected.' : 'Add them to the Team Roster, or fix their CRM Owner Name, to count them under a person'}</small></td>
     <td class="n">${r.f.demos}</td><td class="n">${fmt1(r.f.units)}</td><td class="n">${pct(r.f.dc2e, 1)}</td><td class="n">—</td><td></td></tr>`;
 }
 function vTeamNums() {
   const list = numScope(), f = agg(list);
   $('view').innerHTML = `${liveNote()}
     ${filterBar({ type: true, prod: true, sale: true, ctry: true, extra: tlFilter() + srcFilter() })}<div style="margin-top:14px">${club(list)}</div>
-    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL && !x.isNR).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}${list.some(x => x.isNR) ? ' + not on roster' : ''}</small></div>
+    <div class="kpis" style="margin-top:16px"><div class="kpi"><span>Demos completed</span><b data-count="${f.demos}">${fmtN(f.demos)}</b><small>${(n => n + (n === 1 ? ' person' : ' people'))(list.filter(x => !x.isTL && !x.isNR).length)}${(n => n ? ` + ${n} team lead${n === 1 ? '' : 's'}` : '')(list.filter(x => x.isTL).length)}${list.some(x => x.isNR && !x.isFormer) ? ' + not on roster' : ''}${list.some(x => x.isFormer) ? ' + former teams' : ''}</small></div>
       <div class="kpi"><span>Units enrolled</span><b>${fmt1(f.units)}</b><small class="usplit"><span><b>${fmt1(f.rp)}</b> RP</span><span><b>${fmt1(f.otpU)}</b> OTP</span></small><small>${f.bun ? `incl. ${fmt1(f.bun)} bundle${f.bun === 1 ? '' : 's'} · ` : ''}a bundle counts as 1</small></div>
       <div class="kpi ${f.dc2e >= RULES.DC2E_TARGET ? 'pos' : ''}"><span>DC2E</span><b>${pct(f.dc2e, 1)}</b><small>${filterNote()}</small></div>
       <div class="kpi"><span>RP units</span><b>${fmt1(f.rp)}</b></div><div class="kpi"><span>OTP revenue</span><b>${lakh(f.otp)}</b></div></div>
@@ -1795,13 +1797,21 @@ function applyNumbers(n2) {
     if (o >= 0) { DATA.DM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) D.push([r[1], r[4], ...r.slice(5, 12)]); }); DATA.EM.forEach(r => { if (r[2] === o && r[0] === DATA.cur) E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); }); }
     tp.own = o; tp.d = { D, E, F: [] }; });
   /* demos and sales under a current team lead's team whose owner is not an active team member or team lead */
-  const onRoster = new Set(); ICS.forEach(ic => { if (ic.active && ic.own >= 0) onRoster.add(ic.own); }); TLP.forEach(tp => { if (tp.own >= 0) onRoster.add(tp.own); });
+  const curTL = new Set(TLS.map(t => t.id));
+  /* owners already counted under a person: active team members of a current team lead, and the team leads */
+  const onRoster = new Set(); ICS.forEach(ic => { if (ic.active && curTL.has(ic.tl) && ic.own >= 0) onRoster.add(ic.own); }); TLP.forEach(tp => { if (tp.own >= 0) onRoster.add(tp.own); });
   NRP.length = 0; const nrOf = {};
   TLS.forEach(t => { const x = { id: 'nr-' + t.id, name: 'Not on roster', email: '', tl: t.id, isNR: true, home: 'NR', active: false, owners: {}, d: { D: [], E: [], F: [] } }; nrOf[t.id] = x; NRP.push(x); });
   const nrRow = r => { if (r[0] !== DATA.cur || onRoster.has(r[2])) return null; const b = DATA.tlb[r[3]]; return b && b.tl && nrOf[b.tl] ? nrOf[b.tl] : null; };
   const who = (x, r, k) => { const n = (DATA.own[r[2]] || {}).n || 'Unknown'; (x.owners[n] = x.owners[n] || { d: 0, u: 0 })[k] += k === 'd' ? 1 : r[4]; };
   DATA.DM.forEach(r => { const x = nrRow(r); if (x) { x.d.D.push([r[1], r[4], ...r.slice(5, 12)]); who(x, r, 'd'); } });
   DATA.EM.forEach(r => { const x = nrRow(r); if (x) { x.d.E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); who(x, r, 'u'); } });
+  /* teams with no current team lead (a former TL, or BM-led): one line per team, so the floor total adds up */
+  FRP.length = 0; const frOf = {};
+  const frRow = r => { if (r[0] !== DATA.cur || onRoster.has(r[2])) return null; const b = DATA.tlb[r[3]]; if (!b || (b.tl && curTL.has(b.tl)) || b.kind === 'Not this floor') return null;
+    return frOf[r[3]] = frOf[r[3]] || (FRP.push({ id: 'fr-' + r[3], name: 'Former team', label: b.n, mgr: b.mgr, email: '', tl: null, isNR: true, isFormer: true, home: 'NR', active: false, owners: {}, d: { D: [], E: [], F: [] } }), FRP[FRP.length - 1]); };
+  DATA.DM.forEach(r => { const x = frRow(r); if (x) { x.d.D.push([r[1], r[4], ...r.slice(5, 12)]); who(x, r, 'd'); } });
+  DATA.EM.forEach(r => { const x = frRow(r); if (x) { x.d.E.push([r[1], r[8], r[4], r[5], r[6], r[7], ...r.slice(9, 16)]); who(x, r, 'u'); } });
   const T = n2.targets || { tl: {}, sm: {} };
   DB.targets = { tl: {}, ic: {}, hist: (n2.hist || []).slice().reverse() };
   TLS.forEach(t => DB.targets.tl[t.id] = T.tl[t.email] || { rp: 0, dc2e: 35, otp: 0 });
