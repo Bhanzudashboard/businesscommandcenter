@@ -1936,7 +1936,7 @@ async function tliveBoot() {
 /* ════════════════ TEAM NOW ════════════════ */
 function tile(ic, i) {
   const n = tonight(ic), s = n.s;
-  const idle = s && !s.outT && !s.onBreak && s.inT && now() - s.seen > RULES.IDLE_FLAG_MIN * MIN;
+  const idle = s && !s.outT && !s.onBreak && s.inT && s.seen && now() - s.seen > RULES.IDLE_FLAG_MIN * MIN;
   const st = n.st === 'working' && s.mode === 'wfh' ? 'wfh' : n.st;
   const hf = s ? Math.min(1, s.credited / (RULES.SHIFT_MIN * MIN)) : 0;
   const flags = [];
@@ -2027,7 +2027,8 @@ function icDrawer(id) {
   $('overlay').dataset.id = id;
   modal(esc(ic.name), `<p class="note">${ic.isTL ? 'Team lead · ' + esc(MGRS[tl.mgr].name) + '’s team' : typeOf(ic) + ' target · team of ' + esc(tl.name)} · ${esc(ic.email)}</p>
     ${ic.isTL ? '' : `<p class="note" style="margin-top:4px">Rostered tonight: ${cellLabel(planOf(ic.id, SHIFT))} · late clock-ins this month: ${lateCount(ic)}</p>`}
-    <div class="dr-sec"><h4>Tonight ${chip(n.st)}</h4>${s && s.inT ? timeline(s, true) + `<div class="stats"><div class="stat"><b>${fmtT(s.inT)}</b><span>clocked in ${s.modes[0].m === 'wfh' ? '(from home)' : ''}</span></div><div class="stat"><b>${fmtDur(s.credited)}</b><span>credited of 9:00</span></div><div class="stat"><b class="${s.brMs > RULES.BREAK_MIN * MIN ? 'bad' : ''}">${fmtDur(s.brMs)}</b><span>break of 1:00</span></div><div class="stat"><b>${s.outT ? fmtT(s.outT) : '—'}</b><span>${s.auto ? 'auto clock-out' : 'clocked out'}</span></div></div>` : `<p class="note">${n.a && n.a.reason ? 'Reason: ' + esc(n.a.reason) : 'No clock-in yet.'}</p>`}</div>
+    <div class="dr-sec"><h4>Tonight ${chip(n.st)}</h4>${s && s.inT ? timeline(s, true) + `<div class="stats"><div class="stat"><b>${fmtT(s.inT)}</b><span>clocked in ${s.modes[0].m === 'wfh' ? '(from home)' : ''}</span></div><div class="stat"><b>${fmtDur(s.credited)}</b><span>credited of 9:00</span></div><div class="stat"><b class="${s.brMs > RULES.BREAK_MIN * MIN ? 'bad' : ''}">${fmtDur(s.brMs)}</b><span>break of 1:00</span></div><div class="stat"><b>${s.outT ? fmtT(s.outT) : '—'}</b><span>${s.auto ? 'auto clock-out' : 'clocked out'}</span></div></div>${(() => { const e = (DB.night[ic.id].ev || []).filter(x => x.type === 'in' || x.type === 'mode');
+      return e.length ? `<p class="note" style="margin-top:10px">${e.map(x => `${fmtT(x.t)}: ${x.mode === 'wfh' ? 'from home' : 'In office'}${x.mode === 'wfh' ? '' : x.at ? ' · confirmed by ' + esc(x.at) : ' · <b class="bad">no location check</b> (marked before the check was live)'}`).join('<br>')}</p>` : ''; })()}` : `<p class="note">${n.a && n.a.reason ? 'Reason: ' + esc(n.a.reason) : 'No clock-in yet.'}</p>`}</div>
     <div class="dr-sec"><h4>Correct tonight</h4>${acts || '<p class="note">Nothing to correct.</p>'}
       <div class="formrow" style="margin-top:12px"><div class="f"><label for="xr">Mark tonight as</label><select class="inp" id="xr">${canExcuse ? '<option value="ex:Approved half day">Excused: approved half day</option><option value="ex:Medical">Excused: medical</option><option value="ex:System outage">Excused: system outage</option>' : ''}<option value="leave">Leave</option><option value="weekoff">Week off</option></select></div><div class="f" style="flex:1"><label for="xn">Note (optional)</label><input class="inp" id="xn"></div><button class="btn" data-act="mark" data-id="${id}" data-k="${SHIFT}">Apply</button></div></div>
     ${ic.isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : (() => { const p = paceOf(ic), g = coachGap(ic), au = auditSum(ic), F = ic.d.F || [];
