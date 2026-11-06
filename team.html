@@ -1098,7 +1098,7 @@ function agg(list, f) {
   /* demos: Math demos (a bundle demo is a Math demo) for All, Math and Bundle; English demos only for English */
   const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math');
   const src = srcSet(f.src), okSrc = i => !src || src.has(i);
-  const o = { demos: 0, units: 0, bun: 0, smu: 0, rp: 0, otp: 0, otpU: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
+  const o = { demos: 0, units: 0, bun: 0, smu: 0, smRp: 0, smOtp: 0, rp: 0, otp: 0, otpU: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
   DIMK.forEach(k => o.dims[k] = {});
   list.forEach(ic => {
     ic.d.D.forEach(r => {   /* Math / English: that subject’s demos. Bundle: all demos, since a bundle can follow either */
@@ -1110,11 +1110,11 @@ function agg(list, f) {
       const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci) || !okSrc(r[6 + DI('source')])) return;
       const un = r[2] * w, rv = r[3] * w;
       o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[5]) o.smu += un; if (r[4] === 2) o.bun += un;
-      if (V.team[r[6 + DI('team')]] === 'RP') o.rp += un; else { o.otp += rv; o.otpU += un; }
+      if (V.team[r[6 + DI('team')]] === 'RP') { o.rp += un; if (r[5]) o.smRp += un; } else { o.otp += rv; o.otpU += un; if (r[5]) o.smOtp += rv; }
       DIMK.forEach((k, j) => { const v = V[k][r[6 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[1] += un; });
     });
   });
-  const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.otpU = r2(o.otpU); o.en = r2(o.en); o.u = o.u.map(r2);
+  const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.smRp = r2(o.smRp); o.otpU = r2(o.otpU); o.en = r2(o.en); o.u = o.u.map(r2);
   o.dc2e = o.demos ? o.units / o.demos : null;
   return o;
 }
@@ -1124,7 +1124,7 @@ function numsOf(ic) {
   const a = agg([ic], ALL), type = typeOf(ic), t = DB.targets.ic[ic.id] || { v: 0 };
   const ach = type === 'RP' ? a.rp : a.otp;
   let daysLeft = 0; if (!ic.isNR) for (let k = TODAY; k.slice(0, 7) === MONTH; k = addDays(k, 1)) if (workingDay(ic, k)) daysLeft++;
-  return { type, demos: a.demos, units: a.units, rp: a.rp, otp: a.otp, rev: a.rev, dc2e: a.dc2e, smdc: a.demos ? a.smu / a.demos : null, smDemos: a.demos, tgt: t.v, ach,
+  return { type, demos: a.demos, units: a.units, smu: a.smu, smRp: a.smRp, smOtp: a.smOtp, rp: a.rp, otp: a.otp, rev: a.rev, dc2e: a.dc2e, smdc: a.demos ? a.smu / a.demos : null, smDemos: a.demos, tgt: t.v, ach,
     att: t.v ? ach / t.v : null, daysLeft, perDay: daysLeft ? Math.max(0, t.v - ach) / daysLeft : 0 };
 }
 const fmtV = (type, v) => type === 'RP' ? fmt1(v) + ' units' : lakh(v);
@@ -1221,22 +1221,25 @@ function boardRows(list, type, meIdv) {
   const rows = list.map(ic => ({ ic, q: numsOf(ic) }));
   const ranked = rows.filter(r => r.q.type === type).sort((a, b) => (b.q.att || 0) - (a.q.att || 0) || b.q.ach - a.q.ach);
   const also = rows.filter(r => r.q.type !== type && (type === 'RP' ? r.q.rp : r.q.otp) > 0).sort((a, b) => (type === 'RP' ? b.q.rp - a.q.rp : b.q.otp - a.q.otp));
-  const line = (r, i, extra) => { const got = type === 'RP' ? r.q.rp : r.q.otp, own = r.q.type === type;
+  const sm = S.lbSale === 'sm';
+  const line = (r, i, extra) => { const got = type === 'RP' ? (sm ? r.q.smRp : r.q.rp) : (sm ? r.q.smOtp : r.q.otp), own = r.q.type === type;
     return `<tr class="${r.ic.id === meIdv ? 'me' : ''}${extra ? ' dim' : ''}"><td class="n">${own ? i + 1 : ''}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}</span></td><td>${esc(TL(r.ic.tl).name)}</td>
     <td class="n">${own ? fmtV(type, r.q.tgt) : `<span class="note">${r.q.type} target</span>`}</td><td class="n"><b>${fmtV(type, got)}</b></td>
     <td>${own ? `<div class="dbar"><div class="bar"><i class="${r.q.att >= 1 ? 'good' : r.q.att >= .8 ? 'mid' : 'bad'}" style="width:${Math.min(100, (r.q.att || 0) * 100)}%"></i></div><span class="mono" style="width:44px;text-align:right">${pct(r.q.att)}</span></div>` : '<span class="note">not ranked here</span>'}</td>
-    <td class="n">${pct(r.q.smdc, 1)}</td><td class="n">${r.q.demos}</td></tr>`; };
-  return ranked.map((r, i) => line(r, i)).join('') + (also.length ? `<tr><td colspan="8" class="note" style="padding-top:16px">Also sold ${type} this month (target is ${type === 'RP' ? 'OTP' : 'RP'}):</td></tr>` + also.map(r => line(r, 0, true)).join('') : '');
+    <td class="n">${fmt1(sm ? r.q.smu : r.q.units)}</td><td class="n">${r.q.demos}</td><td class="n"><b>${pct(sm ? r.q.smdc : r.q.dc2e, 1)}</b></td></tr>`; };
+  return ranked.map((r, i) => line(r, i)).join('') + (also.length ? `<tr><td colspan="9" class="note" style="padding-top:16px">Also sold ${type} this month (target is ${type === 'RP' ? 'OTP' : 'RP'}):</td></tr>` + also.map(r => line(r, 0, true)).join('') : '');
 }
 function boardTable(list, type, meIdv) {
-  return `<div class="tw"><table><tr><th class="n">#</th><th>Name</th><th>Team lead</th><th class="n">Target</th><th class="n">${type === 'RP' ? 'RP units' : 'OTP revenue'}</th><th>Target achieved</th><th class="n">Same-month DC2E</th><th class="n">Demos</th></tr>${boardRows(list, type, meIdv)}</table></div>`;
+  return `<div class="tw"><table><tr><th class="n">#</th><th>Name</th><th>Team lead</th><th class="n">Target</th><th class="n">${type === 'RP' ? 'RP units' : 'OTP revenue'}${S.lbSale === 'sm' ? '<br><small>same month</small>' : ''}</th><th>Target achieved<br><small>every sale</small></th><th class="n">Units${S.lbSale === 'sm' ? '<br><small>same month</small>' : ''}</th><th class="n">Demos</th><th class="n">${S.lbSale === 'sm' ? 'Same-month DC2E' : 'DC2E'}</th></tr>${boardRows(list, type, meIdv)}</table></div>`;
 }
 function vBoard() {
   const ic = IC(meId()); if (!S.lbType) S.lbType = typeOf(ic);
   const list = S.lb === 'team' ? icsOf(ic.tl) : ACTIVE();
   $('view').innerHTML = `${club(list)}<section class="panel"><div class="ph"><h2>${S.lbType} leaderboard</h2><p>Ranked by % of target achieved this month</p></div><div class="pb">
     <div class="fbar"><div class="segs"><button class="${S.lbType === 'RP' ? 'on' : ''}" data-act="lbt" data-v="RP">RP (units)</button><button class="${S.lbType === 'OTP' ? 'on' : ''}" data-act="lbt" data-v="OTP">OTP (revenue)</button></div>
-    <div class="segs"><button class="${S.lb === 'team' ? 'on' : ''}" data-act="lb" data-v="team">My team</button><button class="${S.lb === 'floor' ? 'on' : ''}" data-act="lb" data-v="floor">Whole floor</button></div></div>
+    <div class="segs"><button class="${S.lb === 'team' ? 'on' : ''}" data-act="lb" data-v="team">My team</button><button class="${S.lb === 'floor' ? 'on' : ''}" data-act="lb" data-v="floor">Whole floor</button></div>
+    <div class="segs" title="Same month: only sales from demos done this month"><button class="${S.lbSale !== 'sm' ? 'on' : ''}" data-act="lbs" data-v="all">Same month + rolling</button><button class="${S.lbSale === 'sm' ? 'on' : ''}" data-act="lbs" data-v="sm">Same month</button></div></div>
+    <p class="note" style="margin-top:8px">${S.lbSale === 'sm' ? 'Same month: units and revenue from demos done this month · DC2E = those units ÷ this month’s demos.' : 'Same month + rolling: every sale this month, including from earlier demos · DC2E = all units ÷ this month’s demos.'} Ranking is by target achieved, which counts every sale.</p>
     <div style="margin-top:14px">${boardTable(list, S.lbType, ic.id)}</div></div></section>`;
 }
 
@@ -2124,6 +2127,7 @@ document.addEventListener('click', ev => {
       render(); break; }
     case 'flt': S[el.dataset.k] = el.dataset.v; render(); break;
     case 'lbt': S.lbType = el.dataset.v; render(); break;
+    case 'lbs': S.lbSale = el.dataset.v; render(); break;
     case 'holAdd': { const k = $('hk').value, n = $('hn').value.trim(); if (!k || !n) return toast('Add a date and a name.'); DB.hol.push({ k, name: n }); render(); toast(`${n} added.`); break; }
     case 'holDel': DB.hol = DB.hol.filter(h => h.k !== el.dataset.k); render(); break;
     case 'fu': fuModal({ s: el.dataset.s, ic: el.dataset.ic, h: el.dataset.h }); break;
