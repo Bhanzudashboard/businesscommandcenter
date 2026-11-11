@@ -1929,6 +1929,8 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
     case 'me': stop(); return liveMe(el.dataset.x, el.dataset.m);
     case 'fixIn': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, mode: $('cm').value }), 'Clocked in.');
     case 'fixTimes': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, clockOut: $('co').value }), 'Times saved.');
+    case 'rday': { stop(); const who = P(el.dataset.id), k = el.dataset.k, v = $('rv').value;
+      return done(await tapi('team.rosterDay', { email: who.email, k, value: v }), `Roster changed: ${who.name} ${v === 'off' ? 'is on week off' : 'starts at ' + fmtT(T(v))} on ${fmtDay(k)}.`); }
     case 'mark': { stop(); const v = $('xr').value, ex = v.startsWith('ex:');
       return done(await tapi('team.mark', { email: P(el.dataset.id).email, k: el.dataset.k, status: ex ? 'excused' : v, why: ex ? v.slice(3) : '', reason: ($('xn') || {}).value || '' }), 'Saved.'); }
     case 'resetDev': { stop(); const who = P(el.dataset.id); if (!confirm(`Reset the attendance laptop for ${who.name}? The next laptop they clock in from becomes their attendance laptop.`)) return;
@@ -2065,7 +2067,7 @@ function icDrawer(id) {
   const canExcuse = ['short', 'done', 'working', 'break', 'overrun'].includes(n.st);
   $('overlay').dataset.id = id;
   modal(esc(ic.name), `<p class="note">${ic.isTL ? 'Team lead · ' + esc(MGRS[tl.mgr].name) + '’s team' : typeOf(ic) + ' target · team of ' + esc(tl.name)} · ${esc(ic.email)}</p>
-    ${ic.isTL ? '' : `<p class="note" style="margin-top:4px">Rostered tonight: ${cellLabel(planOf(ic.id, SHIFT))} · late clock-ins this month: ${lateCount(ic)}</p>`}
+    ${ic.isTL ? '' : `<p class="note" style="margin-top:4px">Rostered tonight: ${cellLabel(planOf(ic.id, SHIFT))} · late clock-ins this month: ${lateCount(ic)}</p>${rosterChanger(ic, SHIFT)}`}
     <div class="dr-sec"><h4>Tonight ${chip(n.st)}</h4>${s && s.inT ? timeline(s, true) + `<div class="stats"><div class="stat"><b>${fmtT(s.inT)}</b><span>clocked in ${s.modes[0].m === 'wfh' ? '(from home)' : ''}</span></div><div class="stat"><b>${fmtDur(s.credited)}</b><span>credited of 9:00</span></div><div class="stat"><b class="${s.brMs > RULES.BREAK_MIN * MIN ? 'bad' : ''}">${fmtDur(s.brMs)}</b><span>break of 1:00</span></div><div class="stat"><b>${s.outT ? fmtT(s.outT) : '—'}</b><span>${s.auto ? 'auto clock-out' : 'clocked out'}</span></div></div>${(() => { const e = (DB.night[ic.id].ev || []).filter(x => x.type === 'in' || x.type === 'mode');
       return e.length ? `<p class="note" style="margin-top:10px">${e.map(x => `${fmtT(x.t)}: ${x.mode === 'wfh' ? 'from home' : 'In office'}${x.mode === 'wfh' ? '' : x.at ? ' · confirmed by ' + esc(x.at) : ' · <b class="bad">no location check</b> (marked before the check was live)'}`).join('<br>')}</p>` : ''; })()}` : `<p class="note">${n.a && n.a.reason ? 'Reason: ' + esc(n.a.reason) : 'No clock-in yet.'}</p>`}</div>
     <div class="dr-sec"><h4>Correct tonight</h4>${acts || '<p class="note">Nothing to correct.</p>'}
@@ -2078,13 +2080,23 @@ function icDrawer(id) {
     ${ic.isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : `<div class="dr-sec"><h4>This month</h4><div class="sumgrid" style="margin-top:0"><div class="sum"><b>${fmtV(q.type, q.ach)}</b><span>${q.type} achieved of ${fmtV(q.type, q.tgt)} (${pct(q.att)})</span></div><div class="sum"><b>${pct(q.smdc, 1)}</b><span>same-month DC2E</span></div><div class="sum"><b>${q.demos}</b><span>demos</span></div>
       <div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'short').length}</b><span>short shifts</span></div><div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'lop').length}</b><span>LOP days</span></div></div></div>`}`);
 }
+/* change one day of a team member's roster (swaps, moving a week off): tonight or later, by their TL, BM or an admin */
+function rosterChanger(ic, k) {
+  if (ic.isTL || k < SHIFT || !['tl', 'mgr', 'admin'].includes(role())) return '';
+  const cur = planOf(ic.id, k);
+  if (cur === undefined) return `<p class="note" style="margin-top:6px">No roster for this week yet, so the day can’t be changed here.</p>`;
+  return `<div class="formrow" style="margin-top:10px"><div class="f"><label for="rv">Change ${k === SHIFT ? 'tonight’s' : fmtDay(k) + '’s'} roster</label><select class="inp" id="rv">
+      <option value="off"${cur === 'off' ? ' selected' : ''}>Week off</option>${SLOTS.map(t => `<option value="${t}"${cur === t ? ' selected' : ''}>Starts ${fmtT(T(t))}</option>`).join('')}</select></div>
+      <button class="btn" data-act="rday" data-id="${ic.id}" data-k="${k}">Save roster</button></div>
+    <p class="note" style="margin-top:4px">For swaps: if someone rostered off is covering for someone on leave, give them a start time here, mark the other person as leave, and move this person’s week off to another day if needed.</p>`;
+}
 function dayDrawer(id, k) {
   if (k === SHIFT) return icDrawer(id);
   const ic = PERSON(id), st = dayStatus(ic, k), a = DB.att[ic.id][k] || {};
   if (isHol(k)) return toast(fmtDay(k) + ' is a public holiday.');
   modal(`${esc(ic.name)} · ${fmtDay(k)}`, `<p>${chip(st === 'future' ? 'future' : st)} ${a.min ? `<span class="mono" style="margin-left:6px">${fmtDur(a.min * MIN)} credited</span>` : ''} ${a.reason ? `<span class="note">· ${esc(a.reason)}</span>` : ''}</p>
     <div class="formrow" style="margin-top:14px"><div class="f"><label for="xr">Mark as</label><select class="inp" id="xr">${st === 'short' ? '<option value="ex:Approved half day">Excused: approved half day</option><option value="ex:Medical">Excused: medical</option><option value="ex:System outage">Excused: system outage</option>' : ''}<option value="leave">Leave</option><option value="weekoff">Week off</option>${['leave', 'weekoff', 'excused'].includes(st) && k < SHIFT ? '<option value="undo">Undo marking</option>' : ''}</select></div><div class="f" style="flex:1"><label for="xn">Note (optional)</label><input class="inp" id="xn"></div><button class="btn btn-p" data-act="mark" data-id="${id}" data-k="${k}">Apply</button></div>
-    ${st === 'lop' ? '<p class="note" style="margin-top:10px">Marking leave reverses the LOP and emails the team member.</p>' : ''}`);
+    ${st === 'lop' ? '<p class="note" style="margin-top:10px">Marking leave reverses the LOP and emails the team member.</p>' : ''}${k > SHIFT ? rosterChanger(ic, k) : ''}`);
 }
 function applyMark(id, k) {
   const ic = PERSON(id), v = $('xr').value, note = ($('xn') || {}).value || '', was = dayStatus(ic, k), by = whoName();
@@ -2167,6 +2179,7 @@ document.addEventListener('click', ev => {
     case 'holAdd': { const k = $('hk').value, n = $('hn').value.trim(); if (!k || !n) return toast('Add a date and a name.'); DB.hol.push({ k, name: n }); render(); toast(`${n} added.`); break; }
     case 'holDel': DB.hol = DB.hol.filter(h => h.k !== el.dataset.k); render(); break;
     case 'fu': fuModal({ s: el.dataset.s, ic: el.dataset.ic, h: el.dataset.h }); break;
+    case 'rday': { const ic = PERSON(el.dataset.id), k = el.dataset.k, R = (DB.roster[ic.tl] || {})[wkOf(k)]; if (R) { R.plan[ic.id][k] = $('rv').value; if ((DB.att[ic.id][k] || {}).st === 'weekoff' && $('rv').value !== 'off') delete DB.att[ic.id][k]; } closeModal(); render(); toast('Roster changed.'); break; }
     case 'resetDev': DB.dev[el.dataset.id] = null; closeModal(); toast(`Laptop reset for ${PERSON(el.dataset.id).name}. The next laptop they mark present from is registered.`); break;
     case 'copy': (navigator.clipboard ? navigator.clipboard.writeText(el.dataset.v) : Promise.reject()).then(() => toast('Lead ID copied.'), () => toast(el.dataset.v)); break;
     case 'mails': S.mailSel = 0; mailLog(); break;
