@@ -1090,32 +1090,45 @@ const typeOf = ic => (DB.targets && DB.targets.ic[ic.id] && DB.targets.ic[ic.id]
 /* bundle rule: a bundle is 1 sale (its Math ½ and English ½ rows together) and is counted with Math;
    English shows standalone English sales only, so Math + English = all sales */
 const saleW = (pi, prod) => pi < 0 ? 1 : pi === 2 ? (prod === 2 ? 1 : 0) : pi === 0 ? (prod === 0 || prod === 2 ? 1 : 0) : (prod === 1 ? 1 : 0);
+/* ════ sale groups, for the month a row belongs to ════
+   same month:      lead created this month, demo this month, sale this month
+   previous month:  lead created before this month, demo this month, sale this month
+   rolling:         any other sale this month (no demo this month)
+   Demos: same month = demos on leads created this month; previous month = demos on older leads; rolling has no demos. */
+const SALE_GROUPS = [['all', 'All'], ['sm', 'Same month'], ['pm', 'Previous month'], ['rl', 'Rolling'], ['rlpm', 'Rolling + previous month']];
+const SALE_NOTE = { all: 'all sales', sm: 'same month', pm: 'previous month', rl: 'rolling (no demo this month)', rlpm: 'rolling + previous month' };
+const saleGrp = (leadThis, demoThis) => demoThis ? (leadThis ? 'sm' : 'pm') : 'rl';
+const okSaleG = (g, sel) => !sel || sel === 'all' || g === sel || (sel === 'rlpm' && g !== 'sm');
+const okDemoG = (leadThis, sel) => !sel || sel === 'all' || (sel === 'sm' ? !!leadThis : sel === 'rl' ? false : !leadThis);
 function agg(list, f) {
   f = f || { sale: S.sale, ctry: S.ctry, prod: S.prod, src: S.srcF };
   const V = DATA.vocab, ci = !f.ctry || f.ctry === 'all' ? -1 : V.country.indexOf(f.ctry);
   const pi = !f.prod || f.prod === 'all' ? -1 : DATA.prod.indexOf(f.prod), si = pi >= 0 && pi < 2 ? V.subj.indexOf(f.prod) : -1;
-  const okS = x => !f.sale || f.sale === 'all' || (f.sale === 'sm' ? x === 1 : x === 0);
   /* demos: Math demos (a bundle demo is a Math demo) for All, Math and Bundle; English demos only for English */
   const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math');
   const src = srcSet(f.src), okSrc = i => !src || src.has(i);
-  const o = { demos: 0, units: 0, bun: 0, smu: 0, smRp: 0, smOtp: 0, rp: 0, otp: 0, otpU: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
+  const o = { demos: 0, smD: 0, units: 0, bun: 0, smu: 0, smRp: 0, smOtp: 0, rp: 0, otp: 0, otpU: 0, rev: 0, en: 0, d: Array(31).fill(0), u: Array(31).fill(0), dims: {} };
   DIMK.forEach(k => o.dims[k] = {});
   list.forEach(ic => {
     ic.d.D.forEach(r => {   /* Math / English: that subject’s demos. Bundle: all demos, since a bundle can follow either */
-      if (!okS(r[1]) || (ci >= 0 && r[2 + DI('country')] !== ci) || r[2 + DI('subj')] !== dsi || !okSrc(r[2 + DI('source')])) return;
+      if ((ci >= 0 && r[2 + DI('country')] !== ci) || r[2 + DI('subj')] !== dsi || !okSrc(r[2 + DI('source')])) return;
+      if (r[1]) o.smD++;
+      if (!okDemoG(r[1], f.sale)) return;
       o.demos++; o.d[r[0] - 1]++;
       DIMK.forEach((k, j) => { const v = V[k][r[2 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[0]++; });
     });
     ic.d.E.forEach(r => {
-      const w = saleW(pi, r[4]); if (!w || !okS(r[1]) || (ci >= 0 && r[6 + DI('country')] !== ci) || !okSrc(r[6 + DI('source')])) return;
-      const un = r[2] * w, rv = r[3] * w;
-      o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[5]) o.smu += un; if (r[4] === 2) o.bun += un;
-      if (V.team[r[6 + DI('team')]] === 'RP') { o.rp += un; if (r[5]) o.smRp += un; } else { o.otp += rv; o.otpU += un; if (r[5]) o.smOtp += rv; }
+      const w = saleW(pi, r[4]); if (!w || (ci >= 0 && r[6 + DI('country')] !== ci) || !okSrc(r[6 + DI('source')])) return;
+      const un = r[2] * w, rv = r[3] * w, g = saleGrp(r[1], r[5]), isRP = V.team[r[6 + DI('team')]] === 'RP';
+      if (g === 'sm') { o.smu += un; if (isRP) o.smRp += un; else o.smOtp += rv; }
+      if (!okSaleG(g, f.sale)) return;
+      o.units += un; o.rev += rv; o.en += un; o.u[r[0] - 1] += un; if (r[4] === 2) o.bun += un;
+      if (isRP) o.rp += un; else { o.otp += rv; o.otpU += un; }
       DIMK.forEach((k, j) => { const v = V[k][r[6 + j]]; (o.dims[k][v] = o.dims[k][v] || [0, 0])[1] += un; });
     });
   });
   const r2 = v => Math.round(v * 100) / 100; o.units = r2(o.units); o.smu = r2(o.smu); o.rp = r2(o.rp); o.smRp = r2(o.smRp); o.otpU = r2(o.otpU); o.en = r2(o.en); o.u = o.u.map(r2);
-  o.dc2e = o.demos ? o.units / o.demos : null;
+  o.dc2e = o.demos ? o.units / o.demos : null; o.smdc = o.smD ? o.smu / o.smD : null;
   return o;
 }
 const ALL = { sale: 'all', ctry: 'all' }, SM = { sale: 'sm', ctry: 'all' };
@@ -1124,7 +1137,7 @@ function numsOf(ic) {
   const a = agg([ic], ALL), type = typeOf(ic), t = DB.targets.ic[ic.id] || { v: 0 };
   const ach = type === 'RP' ? a.rp : a.otp;
   let daysLeft = 0; if (!ic.isNR) for (let k = TODAY; k.slice(0, 7) === MONTH; k = addDays(k, 1)) if (workingDay(ic, k)) daysLeft++;
-  return { type, demos: a.demos, units: a.units, smu: a.smu, smRp: a.smRp, smOtp: a.smOtp, rp: a.rp, otp: a.otp, rev: a.rev, dc2e: a.dc2e, smdc: a.demos ? a.smu / a.demos : null, smDemos: a.demos, tgt: t.v, ach,
+  return { type, demos: a.demos, units: a.units, smu: a.smu, smRp: a.smRp, smOtp: a.smOtp, rp: a.rp, otp: a.otp, rev: a.rev, dc2e: a.dc2e, smdc: a.smdc, smDemos: a.smD, tgt: t.v, ach,
     att: t.v ? ach / t.v : null, daysLeft, perDay: daysLeft ? Math.max(0, t.v - ach) / daysLeft : 0 };
 }
 const fmtV = (type, v) => type === 'RP' ? fmt1(v) + ' units' : lakh(v);
@@ -1165,10 +1178,10 @@ function filterBar(o) {
   const seg = (key, opts) => `<div class="segs">${opts.map(([v, l]) => `<button class="${S[key] === v ? 'on' : ''}" data-act="flt" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<div class="fbar">${o.type ? `<span class="fl">Teams</span>${seg('typeF', [['all', 'All'], ['RP', 'RP teams'], ['OTP', 'OTP teams']])}` : ''}
     ${o.prod ? `<span class="fl">Subject</span>${seg(K.prod, [['all', 'All'], ['Math', 'Math'], ['English', 'English'], ['Bundle', 'Math + English bundle']])}` : ''}
-    ${o.sale ? `<span class="fl">Lead</span>${seg(K.sale, [['all', 'All leads'], ['sm', 'This month’s leads'], ['roll', 'Older leads']])}` : ''}
+    ${o.sale ? `<span class="fl">Sales</span>${seg(K.sale, SALE_GROUPS)}` : ''}
     ${o.ctry ? `<span class="fl">Country</span>${seg(K.ctry, [['all', 'US + CA'], ['US', 'US'], ['CA', 'CA']])}` : ''}${o.extra || ''}</div>`;
 }
-const filterNote = (p = '') => `${{ all: 'all sales over Math demos', Math: 'Math, including bundles', English: 'standalone English only (bundles are in Math)', Bundle: 'Math + English bundles over Math demos' }[S[p + 'prod']]}${S.srcF !== 'all' ? ' · ' + (S.srcF.length === 1 ? S.srcF[0] : S.srcF.length + ' sources') : ''} · ${{ all: 'all leads', sm: 'leads from this month', roll: 'older leads' }[S[p + 'sale']]} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
+const filterNote = (p = '') => `${{ all: 'All subjects over Math demos', Math: 'Math, including bundles', English: 'standalone English only (bundles are in Math)', Bundle: 'Math + English bundles over Math demos' }[S[p + 'prod']]}${S.srcF !== 'all' ? ' · ' + (S.srcF.length === 1 ? S.srcF[0] : S.srcF.length + ' sources') : ''} · ${SALE_NOTE[S[p + 'sale']] || 'all sales'} · ${{ all: 'US and CA', US: 'US only', CA: 'CA only' }[S[p + 'ctry']]}`;
 const BKEYS = { sale: 'bsale', ctry: 'bctry', prod: 'bprod' };
 
 /* ════════════════ IC: my numbers ════════════════ */
@@ -1178,7 +1191,7 @@ function vNums() {
   $('view').innerHTML = `${liveNote()}
     <div class="kpis">
       <div class="kpi att">${ringSVG(q.att, q.att >= 1 ? 'var(--pos)' : 'var(--accent)')}<div><span>${q.type === 'RP' ? 'RP units' : 'OTP revenue'} vs target</span><b>${q.type === 'RP' ? fmt1(q.ach) + ' / ' + fmt1(q.tgt) : lakh(q.ach)}</b><small>${q.type === 'RP' ? 'units' : 'of ' + lakh(q.tgt)}</small></div></div>
-      <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>demo and sale both this month · target 35%</small></div></div>
+      <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>lead, demo and sale all this month · target 35%</small></div></div>
       <div class="kpi"><span>Needed per working day</span><b>${fmtV(q.type, q.perDay)}</b><small>${q.daysLeft} working day${q.daysLeft === 1 ? '' : 's'} left this month</small></div></div>
     <section class="panel"><div class="ph"><h2>My performance</h2><p>${filterNote()}</p></div><div class="pb">${filterBar({ prod: true, sale: true, ctry: true, extra: srcFilter() })}
       <div class="kpis" style="margin:16px 0 6px">
@@ -1193,7 +1206,7 @@ function vNums() {
 function quickNums(ic) {
   const q = numsOf(ic);
   return `<div class="kpi"><span>${q.type === 'RP' ? 'RP units this month' : 'OTP revenue this month'}</span><b>${q.type === 'RP' ? fmt1(q.ach) : lakh(q.ach)}</b><small>${pct(q.att)} of ${fmtV(q.type, q.tgt)}</small></div>
-    <div class="kpi"><span>Same-month DC2E</span><b class="${q.smdc >= RULES.DC2E_TARGET ? 'good' : 'bad'}">${pct(q.smdc, 1)}</b><small>demo and sale both this month · target 35%</small></div>
+    <div class="kpi"><span>Same-month DC2E</span><b class="${q.smdc >= RULES.DC2E_TARGET ? 'good' : 'bad'}">${pct(q.smdc, 1)}</b><small>lead, demo and sale all this month · target 35%</small></div>
     <div class="kpi"><span>Demos completed</span><b>${fmtN(q.demos)}</b><small>overall DC2E ${pct(q.dc2e, 1)}</small></div>
     <div class="kpi"><span>Needed per working day</span><b>${fmtV(q.type, q.perDay)}</b><small>${q.daysLeft} working day${q.daysLeft === 1 ? '' : 's'} left</small></div>`;
 }
@@ -1218,19 +1231,25 @@ function breakdown(list) {
 
 /* ════════════════ leaderboards: separate RP and OTP boards ════════════════ */
 function boardRows(list, type, meIdv) {
-  const rows = list.map(ic => ({ ic, q: numsOf(ic) }));
+  const rows = list.map(ic => ({ ic, q: numsOf(ic), g: agg([ic], { sale: S.lbSale || 'all', ctry: 'all' }) }));
   const ranked = rows.filter(r => r.q.type === type).sort((a, b) => (b.q.att || 0) - (a.q.att || 0) || b.q.ach - a.q.ach);
   const also = rows.filter(r => r.q.type !== type && (type === 'RP' ? r.q.rp : r.q.otp) > 0).sort((a, b) => (type === 'RP' ? b.q.rp - a.q.rp : b.q.otp - a.q.otp));
-  const sm = S.lbSale === 'sm';
-  const line = (r, i, extra) => { const got = type === 'RP' ? (sm ? r.q.smRp : r.q.rp) : (sm ? r.q.smOtp : r.q.otp), own = r.q.type === type;
+  const line = (r, i, extra) => { const got = type === 'RP' ? r.g.rp : r.g.otp, own = r.q.type === type;
     return `<tr class="${r.ic.id === meIdv ? 'me' : ''}${extra ? ' dim' : ''}"><td class="n">${own ? i + 1 : ''}</td><td><span class="tl-n"><span class="av">${initials(r.ic.name)}</span>${esc(r.ic.name)}</span></td><td>${esc(TL(r.ic.tl).name)}</td>
     <td class="n">${own ? fmtV(type, r.q.tgt) : `<span class="note">${r.q.type} target</span>`}</td><td class="n"><b>${fmtV(type, got)}</b></td>
     <td>${own ? `<div class="dbar"><div class="bar"><i class="${r.q.att >= 1 ? 'good' : r.q.att >= .8 ? 'mid' : 'bad'}" style="width:${Math.min(100, (r.q.att || 0) * 100)}%"></i></div><span class="mono" style="width:44px;text-align:right">${pct(r.q.att)}</span></div>` : '<span class="note">not ranked here</span>'}</td>
-    <td class="n">${fmt1(sm ? r.q.smu : r.q.units)}</td><td class="n">${r.q.demos}</td><td class="n"><b>${pct(sm ? r.q.smdc : r.q.dc2e, 1)}</b></td></tr>`; };
+    <td class="n">${fmt1(r.g.units)}</td><td class="n">${r.g.demos}</td><td class="n"><b>${pct(r.g.dc2e, 1)}</b></td></tr>`; };
   return ranked.map((r, i) => line(r, i)).join('') + (also.length ? `<tr><td colspan="9" class="note" style="padding-top:16px">Also sold ${type} this month (target is ${type === 'RP' ? 'OTP' : 'RP'}):</td></tr>` + also.map(r => line(r, 0, true)).join('') : '');
 }
+function saleGroupNote(v) {
+  return { all: 'All: every sale this month · DC2E = all units ÷ this month’s demos.',
+    sm: 'Same month: lead created, demo done and sale made this month · DC2E = those units ÷ demos on leads created this month.',
+    pm: 'Previous month: lead created before this month, demo and sale this month · DC2E = those units ÷ demos on older leads this month.',
+    rl: 'Rolling: sales this month with no demo this month · there are no demos to divide by, so DC2E shows “—”.',
+    rlpm: 'Rolling + previous month: every sale that is not same month · DC2E = those units ÷ demos on older leads this month.' }[v || 'all'];
+}
 function boardTable(list, type, meIdv) {
-  return `<div class="tw"><table><tr><th class="n">#</th><th>Name</th><th>Team lead</th><th class="n">Target</th><th class="n">${type === 'RP' ? 'RP units' : 'OTP revenue'}${S.lbSale === 'sm' ? '<br><small>same month</small>' : ''}</th><th>Target achieved<br><small>every sale</small></th><th class="n">Units${S.lbSale === 'sm' ? '<br><small>same month</small>' : ''}</th><th class="n">Demos</th><th class="n">${S.lbSale === 'sm' ? 'Same-month DC2E' : 'DC2E'}</th></tr>${boardRows(list, type, meIdv)}</table></div>`;
+  return `<div class="tw"><table><tr><th class="n">#</th><th>Name</th><th>Team lead</th><th class="n">Target</th><th class="n">${type === 'RP' ? 'RP units' : 'OTP revenue'}${(S.lbSale || 'all') !== 'all' ? '<br><small>' + SALE_NOTE[S.lbSale] + '</small>' : ''}</th><th>Target achieved<br><small>every sale</small></th><th class="n">Units</th><th class="n">Demos</th><th class="n">DC2E</th></tr>${boardRows(list, type, meIdv)}</table></div>`;
 }
 function vBoard() {
   const ic = IC(meId()); if (!S.lbType) S.lbType = typeOf(ic);
@@ -1238,8 +1257,8 @@ function vBoard() {
   $('view').innerHTML = `${club(list)}<section class="panel"><div class="ph"><h2>${S.lbType} leaderboard</h2><p>Ranked by % of target achieved this month</p></div><div class="pb">
     <div class="fbar"><div class="segs"><button class="${S.lbType === 'RP' ? 'on' : ''}" data-act="lbt" data-v="RP">RP (units)</button><button class="${S.lbType === 'OTP' ? 'on' : ''}" data-act="lbt" data-v="OTP">OTP (revenue)</button></div>
     <div class="segs"><button class="${S.lb === 'team' ? 'on' : ''}" data-act="lb" data-v="team">My team</button><button class="${S.lb === 'floor' ? 'on' : ''}" data-act="lb" data-v="floor">Whole floor</button></div>
-    <div class="segs" title="Same month: only sales from demos done this month"><button class="${S.lbSale !== 'sm' ? 'on' : ''}" data-act="lbs" data-v="all">Same month + rolling</button><button class="${S.lbSale === 'sm' ? 'on' : ''}" data-act="lbs" data-v="sm">Same month</button></div></div>
-    <p class="note" style="margin-top:8px">${S.lbSale === 'sm' ? 'Same month: units and revenue from demos done this month · DC2E = those units ÷ this month’s demos.' : 'Same month + rolling: every sale this month, including from earlier demos · DC2E = all units ÷ this month’s demos.'} Ranking is by target achieved, which counts every sale.</p>
+    <div class="segs">${SALE_GROUPS.map(([v, l]) => `<button class="${(S.lbSale || 'all') === v ? 'on' : ''}" data-act="lbs" data-v="${v}">${l}</button>`).join('')}</div></div>
+    <p class="note" style="margin-top:8px">${saleGroupNote(S.lbSale)} Ranking is by target achieved, which counts every sale.</p>
     <div style="margin-top:14px">${boardTable(list, S.lbType, ic.id)}</div></div></section>`;
 }
 
@@ -1482,7 +1501,7 @@ const rowKey = r => MO[r[0]] + '-' + pad2(r[1]);
 let PER = null;   // periods for the view being drawn
 const mLabel = i => PER.list[i].label;
 Object.assign(S, { dfrom: null, dto: null, dpre: 'all', msale: 'all', mctry: 'all', mprod: 'Math', mm: 'smdc', mdim: 'eth', mF: 'all', rw: null, pst: 'active' });
-const MDIM = { eth: ['Ethnicity', 5, 9], source: ['Source', 6, 10], country: ['Country', 8, 12], grade: ['Grade', 9, 13], subj: ['Subject', 10, 14], team: ['RP / OTP', 11, 15], lead: ['Lead month', 4, 8] };
+const MDIM = { eth: ['Ethnicity', 5, 9], source: ['Source', 6, 10], country: ['Country', 8, 12], grade: ['Grade', 9, 13], subj: ['Subject', 10, 14], team: ['RP / OTP', 11, 15], lead: ['Sale group', 4, 8] };
 function momFilter() {
   const r = role();
   if (r === 'ic') { const me = IC(meId()); return x => x[2] === me.own; }
@@ -1494,16 +1513,17 @@ function momFilter() {
 function momAgg(group) {
   const V = DATA.vocab, ci = S.mctry === 'all' ? -1 : V.country.indexOf(S.mctry);
   const pi = S.mprod === 'all' ? -1 : DATA.prod.indexOf(S.mprod), si = pi === 0 || pi === 1 ? V.subj.indexOf(S.mprod) : -1;
-  const okS = x => S.msale === 'all' || (S.msale === 'sm' ? x === 1 : x === 0), F = momFilter(), out = {};
+  const F = momFilter(), out = {};
   const dsi = V.subj.indexOf(pi === 1 ? 'English' : 'Math'), src = srcSet(S.srcF), okSrc = i => !src || src.has(i);
-  const cell = (k, m) => (out[k] = out[k] || PER.list.map(() => ({ d: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 })))[m];
+  const cell = (k, m) => (out[k] = out[k] || PER.list.map(() => ({ d: 0, smD: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 })))[m];
   const at = r => PER.of(rowKey(r));
-  DATA.DM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || !okS(r[4]) || (ci >= 0 && r[8] !== ci) || r[10] !== dsi || !okSrc(r[6])) return; cell(group(r, 'd'), p).d++; });
-  DATA.EM.forEach(r => { const p = at(r), w = saleW(pi, r[6]); if (p < 0 || !w || !F(r) || !okS(r[8]) || (ci >= 0 && r[12] !== ci) || !okSrc(r[10])) return;
-    const c = cell(group(r, 'e'), p), un = r[4] * w, rv = r[5] * w; c.u += un; c.rev += rv; if (r[7]) c.smu += un; if (V.team[r[15]] === 'RP') c.rp += un; else c.otp += rv; });
+  DATA.DM.forEach(r => { const p = at(r); if (p < 0 || !F(r) || (ci >= 0 && r[8] !== ci) || r[10] !== dsi || !okSrc(r[6])) return; const c = cell(group(r, 'd'), p); if (r[4]) c.smD++; if (okDemoG(r[4], S.msale)) c.d++; });
+  DATA.EM.forEach(r => { const p = at(r), w = saleW(pi, r[6]); if (p < 0 || !w || !F(r) || (ci >= 0 && r[12] !== ci) || !okSrc(r[10])) return;
+    const c = cell(group(r, 'e'), p), un = r[4] * w, rv = r[5] * w, g = saleGrp(r[8], r[7]); if (g === 'sm') c.smu += un; if (!okSaleG(g, S.msale)) return;
+    c.u += un; c.rev += rv; if (V.team[r[15]] === 'RP') c.rp += un; else c.otp += rv; });
   return out;
 }
-const MET = { d: ['Demos', c => c.d, fmtN], u: ['Units', c => c.u, fmt1], dc2e: ['DC2E', c => c.d ? c.u / c.d : null, v => pct(v, 1)], smdc: ['Same-month DC2E', c => c.d ? c.smu / c.d : null, v => pct(v, 1)], rp: ['RP units', c => c.rp, fmt1], otp: ['OTP revenue', c => c.otp, lakh] };
+const MET = { d: ['Demos', c => c.d, fmtN], u: ['Units', c => c.u, fmt1], dc2e: ['DC2E', c => c.d ? c.u / c.d : null, v => pct(v, 1)], smdc: ['Same-month DC2E', c => c.smD ? c.smu / c.smD : null, v => pct(v, 1)], rp: ['RP units', c => c.rp, fmt1], otp: ['OTP revenue', c => c.otp, lakh] };
 const plen = i => PER && PER.list[i] ? Math.round((fromKey(PER.list[i].to) - fromKey(PER.list[i].from)) / DAY) + 1 : 1;
 /* periods of different length (a part-month, a short week) are compared per day */
 const delta = (a, b, k, ia, ib) => { if (a == null || b == null || !b) return ''; const ratio = ['dc2e', 'smdc'].includes(k);
@@ -1511,18 +1531,18 @@ const delta = (a, b, k, ia, ib) => { if (a == null || b == null || !b) return ''
   const d = ratio ? (a - b) * 100 : (a - b) / b * 100; if (Math.abs(d) < .05) return '<span class="dl0">±0</span>';
   return `<span class="${d > 0 ? 'dlu' : 'dld'}" ${perDay ? 'title="Compared per day, because the periods are different lengths"' : ''}>${d > 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}${ratio ? ' pts' : '%'}${perDay ? ' /day' : ''}</span>`; };
 function momChart(series) {
-  const W = 640, H = 190, P = 30, n = Math.max(1, series.length), bw = (W - P * 2) / n, md = Math.max(1, ...series.map(c => c.d)), ms = Math.max(.01, ...series.map(c => c.d ? c.smu / c.d : 0)) * 1.15;
+  const W = 640, H = 190, P = 30, n = Math.max(1, series.length), bw = (W - P * 2) / n, md = Math.max(1, ...series.map(c => c.d)), ms = Math.max(.01, ...series.map(c => c.smD ? c.smu / c.smD : 0)) * 1.15;
   const bars = series.map((c, i) => `<rect class="b" x="${P + i * bw + bw * .2}" y="${H - P - c.d / md * (H - P * 2)}" width="${bw * .6}" height="${c.d / md * (H - P * 2)}" rx="3"><title>${mLabel(i)}: ${fmtN(c.d)} demos</title></rect><text class="ax" x="${P + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle">${n > 8 ? PER.list[i].short.replace(/ \w+$/, '') : PER.list[i].short}</text>`).join('');
   /* a period with no demos has no DC2E: leave a gap in the line and say so, rather than drawing 0% */
-  const all = series.map((c, i) => [P + i * bw + bw / 2, H - P - (c.d ? c.smu / c.d : 0) / ms * (H - P * 2), c]), pts = all.filter(p => p[2].d);
-  const segs = []; let cur = []; all.forEach(p => { if (p[2].d) cur.push(p); else { if (cur.length) segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
+  const all = series.map((c, i) => [P + i * bw + bw / 2, H - P - (c.smD ? c.smu / c.smD : 0) / ms * (H - P * 2), c]), pts = all.filter(p => p[2].smD);
+  const segs = []; let cur = []; all.forEach(p => { if (p[2].smD) cur.push(p); else { if (cur.length) segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
   const gaps = all.filter(p => !p[2].d && !p[2].u).map(([x]) => `<text class="ax" x="${x}" y="${H - P - 8}" text-anchor="middle">no data</text>`).join('');
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Demos and same-month DC2E by month">${bars}${gaps}${segs.map(sg => `<polyline class="l" points="${sg.map(p => p[0] + ',' + p[1]).join(' ')}"/>`).join('')}${pts.map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="4" fill="var(--pos)"><title>${pct(c.d ? c.smu / c.d : null, 1)} same-month DC2E</title></circle><text class="ax" x="${x}" y="${y - 9}" text-anchor="middle" style="fill:var(--pos);font-weight:600">${pct(c.d ? c.smu / c.d : null, 0)}</text>`).join('')}</svg>
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Demos and same-month DC2E by month">${bars}${gaps}${segs.map(sg => `<polyline class="l" points="${sg.map(p => p[0] + ',' + p[1]).join(' ')}"/>`).join('')}${pts.map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="4" fill="var(--pos)"><title>${pct(c.smD ? c.smu / c.smD : null, 1)} same-month DC2E</title></circle><text class="ax" x="${x}" y="${y - 9}" text-anchor="middle" style="fill:var(--pos);font-weight:600">${pct(c.smD ? c.smu / c.smD : null, 0)}</text>`).join('')}</svg>
     <div class="tleg"><span><i style="background:var(--accent-line)"></i>Demos</span><span><i style="background:var(--pos)"></i>Same-month DC2E</span></div>`;
 }
 function vMoM() {
   PER = periods();
-  const r = role(), tot = (momAgg(() => 'all').all) || PER.list.map(() => ({ d: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 }));
+  const r = role(), tot = (momAgg(() => 'all').all) || PER.list.map(() => ({ d: 0, smD: 0, u: 0, smu: 0, rp: 0, otp: 0, rev: 0 }));
   const last = PER.list.length - 1, prev = last - 1, unit = PER.weekly ? 'week' : 'month';
   const presets = [['cm', 'This month'], ['lm', 'Last month'], ['3m', 'Last 3 months'], ['6m', 'Last 6 months'], ['all', 'All']];
   const rangeBar = `<div class="fbar" style="margin-bottom:12px"><span class="fl">Date range</span><div class="segs">${presets.map(([k, l]) => `<button class="${S.dpre === k ? 'on' : ''}" data-act="dpre" data-v="${k}">${l}</button>`).join('')}</div>
@@ -1544,7 +1564,8 @@ function vMoM() {
       ${rows.map(x => `<tr><td>${nm(x.k)}</td>${PER.list.map((p, i) => { const v = mf(x.a[i]); const ratio = ['dc2e', 'smdc'].includes(S.mm); return `<td class="n" style="${ratio && v != null && x.a[i].d >= 10 ? `background:color-mix(in srgb,${v >= RULES.DC2E_TARGET ? 'var(--pos)' : v >= .25 ? 'var(--warn)' : 'var(--neg)'} ${Math.min(30, 8 + x.a[i].d / 6)}%,transparent)` : ''}">${x.a[i].d || x.a[i].u ? mfm(v) : '<span class="note">—</span>'}</td>`; }).join('')}<td class="n">${prev >= 0 ? delta(mf(x.a[last]), mf(x.a[prev]), S.mm, last, prev) : ''}</td></tr>`).join('')}</table></div></div></section>`;
   }
   const [dl, di, ei] = MDIM[S.mdim], V = DATA.vocab, lab = (t, v) => S.mdim === 'lead' ? (v ? 'This month’s leads' : 'Older leads') : V[S.mdim][v];
-  const bd = momAgg((x, t) => lab(t, x[t === 'd' ? di : ei]));
+  const GN = { sm: 'Same month', pm: 'Previous month', rl: 'Rolling' };
+  const bd = momAgg((x, t) => S.mdim === 'lead' ? (t === 'd' ? (x[4] ? GN.sm : GN.pm) : GN[saleGrp(x[8], x[7])]) : lab(t, x[t === 'd' ? di : ei]));
   const bdRows = Object.entries(bd).filter(([k, a]) => k !== 'Unknown' && sum(a.map(c => c.d)) >= 20).sort((x, y) => sum(y[1].map(c => c.d)) - sum(x[1].map(c => c.d)));
   $('view').innerHTML = `${rangeBar}${filterBar({ prod: true, sale: true, ctry: true, keys: { sale: 'msale', ctry: 'mctry', prod: 'mprod' }, extra: mgrSel + tlFilter() + srcFilter() })}
     <div class="kpis" style="margin-top:14px">${['d', 'u', 'smdc', r === 'ic' ? (typeOf(IC(meId())) === 'RP' ? 'rp' : 'otp') : 'dc2e'].map(kpi).join('')}</div>
@@ -1634,13 +1655,14 @@ function vPeople() {
   $('view').innerHTML = `<div class="fbar"><span class="fl">Show</span><div class="segs">${[['active', 'Active'], ['inactive', 'Inactive'], ['all', 'All']].map(([v, l]) => `<button class="${S.pst === v ? 'on' : ''}" data-act="pst" data-v="${v}">${l}</button>`).join('')}</div>${tlFilter()}
       <span style="margin-left:auto;display:flex;gap:8px"><button class="btn btn-p" data-act="padd">+ Add SM</button><button class="btn" data-act="tadd">+ Add TL</button></span></div>
     <section class="panel" style="margin-top:14px"><div class="ph"><h2>Team members</h2><p>${list.length} shown · removing someone makes them inactive: they can’t sign in, and every sale they made still counts in its month</p></div><div class="pb tw"><table>
-      <tr><th>Name</th><th>Employee ID</th><th>Email</th><th>Team lead</th><th>Type</th><th>Status</th><th>Move to</th><th></th></tr>
+      <tr><th>Name</th><th>Employee ID</th><th>Email</th><th>Team lead</th><th>Type</th><th>Status</th><th>Attendance laptop</th><th>Move to</th><th></th></tr>
       ${list.map(ic => `<tr class="${ic.active ? '' : 'dim'}"><td><span class="tl-n"><span class="av">${initials(ic.name)}</span>${esc(ic.name)}</span></td><td class="mono">${esc(ic.emp || '—')}</td><td>${esc(ic.email)}</td><td>${ic.tl ? esc(TL(ic.tl).name) : '—'}</td><td>${typeOf(ic)}</td>
         <td>${ic.active ? '<span class="st st-complete">Active</span>' : '<span class="st st-holiday">Inactive</span>'}</td>
+        <td>${DB.dev[ic.id] ? `<span class="note">Registered ${fmtDay(DB.dev[ic.id])}</span>` : '<span class="note">Not registered</span>'} ${DB.dev[ic.id] ? `<button class="link" data-act="resetDev" data-id="${ic.id}">Reset</button>` : ''}</td>
         <td>${ic.active ? `<select class="inp" style="width:auto" data-mv="${ic.id}" aria-label="Move ${esc(ic.name)}"><option value="">Move…</option>${tlOpts('').replace(`value="${ic.tl}"`, `value="${ic.tl}" disabled`)}</select>` : ''}</td>
         <td>${ic.active ? `<button class="link" data-act="prem" data-id="${ic.id}">Remove</button>` : `<button class="link" data-act="preact" data-id="${ic.id}">Reactivate</button>`}</td></tr>`).join('')}</table></div></section>
-    <section class="panel" style="margin-top:18px"><div class="ph"><h2>Team leads</h2></div><div class="pb tw"><table><tr><th>Team lead</th><th>Email</th><th>BM</th><th class="n">Active members</th>${role() === 'admin' ? '<th>Move to BM</th>' : ''}</tr>
-      ${tls.map(t => `<tr><td><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span></td><td>${esc(t.email)}</td><td>${esc(MGRS[t.mgr].name)}</td><td class="n">${icsOf(t.id).length}</td>
+    <section class="panel" style="margin-top:18px"><div class="ph"><h2>Team leads</h2></div><div class="pb tw"><table><tr><th>Team lead</th><th>Email</th><th>BM</th><th class="n">Active members</th><th>Attendance laptop</th>${role() === 'admin' ? '<th>Move to BM</th>' : ''}</tr>
+      ${tls.map(t => `<tr><td><span class="tl-n"><span class="av">${initials(t.name)}</span>${esc(t.name)}</span></td><td>${esc(t.email)}</td><td>${esc(MGRS[t.mgr].name)}</td><td class="n">${icsOf(t.id).length}</td><td>${DB.dev['tl-' + t.id] ? `<span class="note">Registered ${fmtDay(DB.dev['tl-' + t.id])}</span>` : '<span class="note">Not registered</span>'} ${DB.dev['tl-' + t.id] ? `<button class="link" data-act="resetDev" data-id="${'tl-' + t.id}">Reset</button>` : ''}</td>
         ${role() === 'admin' ? `<td><select class="inp" style="width:auto" data-tlm="${t.id}">${Object.entries(MGRS).map(([k, m]) => `<option value="${k}"${t.mgr === k ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></td>` : ''}</tr>`).join('')}</table></div></section>
     <section class="panel" style="margin-top:18px"><div class="ph"><h2>Change log</h2></div><div class="pb"><div class="hist">${DB.plog.slice().reverse().map(h => `<div><span>${fmtDay(key(new Date(h.at + IST)))} ${fmtT(h.at)}</span><b style="font-weight:500">${esc(h.by)}</b><span style="font-family:var(--body);font-size:12.5px;color:var(--ink)">${esc(h.text)}</span></div>`).join('') || '<p class="note">No changes yet.</p>'}</div></div></section>`;
 }
@@ -1844,6 +1866,19 @@ function tsignOut(expired) { TSESSION = null; tstore.del('team.session'); if (wi
 async function treboot(silent) { const r = await tapi('team.boot'); if (!r.ok) { if (!silent) toast(r.message); return false; } const keep = { view: S.view, rw: S.rw, tlF: S.tlF }; applyTeamBoot(r.boot); Object.assign(S, keep); if (!$('overlay').innerHTML) render(); return true; }
 async function done(r, msg, close = true) { if (!r.ok) { toast(r.message || 'That didn’t work. Try again.'); return false; } if (close) closeModal(); await treboot(true); if (msg) toast(msg); return true; }
 const meP = () => role() === 'tl' ? PERSON('tl-' + meId()) : IC(meId());
+/* A short code describing this laptop's hardware (processor, memory, graphics chip, time zone). It stays the same when
+   browser data is cleared, so the server can recognise the same laptop and re-link it without an admin reset. */
+let _lp = null;
+async function laptopPrint() {
+  if (_lp) return _lp;
+  try {
+    let gpu = ''; try { const c = document.createElement('canvas').getContext('webgl'), e = c && c.getExtension('WEBGL_debug_renderer_info'); if (e) gpu = c.getParameter(e.UNMASKED_VENDOR_WEBGL) + '|' + c.getParameter(e.UNMASKED_RENDERER_WEBGL); } catch (x) { }
+    const parts = [navigator.platform, (navigator.userAgentData && navigator.userAgentData.platform) || '', navigator.hardwareConcurrency, navigator.deviceMemory || '', Intl.DateTimeFormat().resolvedOptions().timeZone, gpu];
+    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parts.join('#')));
+    _lp = 'P-' + Array.from(new Uint8Array(h)).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) { _lp = ''; }
+  return _lp;
+}
 /* In office: send the office network (public IP) and the laptop's location, so the server can confirm it */
 async function officeProof() {
   const out = {};
@@ -1862,7 +1897,7 @@ async function liveMe(x, m) {
   const mode = m === 'wfh' ? 'wfh' : 'office';
   let proof = {};
   if ((x === 'in' || x === 'mode') && mode === 'office') { toast('Checking you’re at the office…'); proof = await officeProof(); }
-  const r = await tapi('team.clock', { act: x, mode, device: DEVICE, ua: navigator.userAgent, mobile: !!(navigator.userAgentData && navigator.userAgentData.mobile), ...proof });
+  const r = await tapi('team.clock', { act: x, mode, device: DEVICE, fp: await laptopPrint(), ua: navigator.userAgent, mobile: !!(navigator.userAgentData && navigator.userAgentData.mobile), ...proof });
   if (!r.ok) return toast(r.message);
   closeModal(); await treboot(true);
   if (x === 'in') toast(r.day.late ? `Clocked in, ${r.day.late} min after your rostered start.` : 'You’re in. Have a good shift.');
@@ -1896,7 +1931,8 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
     case 'fixTimes': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, clockOut: $('co').value }), 'Times saved.');
     case 'mark': { stop(); const v = $('xr').value, ex = v.startsWith('ex:');
       return done(await tapi('team.mark', { email: P(el.dataset.id).email, k: el.dataset.k, status: ex ? 'excused' : v, why: ex ? v.slice(3) : '', reason: ($('xn') || {}).value || '' }), 'Saved.'); }
-    case 'resetDev': stop(); return done(await tapi('team.resetDevice', { email: P(el.dataset.id).email }), 'Laptop reset. The next laptop they mark present from is registered.');
+    case 'resetDev': { stop(); const who = P(el.dataset.id); if (!confirm(`Reset the attendance laptop for ${who.name}? The next laptop they clock in from becomes their attendance laptop.`)) return;
+      return done(await tapi('team.resetDevice', { email: who.email }), `Laptop reset for ${who.name}. The next laptop they clock in from is registered.`, false); }
     case 'rsubmit': { stop(); const t = TL(meId()), w = S.rw, { plan } = rosterOf(t.id, w), out = {};
       icsOf(t.id).forEach(ic => { out[ic.email] = {}; wdays(w).forEach(k => { const v = (plan[ic.id] || {})[k] || ''; out[ic.email][k] = v === 'off' ? 'OFF' : v === 'leave' ? 'LEAVE' : v; }); });
       const r = await tapi('team.roster', { week: w, plan: out, via: DB.rvia || 'grid' }); DB.rvia = null; if (r.ok) delete DB.rdraft[t.id + '|' + w];
@@ -2038,7 +2074,7 @@ function icDrawer(id) {
       return `<div class="dr-sec"><h4>Pace and follow-ups</h4><p>${fmtV(p.type, p.ach)} of ${fmtV(p.type, p.exp)} expected by today${p.behind ? ` · <b class="bad">${fmtV(p.type, p.gap)} behind</b>` : ' · <b class="good">on pace</b>'} · ${F.filter(r => r[2] <= 2).length} hot and ${F.length} open follow-ups <button class="link" data-act="fu" data-ic="${ic.id}">see lead IDs</button></p></div>
       <div class="dr-sec"><h4>Coaching gap</h4>${g ? `<p><b>${esc(g.seg)}</b>: ${pct(g.me)} DC2E against ${pct(g.team)} for the team, over ${g.n} demos.</p>` : '<p class="note">No segment more than 8 points below the team.</p>'}</div>
       <div class="dr-sec"><h4>Audit quality (from Daily KRA)</h4>${au.n ? `<div class="tw"><table><tr><th>Date</th><th>Lead</th><th>Verdict</th><th>Audited by</th></tr>${au.L.map(x => `<tr><td>${fmtDay(x.k)}</td><td class="mono">${esc(x.lead)}</td><td>${vchip(x.verdict)}</td><td>${esc(x.by)}</td></tr>`).join('')}</table></div>` : '<p class="note">No audits this month.</p>'}</div>`; })()}
-    ${ic.isTL ? '' : `<div class="dr-sec"><h4>Attendance laptop</h4><p>${DB.dev[ic.id] ? `Registered ${fmtDay(DB.dev[ic.id])}. ` : 'Not registered yet. '}<button class="link" data-act="resetDev" data-id="${ic.id}">Reset laptop</button> <span class="note">if they’ve changed laptops; the next laptop they mark present from is registered.</span></p></div>`}
+    ${ic.isTL && !['admin', 'mgr'].includes(role()) ? '' : `<div class="dr-sec"><h4>Attendance laptop</h4><p>${DB.dev[ic.id] ? `Registered ${fmtDay(DB.dev[ic.id])}. ` : 'Not registered yet. '}<button class="link" data-act="resetDev" data-id="${ic.id}">Reset laptop</button> <span class="note">if they’ve changed laptops; the next laptop they mark present from is registered.</span></p></div>`}
     ${ic.isTL || (IS_LIVE && !LIVE_VIEWS.has('nums')) ? '' : `<div class="dr-sec"><h4>This month</h4><div class="sumgrid" style="margin-top:0"><div class="sum"><b>${fmtV(q.type, q.ach)}</b><span>${q.type} achieved of ${fmtV(q.type, q.tgt)} (${pct(q.att)})</span></div><div class="sum"><b>${pct(q.smdc, 1)}</b><span>same-month DC2E</span></div><div class="sum"><b>${q.demos}</b><span>demos</span></div>
       <div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'short').length}</b><span>short shifts</span></div><div class="sum"><b>${monthDays().filter(k => k <= SHIFT && dayStatus(ic, k) === 'lop').length}</b><span>LOP days</span></div></div></div>`}`);
 }
