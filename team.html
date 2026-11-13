@@ -1892,7 +1892,18 @@ async function officeProof() {
   await Promise.race([Promise.all([ip, geo]), new Promise(r => setTimeout(r, 12000))]);
   return out;
 }
-async function liveMe(x, m) {
+let _meBusy = false;
+function meButtons(on, el) {   // lock every attendance button while a click is being saved
+  document.querySelectorAll('[data-act="me"]').forEach(b => { b.disabled = on; b.style.opacity = on ? '.55' : ''; b.style.cursor = on ? 'wait' : ''; });
+  if (el) { if (on) { el.dataset.was = el.textContent; el.textContent = 'Saving…'; } else if (el.dataset.was) el.textContent = el.dataset.was; }
+}
+async function liveMe(x, m, el) {
+  if (_meBusy) return toast('Still saving your last click…');
+  if (x === 'out' && m !== 'force' && shiftOf(meP()).credited < RULES.SHIFT_MIN * MIN) return liveMe2(x, m);   // the confirm box comes first
+  _meBusy = true; meButtons(true, el);
+  try { return await liveMe2(x, m); } finally { _meBusy = false; meButtons(false, el); }
+}
+async function liveMe2(x, m) {
   const ic = meP(), s = shiftOf(ic);
   if (isPhone()) return toast('Use your registered laptop to mark attendance.');
   if (x === 'out' && m !== 'force' && s.credited < RULES.SHIFT_MIN * MIN)
@@ -1902,7 +1913,10 @@ async function liveMe(x, m) {
   if ((x === 'in' || x === 'mode') && mode === 'office') { toast('Checking you’re at the office…'); proof = await officeProof(); }
   const r = await tapi('team.clock', { act: x, mode, device: DEVICE, fp: await laptopPrint(), ua: navigator.userAgent, mobile: !!(navigator.userAgentData && navigator.userAgentData.mobile), ...proof });
   if (!r.ok) return toast(r.message);
-  closeModal(); await treboot(true);
+  closeModal();
+  /* show the saved shift straight away from the reply; the full refresh runs in the background */
+  if (r.day && r.day.ev && DB.night[ic.id]) { DB.night[ic.id].ev = r.day.ev.map(e => ({ ...e })).sort((p, q) => p.t - q.t); if (r.day.late > 0) DB.lateTonight[ic.id] = r.day.late; render(); }
+  treboot(true);
   if (x === 'in') toast(r.day.late ? `Clocked in, ${r.day.late} min after your rostered start.` : 'You’re in. Have a good shift.');
   if (x === 'out') { if (r.day.st === 'Present') setTimeout(confetti, 200); else toast('Shift ended. It’s recorded as short.'); }
 }
@@ -1929,7 +1943,7 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
         ['The whole floor is listed. Filter the Team lead column to match the Team lead filter on the page.']]);
       read['!cols'] = [{ wch: 60 }, { wch: 10 }]; XLSX.utils.book_append_sheet(wb, read, 'Read me'); wb.SheetNames.unshift(wb.SheetNames.pop());
       XLSX.writeFile(wb, 'Team_demos_' + r.month + '.xlsx'); return toast('Downloaded ' + r.counted.rows.length + ' demos and ' + r.skipped.rows.length + ' rows not counted.'); }
-    case 'me': stop(); return liveMe(el.dataset.x, el.dataset.m);
+    case 'me': stop(); return liveMe(el.dataset.x, el.dataset.m, el);
     case 'fixIn': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, mode: $('cm').value }), 'Clocked in.');
     case 'fixTimes': stop(); return done(await tapi('team.fix', { email: P(el.dataset.id).email, k: SHIFT, clockIn: $('ci').value, clockOut: $('co').value }), 'Times saved.');
     case 'rday': { stop(); const who = P(el.dataset.id), k = el.dataset.k, v = $('rv').value;
