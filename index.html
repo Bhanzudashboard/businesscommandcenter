@@ -1,0 +1,3643 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>US/CA Business Command Centre — V7.7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f7fa; --surface:#ffffff; --raised:#fbfcfe;
+  --line:#dce5ed; --line2:#c6d4e0;
+  --ink:#0e1d2a; --mute:#57708a; --dim:#8fa4b8;
+  --accent:#1668b3; --accent-soft:#e8f1fa; --accent-line:#a8cbe9;
+  --pos:#0d7550; --pos-bg:#e4f3ec;
+  --warn:#a4640f; --warn-bg:#fbeed8;
+  --neg:#b8382a; --neg-bg:#fbe6e2;
+  --shadow:0 1px 2px rgba(14,29,42,.05), 0 8px 24px -16px rgba(14,29,42,.18);
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --display:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,sans-serif;
+     font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.92em;background:var(--accent-soft);
+     border:1px solid var(--accent-line);border-radius:3px;padding:.5px 4px;color:#0f4f8a}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+
+/* ── masthead ── */
+header{background:var(--surface);border-bottom:1px solid var(--line);
+       position:sticky;top:0;z-index:60}
+.mast{display:flex;align-items:flex-end;gap:20px;padding:16px 26px 13px;flex-wrap:wrap}
+.kick{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--accent);margin-bottom:5px}
+h1{font-family:var(--display);font-size:23px;font-weight:700;letter-spacing:-.022em;line-height:1.1}
+h1 span{color:var(--dim);font-weight:500}
+.mast-meta{margin-left:auto;text-align:right;font-size:11px;color:var(--mute);line-height:1.65}
+.mast-meta b{font-family:var(--mono);color:var(--ink);font-weight:600}
+
+/* ── the integrity strip: this build's signature.
+     Both conversion figures travel together, on every page, permanently. ── */
+.int{display:flex;gap:0;border-top:1px solid var(--line);background:var(--raised);
+     overflow-x:auto;scrollbar-width:thin}
+.int-item{flex:1;min-width:172px;padding:9px 18px;border-right:1px solid var(--line);
+          font-size:10.5px;color:var(--mute);white-space:nowrap}
+.int-item b{display:block;font-family:var(--mono);font-size:16px;font-weight:600;
+            color:var(--ink);letter-spacing:-.02em;margin-bottom:1px}
+.int-s{display:block;color:var(--dim);font-size:9.5px;margin-top:2px}
+.int-bad b{color:var(--neg)}
+.int-bad{background:var(--neg-bg)}
+
+/* ── layout ── */
+.shell{display:grid;grid-template-columns:216px 1fr;align-items:start}
+nav{border-right:1px solid var(--line);background:var(--surface);padding:14px 10px 40px;
+    position:sticky;top:0;max-height:100vh;overflow-y:auto}
+.ngroup{margin-bottom:14px}
+.nglabel{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+         color:var(--dim);padding:0 10px 6px}
+.nav{display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
+     font:inherit;font-size:12.5px;color:var(--mute);padding:7px 10px;border-radius:6px;
+     position:relative;transition:background .12s,color .12s}
+.nav:hover{background:var(--paper);color:var(--ink)}
+.nav.on{background:var(--accent-soft);color:#0f4f8a;font-weight:600}
+.nav.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;
+                background:var(--accent);border-radius:0 2px 2px 0}
+main{padding:18px 26px 64px;min-width:0}
+
+/* ── filters ── */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+         padding:11px 14px;background:var(--surface);border:1px solid var(--line);
+         border-radius:9px;margin-bottom:16px;box-shadow:var(--shadow)}
+select,input[type=number]{font:inherit;font-size:12px;padding:6px 9px;background:var(--surface);
+       color:var(--ink);border:1px solid var(--line2);border-radius:6px;cursor:pointer}
+select:hover,input:hover{border-color:var(--accent-line)}
+input[type=number]{cursor:text;width:132px;font-family:var(--mono)}
+.scope{margin-left:auto;font-size:10.5px;color:var(--dim);font-family:var(--mono)}
+.btn{font:inherit;font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:6px;
+     border:1px solid var(--line2);background:var(--surface);color:var(--mute);cursor:pointer;
+     transition:.12s}
+.btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover{background:#12558f;border-color:#12558f;color:#fff}
+
+/* ── period bar ── */
+.period{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:10px 14px;
+        background:var(--surface);border:1px solid var(--line);border-radius:9px;
+        margin-bottom:10px;box-shadow:var(--shadow)}
+.clbl{font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;
+      color:var(--dim)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:7px;overflow:hidden}
+.sg{font:inherit;font-size:12px;font-weight:500;padding:6px 14px;border:0;cursor:pointer;
+    background:var(--surface);color:var(--mute);border-right:1px solid var(--line);transition:.12s}
+.sg:last-child{border-right:0}
+.sg:hover{background:var(--accent-soft);color:var(--accent)}
+.sg.on{background:var(--accent);color:#fff;font-weight:600}
+.period input[type=date]{font:inherit;font-family:var(--mono);font-size:12px;padding:6px 9px;
+       border:1px solid var(--line2);border-radius:6px;background:var(--surface);color:var(--ink)}
+.pnote{font-size:10.5px;color:var(--dim)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mute);cursor:pointer}
+.chk input{accent-color:var(--accent);cursor:pointer}
+.pnote.warn{color:var(--warn);background:var(--warn-bg);border-radius:4px;padding:2px 8px;font-weight:500}
+.sync{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:11px;
+      display:inline-block;margin-top:3px;max-width:420px;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+.sync-ok{background:var(--pos-bg);color:var(--pos)}
+.sync-warn{background:#eef2f6;color:var(--mute)}
+.sync-bad{background:var(--neg-bg);color:var(--neg)}
+.sync-busy{background:var(--accent-soft);color:var(--accent)}
+#syncBar input{font-family:var(--mono);font-size:11px;padding:6px 9px;
+      border:1px solid var(--line2);border-radius:6px;background:var(--surface);color:var(--ink)}
+.pscope{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.dl{font-family:var(--mono);font-size:10px;font-weight:600;margin-left:6px;vertical-align:2px}
+.dl.up{color:var(--pos)} .dl.dn{color:var(--neg)}
+
+/* ── multi-select ── */
+.ms{position:relative}
+.ms-b{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:12px;
+      padding:6px 10px;background:var(--surface);color:var(--ink);
+      border:1px solid var(--line2);border-radius:6px;cursor:pointer;transition:.12s;
+      max-width:230px}
+.ms-b:hover{border-color:var(--accent-line)}
+.ms-b.on{border-color:var(--accent);background:var(--accent-soft);color:#0f4f8a;font-weight:500}
+.ms-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-n{background:var(--accent);color:#fff;font-family:var(--mono);font-size:9px;
+      font-weight:600;border-radius:9px;padding:1px 6px;flex:none}
+.ms-x{color:var(--dim);font-size:9px;flex:none}
+.ms-p{position:absolute;top:calc(100% + 5px);left:0;z-index:70;min-width:230px;
+      max-width:320px;background:var(--surface);border:1px solid var(--line2);
+      border-radius:9px;box-shadow:0 12px 34px rgba(14,29,42,.18);padding:8px}
+.ms-s{width:100%;font:inherit;font-size:12px;padding:6px 9px;margin-bottom:6px;
+      border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.ms-acts{display:flex;gap:6px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.ms-acts button{flex:1;font:inherit;font-size:10.5px;padding:4px 6px;cursor:pointer;
+      background:var(--paper);border:1px solid var(--line);border-radius:5px;color:var(--mute)}
+.ms-acts button:hover{border-color:var(--accent);color:var(--accent)}
+.ms-l{max-height:264px;overflow-y:auto}
+.ms-o{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;
+      cursor:pointer;font-size:12px;color:var(--ink)}
+.ms-o:hover{background:var(--paper)}
+.ms-o input{accent-color:var(--accent);cursor:pointer;flex:none}
+.ms-o span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── sections ── */
+.page{display:none}
+.page.on{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.sec{margin-bottom:22px}
+.sh{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+h2{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.015em}
+h3{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+h4{font-size:11.5px;font-weight:600}
+.sd{color:var(--mute);font-size:11.5px;margin-bottom:11px;max-width:76ch;line-height:1.6}
+.sh .btn{margin-left:auto}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:9px;
+       padding:15px 17px;box-shadow:var(--shadow)}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;align-items:start}
+.two-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+
+/* ── KPI cards ── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
+      border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface);
+      box-shadow:var(--shadow);margin-bottom:14px}
+.kpis-6{grid-template-columns:repeat(auto-fit,minmax(128px,1fr));margin:12px 0}
+.kpi{padding:12px 15px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.k-l{font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;
+     color:var(--dim);margin-bottom:6px}
+.k-v{font-family:var(--mono);font-size:20px;font-weight:600;letter-spacing:-.025em}
+.k-s{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.4}
+.k-good .k-v{color:var(--pos)} .k-bad .k-v{color:var(--neg)} .k-warn .k-v{color:var(--warn)}
+
+/* ── tables ── */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface);
+    box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+   color:var(--dim);font-weight:500;text-align:right;padding:9px 11px;white-space:nowrap;
+   border-bottom:1px solid var(--line2);cursor:pointer;user-select:none;
+   position:sticky;top:0;background:var(--raised);z-index:2}
+th:hover{color:var(--accent)}
+th.l{text-align:left} th.srt{color:var(--accent)}
+td{padding:8px 11px;border-bottom:1px solid var(--line);text-align:right;
+   font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+td.l{text-align:left;font-family:'Inter',sans-serif;font-size:12px}
+td.wrap,th.wrap{white-space:normal;min-width:260px;line-height:1.5}
+tbody tr:hover td{background:var(--raised)}
+tbody tr:last-child td{border-bottom:0}
+.pos{color:var(--pos);font-weight:600} .neg{color:var(--neg);font-weight:600}
+.warn{color:var(--warn);font-weight:600} .muted{color:var(--dim)}
+.ci{font-size:9.5px;color:var(--dim);font-weight:400}
+.mono{font-family:var(--mono)}
+.empty{color:var(--dim);font-style:italic}
+td.empty{text-align:left;padding:16px 11px}
+
+/* ── tags ── */
+.tag{display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.07em;
+     text-transform:uppercase;padding:2px 7px;border-radius:3px;font-weight:600}
+.t-won,.t-good,.t-sig{background:var(--pos-bg);color:var(--pos)}
+.t-open{background:var(--warn-bg);color:var(--warn)}
+.t-dead,.t-bad{background:var(--neg-bg);color:var(--neg)}
+.t-noise{background:#eef2f6;color:var(--dim)}
+
+/* ── bars ── */
+.bar{display:grid;grid-template-columns:minmax(90px,168px) 1fr 96px;gap:11px;
+     align-items:center;margin:7px 0;font-size:11.5px}
+.b-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+.b-t{height:9px;background:#e8eef4;border-radius:5px;overflow:hidden}
+.b-f{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .4s}
+.bf-pos{background:var(--pos)} .bf-neg{background:var(--neg)} .bf-warn{background:var(--warn)}
+.b-v{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink)}
+
+/* ── prose blocks ── */
+.prose p{margin-bottom:9px;font-size:12px;line-height:1.68;color:var(--mute);max-width:82ch}
+.prose p:last-child{margin-bottom:0}
+.prose b{color:var(--ink);font-weight:600}
+.sig-t{display:inline-block;font-family:var(--mono);font-size:8.5px;letter-spacing:.11em;
+       text-transform:uppercase;color:var(--accent);margin-right:7px;font-weight:600}
+.sig-t.pos{color:var(--pos)} .sig-t.neg{color:var(--neg)} .sig-t.muted{color:var(--dim)}
+.caveat{border-left:2px solid var(--accent-line);padding-left:11px;font-size:11.5px;
+        color:var(--mute);background:var(--accent-soft);padding:9px 11px;border-radius:0 5px 5px 0}
+.note{border-left:3px solid var(--warn);background:var(--warn-bg);padding:11px 14px;
+      border-radius:0 6px 6px 0;font-size:11.5px;color:#6b430b;line-height:1.6}
+
+/* ── hour grid ── */
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.hc{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--surface);
+    box-shadow:var(--shadow)}
+.hc-h{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.08em}
+.hc-v{font-family:var(--mono);font-size:17px;font-weight:600;letter-spacing:-.02em;margin:3px 0 1px}
+.hc-n{font-size:9.5px;color:var(--dim)}
+.hc-b{height:3px;background:#e8eef4;border-radius:2px;margin-top:7px;overflow:hidden}
+.hc-b span{display:block;height:100%;background:var(--accent-line);border-radius:2px}
+.hc-hi{border-color:#9bd3ba;background:var(--pos-bg)} .hc-hi .hc-v{color:var(--pos)}
+.hc-lo{border-color:#eab4ab;background:var(--neg-bg)} .hc-lo .hc-v{color:var(--neg)}
+.hc-thin{opacity:.5}
+
+/* ── quadrants ── */
+.quads{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.quad{border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-height:140px;
+      background:var(--surface)}
+.quad h4{margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.q-pos h4{color:var(--pos)} .q-neg h4{color:var(--neg)} .q-warn h4{color:var(--warn)}
+.q-body{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;flex-direction:column;background:var(--raised);
+      border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:9.5px;
+      color:var(--dim);font-family:var(--mono)}
+.chip b{font-family:'Inter',sans-serif;font-size:11px;color:var(--ink);font-weight:600;
+        margin-bottom:2px}
+
+/* ── rep card ── */
+.rc-head{display:flex;align-items:baseline;gap:11px;padding-bottom:10px;
+         border-bottom:1px solid var(--line)}
+.rc-tl{font-size:11px;color:var(--dim);font-family:var(--mono)}
+.rc-note{font-size:11.5px;color:var(--mute);line-height:1.6;margin-top:9px}
+.rc-note b{color:var(--ink)}
+.rc-leads{margin-top:13px;border-top:1px solid var(--line);padding-top:11px}
+.rc-lh{font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;
+       color:var(--dim);margin-bottom:7px}
+.rc-lead{display:grid;grid-template-columns:1.2fr 1.1fr .8fr 1fr;gap:9px;font-size:10.5px;
+         padding:5px 0;border-bottom:1px solid var(--line);color:var(--mute)}
+.rc-lead:last-child{border-bottom:0}
+.rc-lead span:last-child{text-align:right;color:var(--ink);font-weight:600}
+
+/* ── copilot ── */
+#cpBtn{position:fixed;right:20px;bottom:20px;z-index:80;padding:10px 16px;border-radius:24px;
+       box-shadow:0 4px 18px rgba(22,104,179,.3)}
+#cp{position:fixed;right:20px;bottom:20px;width:412px;max-width:calc(100vw - 40px);
+    max-height:min(78vh,660px);background:var(--surface);border:1px solid var(--line2);
+    border-radius:13px;box-shadow:0 20px 56px rgba(14,29,42,.24);z-index:81;
+    display:none;flex-direction:column}
+#cp.on{display:flex}
+.cp-h{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line)}
+.cp-h h3{font-size:13.5px}
+.cp-scope{font-size:9.5px;color:var(--dim);font-family:var(--mono);margin-top:2px}
+.cp-x{margin-left:auto;background:none;border:0;font-size:19px;color:var(--dim);cursor:pointer;
+      line-height:1;padding:0 3px}
+.cp-x:hover{color:var(--ink)}
+.cp-body{flex:1;overflow-y:auto;padding:14px 15px;font-size:12px;line-height:1.65;color:var(--mute)}
+.cp-body b{color:var(--ink)}
+.cp-q{color:var(--accent);font-weight:600;font-size:11.5px;margin:14px 0 6px;
+      padding-left:9px;border-left:2px solid var(--accent-line)}
+.cp-a{margin-bottom:4px}
+.cp-a p{margin-bottom:8px}
+.cp-li{display:block;padding-left:13px;position:relative;margin:3px 0}
+.cp-li::before{content:'·';position:absolute;left:4px;color:var(--accent)}
+.cp-think{color:var(--dim);font-style:italic}
+.cp-think::after{content:'';animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+.cp-hint{font-size:10.5px;color:var(--dim);margin-top:6px;line-height:1.5}
+.cp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.cp-chip{font:inherit;font-size:10.5px;padding:5px 10px;border-radius:13px;cursor:pointer;
+         background:var(--accent-soft);border:1px solid var(--accent-line);color:#0f4f8a}
+.cp-chip:hover{background:#d8e8f7}
+.cp-f{padding:11px 15px 13px;border-top:1px solid var(--line)}
+.cp-f input[type=text]{width:100%;font:inherit;font-size:12px;padding:9px 10px;
+       border:1px solid var(--line2);border-radius:7px;background:var(--surface);color:var(--ink)}
+.cp-row{display:flex;gap:7px;margin-top:7px;align-items:center}
+.cp-row .btn{flex:1}
+.cp-meta{font-size:9px;color:var(--dim);font-family:var(--mono);margin-top:6px}
+.cp-warn{padding:8px 15px;background:var(--warn-bg);border-top:1px solid var(--line);
+         color:#6b430b;font-size:10.5px;display:none}
+
+@media(max-width:1000px){
+  .shell{grid-template-columns:1fr}
+  nav{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);
+      display:flex;gap:5px;overflow-x:auto;padding:9px}
+  .ngroup{margin:0;display:flex;gap:4px;align-items:center}
+  .nglabel{padding:0 6px 0 10px;white-space:nowrap}
+  .nav{width:auto;white-space:nowrap}
+  .nav.on::before{display:none}
+  .two,.two-eq,.quads{grid-template-columns:1fr}
+  main{padding:14px 15px 48px}
+  .mast{padding:13px 15px 11px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<!-- Daily KRA tab (added). Self-contained; nothing else in this file was changed. -->
+<style>
+.bcc-apptabs{background:#0e1d2a;display:flex;align-items:flex-end;gap:2px;padding:8px 22px 0;overflow-x:auto}
+.bcc-apptabs a{color:#b9c8d6;text-decoration:none;font:500 12.5px/1.5 'Inter',system-ui,sans-serif;padding:8px 16px 9px;border-radius:8px 8px 0 0;white-space:nowrap}
+.bcc-apptabs a:hover{color:#fff;background:rgba(255,255,255,.06);text-decoration:none}
+.bcc-apptabs a.on{background:#fff;color:#0e1d2a;font-weight:600}
+@media(max-width:640px){.bcc-apptabs{padding:6px 10px 0}}
+</style></head><body>
+<div class="bcc-apptabs" role="navigation" aria-label="Command centre sections"><a href="https://bhanzudashboard.github.io/businesscommandcenter/" target="_top" class="on" aria-current="page">Business Command Centre</a><a href="https://bhanzudashboard.github.io/businesscommandcenter/kra.html" target="_top">Daily KRA</a><a href="https://bhanzudashboard.github.io/businesscommandcenter/team.html" target="_top">Team</a></div>
+
+<header>
+  <div class="mast">
+    <div>
+      <div class="kick">Sales Leadership · US &amp; Canada · Director Console</div>
+      <h1>Business Command Centre <span>— V7.7</span></h1>
+    </div>
+    <div class="mast-meta">
+      <div><b id="mLeads">—</b> leads · <b id="mDC">—</b> demos · <b id="mEN">—</b> sales</div>
+      <div id="mPeriod">—</div>
+      <div class="sync sync-warn" id="syncPill">Built-in extract</div>
+    </div>
+  </div>
+  <div class="int" id="intStrip"></div>
+</header>
+
+<div class="shell">
+<nav id="nav"></nav>
+<main>
+
+<div class="period" id="syncBar">
+  <span class="clbl">Live feed</span>
+  <input type="text" id="cfgUrl" placeholder="Apps Script /exec URL" style="flex:1;min-width:220px">
+  <span id="cfgWho" class="clbl" style="text-transform:none;letter-spacing:0"></span>
+  <select id="cfgAuto" onchange="setAutoRefresh(this.value)">
+    <option value="0">Manual only</option>
+    <option value="5">Auto 5 min</option>
+    <option value="15" selected>Auto 15 min</option>
+    <option value="60">Auto hourly</option>
+  </select>
+  <button class="btn" onclick="setEndpoint()">Connect</button>
+  <button class="btn btn-p" onclick="refreshNow()">Refresh now</button>
+  <button class="btn" onclick="BCC_AUTH.signOut()">Sign out</button>
+</div>
+
+<div class="period" id="basisBar"></div>
+<div class="period" id="periodBar"></div>
+
+<div class="filters" id="filterRow"></div>
+
+<!-- ══════════ EXECUTIVE PULSE ══════════ -->
+<section id="p-exec" class="page on">
+  <div id="execKpis" class="kpis"></div>
+  <div class="panel">
+    <div class="sh"><h3>Demos per day</h3></div>
+    <div class="sd">Volume across the selected window. Partial extract days are flagged.</div>
+    <div id="execTrend"></div>
+  </div>
+  <div class="two" style="margin-top:14px">
+    <div class="panel">
+      <div class="sh"><h3>Revenue per demo, by team</h3></div>
+      <div class="sd">Traced revenue only. Teams at or above the portfolio conversion rate are green.</div>
+      <div id="execTeamBars"></div>
+    </div>
+    <div class="panel">
+      <div class="sh"><h3>What the numbers say</h3></div>
+      <div class="sd">Only findings that survive a 95% significance test appear here.</div>
+      <div id="execSignals" class="prose"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ DATA INTEGRITY ══════════ -->
+<section id="p-integrity" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Data integrity</h2></div>
+    <div class="sd">Where the two conversion figures come from, and which one to quote.</div>
+    <div id="intKpis" class="kpis"></div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><h3>Reconciliation</h3>
+        <button class="btn" onclick="exportCSV('intT','integrity')">Export CSV</button></div>
+      <div class="tw"><table id="intT"></table></div>
+    </div>
+    <div class="panel">
+      <div class="sh"><h3>Why this page exists</h3></div>
+      <div id="intNote" class="prose"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MODEL CALIBRATION ══════════ -->
+<section id="p-calibration" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Model calibration</h2></div>
+    <div class="sd">Stage win rates measured against outcomes, next to the values V7.3 assumed.</div>
+    <div id="calKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Assumed versus observed</h3>
+      <button class="btn" onclick="exportCSV('calT','stage_calibration')">Export CSV</button></div>
+    <div class="tw"><table id="calT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>What changed</h3></div>
+    <div id="calNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ FUNNEL DIAGNOSIS ══════════ -->
+<section id="p-diagnosis" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Funnel diagnosis</h2></div>
+    <div class="sd">Every segment with 20+ demos, tested against the portfolio conversion rate.</div>
+    <div id="diagKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Segment drivers</h3>
+      <button class="btn" onclick="exportCSV('diagT','drivers')">Export CSV</button></div>
+    <div class="sd">Sorted by z-score. Rows marked “noise” carry no rupee figure — acting on them means acting on sampling variation.</div>
+    <div class="tw"><table id="diagT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>Reading this table</h3></div>
+    <div id="diagText" class="prose"></div></div>
+</section>
+
+<!-- ══════════ CONVERSION BENCHMARK ══════════ -->
+<section id="p-benchmark" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Conversion benchmark</h2></div>
+    <div class="sd">Actual conversion against each rep's own mix-adjusted expectation.</div>
+    <div id="benchKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Actual versus expected</h3>
+      <button class="btn" onclick="exportCSV('benchT','benchmark')">Export CSV</button></div>
+    <div class="tw"><table id="benchT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>How expectation is built</h3></div>
+    <div id="benchNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ SALESPERSON INTELLIGENCE ══════════ -->
+<section id="p-reps" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Salesperson intelligence</h2>
+      <button class="btn" onclick="exportCSV('repsT','salespeople')">Export CSV</button></div>
+    <div class="sd">Select a name to inspect their mix-adjusted position and open demos.</div>
+    <div class="tw"><table id="repsT"></table></div>
+  </div>
+  <div class="two">
+    <div class="panel" id="repCard"></div>
+    <div class="panel"><div class="sh"><h3>Which number to quote</h3></div>
+      <div id="repsNote" class="prose"></div></div>
+  </div>
+</section>
+
+<!-- ══════════ TL COMMAND CENTRE ══════════ -->
+<section id="p-tl" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Team lead command centre</h2></div>
+    <div id="tlKpis" class="kpis"></div>
+  </div>
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><h3>Team performance</h3>
+        <button class="btn" onclick="exportCSV('tlT','team_leads')">Export CSV</button></div>
+      <div class="tw"><table id="tlT"></table></div>
+    </div>
+    <div class="panel"><div class="sh"><h3>Where to spend attention</h3></div>
+      <div id="tlActions" class="prose"></div></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3 id="drillTitle">Select a team lead</h3>
+      <button class="btn" onclick="exportCSV('drillT','team_detail')">Export CSV</button></div>
+    <div class="tw"><table id="drillT"></table></div>
+  </div>
+</section>
+
+<!-- ══════════ QUADRANT ══════════ -->
+<section id="p-quadrant" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Performance quadrant</h2></div>
+    <div class="sd">Reps with 10+ demos, split on median conversion and median revenue per demo.</div>
+    <div id="quads" class="quads"></div>
+  </div>
+  <div class="panel"><div id="quadNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ REVENUE OPPORTUNITY ══════════ -->
+<section id="p-opportunity" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Open pipeline value</h2></div>
+    <div class="sd">Live demos valued at measured stage win rates.</div>
+    <div id="oppKpis" class="kpis"></div>
+  </div>
+  <div class="two-eq">
+    <div class="sec"><div class="sh"><h3>By stage</h3>
+      <button class="btn" onclick="exportCSV('oppStageT','pipeline_stage')">Export CSV</button></div>
+      <div class="tw"><table id="oppStageT"></table></div></div>
+    <div class="sec"><div class="sh"><h3>By team lead</h3>
+      <button class="btn" onclick="exportCSV('oppTLT','pipeline_tl')">Export CSV</button></div>
+      <div class="tw"><table id="oppTLT"></table></div></div>
+  </div>
+</section>
+
+<!-- ══════════ PRIORITY LEADS ══════════ -->
+<section id="p-priority" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Priority queue</h2></div>
+    <div id="priKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Ranked open demos</h3>
+      <button class="btn" onclick="exportCSV('priT','priority_queue')">Export CSV</button></div>
+    <div class="tw"><table id="priT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>How ranking works</h3></div>
+    <div id="priNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ FUNNEL ══════════ -->
+<section id="p-funnel" class="page">
+  <div class="two-eq">
+    <div class="panel"><div class="sh"><h2>Disposition funnel</h2></div>
+      <div class="sd">All demos by sub stage. Green won, amber open, red dead.</div>
+      <div id="funnelBars"></div></div>
+    <div class="panel"><div class="sh"><h2>Open pool value</h2></div>
+      <div class="sd">Open stages only, valued at measured rates × current ATS.</div>
+      <div id="poolBars"></div></div>
+  </div>
+  <div class="panel" style="margin-top:14px"><div id="funnelNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ LEAD AGE ══════════ -->
+<section id="p-leadage" class="page">
+  <div class="two">
+    <div class="sec">
+      <div class="sh"><h2>Lead age</h2>
+        <button class="btn" onclick="exportCSV('ageT','lead_age')">Export CSV</button></div>
+      <div class="sd">Conversion and revenue per demo by how old the lead was at demo time.</div>
+      <div class="tw"><table id="ageT"></table></div>
+    </div>
+    <div class="panel"><div class="sh"><h3>Revenue per demo</h3></div>
+      <div id="ageBars"></div></div>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <div class="sh"><h3>A metric V7.3 declared impossible</h3></div>
+    <div id="ageNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ SOURCES ══════════ -->
+<section id="p-sources" class="page">
+  <div class="two-eq">
+    <div class="sec"><div class="sh"><h2>Source economics</h2>
+      <button class="btn" onclick="exportCSV('sourceT','sources')">Export CSV</button></div>
+      <div class="tw"><table id="sourceT"></table></div></div>
+    <div class="sec"><div class="sh"><h2>UTM economics</h2>
+      <button class="btn" onclick="exportCSV('utmT','utm')">Export CSV</button></div>
+      <div class="tw"><table id="utmT"></table></div></div>
+  </div>
+</section>
+
+<!-- ══════════ PRODUCT & GRADE ══════════ -->
+<section id="p-product" class="page">
+  <div class="two-eq">
+    <div class="sec"><div class="sh"><h2>Product</h2>
+      <button class="btn" onclick="exportCSV('prodT','products')">Export CSV</button></div>
+      <div class="tw"><table id="prodT"></table></div></div>
+    <div class="sec"><div class="sh"><h2>Grade</h2>
+      <button class="btn" onclick="exportCSV('gradeT','grades')">Export CSV</button></div>
+      <div class="tw"><table id="gradeT"></table></div></div>
+  </div>
+  <div class="panel" style="margin-top:14px"><div id="prodNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ ETHNICITY ══════════ -->
+<section id="p-ethnicity" class="page">
+  <div class="two">
+    <div class="sec"><div class="sh"><h2>Ethnicity</h2>
+      <button class="btn" onclick="exportCSV('ethT','ethnicity')">Export CSV</button></div>
+      <div class="tw"><table id="ethT"></table></div></div>
+    <div class="sec"><div class="sh"><h3>Country × ethnicity</h3>
+      <button class="btn" onclick="exportCSV('matrixT','country_ethnicity')">Export CSV</button></div>
+      <div class="tw"><table id="matrixT"></table></div></div>
+  </div>
+  <div class="note" style="margin-top:14px" id="ethNote"></div>
+</section>
+
+<!-- ══════════ SAME MONTH / ROLLING ══════════ -->
+<section id="p-mix" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Same month versus rolling</h2></div>
+    <div id="mixKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>By team and cohort type</h3>
+      <button class="btn" onclick="exportCSV('mixT','same_rolling')">Export CSV</button></div>
+    <div class="tw"><table id="mixT"></table></div>
+  </div>
+</section>
+
+<!-- ══════════ OTP / RP ══════════ -->
+<section id="p-teams" class="page">
+  <div class="sec">
+    <div class="sh"><h2>RP and Non-RP</h2></div>
+    <div id="teamKpis" class="kpis"></div>
+  </div>
+  <div class="two-eq">
+    <div class="sec"><div class="sh"><h3>RP</h3>
+      <button class="btn" onclick="exportCSV('rpT','rp')">Export CSV</button></div>
+      <div class="tw"><table id="rpT"></table></div></div>
+    <div class="sec"><div class="sh"><h3>Non-RP</h3>
+      <button class="btn" onclick="exportCSV('otpT','non_rp')">Export CSV</button></div>
+      <div class="tw"><table id="otpT"></table></div></div>
+  </div>
+</section>
+
+<!-- ══════════ COHORT ══════════ -->
+<section id="p-cohort" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Speed to close</h2>
+      <button class="btn" onclick="exportCSV('cohortT','speed_to_close')">Export CSV</button></div>
+    <div class="sd">How long a demo takes to become a sale.</div>
+    <div id="cohortKpis" class="kpis"></div>
+    <div class="tw"><table id="cohortT"></table></div>
+  </div>
+  <div class="panel" id="cohortNote"></div>
+</section>
+
+<!-- ══════════ FORECAST ══════════ -->
+<section id="p-forecast" class="page">
+  <div class="filters" style="box-shadow:none">
+    <input type="number" id="fRevTarget" placeholder="Revenue target ₹">
+    <input type="number" id="fEnTarget" placeholder="Enrolment target">
+    <input type="number" id="fDays" value="31" style="width:96px" title="Days in month">
+    <button class="btn btn-p" onclick="applyTargets()">Apply targets</button>
+  </div>
+  <div id="fcKpis" class="kpis"></div>
+  <div class="panel"><div class="sh"><h2>Forecast</h2></div>
+    <div id="fcText" class="prose"></div></div>
+</section>
+
+<!-- ══════════ DECOMPOSITION ══════════ -->
+<section id="p-decomp" class="page">
+  <div id="decompKpis" class="kpis"></div>
+  <div class="two">
+    <div class="panel"><div class="sh"><h2>Incremental levers</h2></div>
+      <div class="sd">Value of an equal-sized nudge to each lever.</div>
+      <div id="leverBars"></div></div>
+    <div class="panel"><div class="sh"><h3>Interpretation</h3></div>
+      <div id="decompText" class="prose"></div></div>
+  </div>
+</section>
+
+
+<!-- ══════════ LEAD → DEMO → ENROLMENT ══════════ -->
+<section id="p-funnel3" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Lead → Demo → Enrolment</h2></div>
+    <div class="sd">The full funnel, matched on lead id at every step.</div>
+    <div id="f3Kpis" class="kpis"></div>
+  </div>
+  <div class="two">
+    <div class="panel"><div class="sh"><h3>Stage drop-off</h3></div><div id="f3Bars"></div></div>
+    <div class="panel"><div class="sh"><h3>Where the loss is</h3></div><div id="f3Note" class="prose"></div></div>
+  </div>
+  <div class="sec" style="margin-top:14px">
+    <div class="sh"><h3>By UTM source</h3>
+      <button class="btn" onclick="exportCSV('f3T','lead_funnel')">Export CSV</button></div>
+    <div class="sd">Sources with 15+ leads. A source can be strong at booking demos and weak at closing them.</div>
+    <div class="tw"><table id="f3T"></table></div>
+  </div>
+</section>
+
+<!-- ══════════ MATURITY ══════════ -->
+<section id="p-maturity" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Maturity-adjusted conversion</h2></div>
+    <div class="sd">What the window is heading for, not just what has landed.</div>
+    <div id="matKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Weekly, raw versus adjusted</h3>
+      <button class="btn" onclick="exportCSV('matT','maturity_weekly')">Export CSV</button></div>
+    <div class="tw"><table id="matT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>How the adjustment works</h3></div>
+    <div id="matNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ HOUR OF DAY ══════════ -->
+<section id="p-hours" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Demo slot yield</h2></div>
+    <div class="sd">Conversion by scheduled demo hour.</div>
+    <div id="hrKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Hour grid</h3></div>
+    <div class="sd">Green and red mark slots that differ from the portfolio rate beyond sampling noise. The bar under each cell is demo volume.</div>
+    <div id="hrGrid" class="hgrid"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Slot detail</h3>
+      <button class="btn" onclick="exportCSV('hrT','hour_yield')">Export CSV</button></div>
+    <div class="tw"><table id="hrT"></table></div>
+  </div>
+  <div class="panel"><div id="hrNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ TARGETS ══════════ -->
+<section id="p-targets" class="page">
+  <div class="filters" style="box-shadow:none">
+    <span class="clbl">Demos</span><input type="number" id="tDC" style="width:96px">
+    <span class="clbl">Enrolments</span><input type="number" id="tEN" style="width:88px">
+    <span class="clbl">Revenue ₹</span><input type="number" id="tRev" style="width:128px">
+    <span class="clbl">Working days</span><input type="number" id="tDays" style="width:70px">
+    <button class="btn btn-p" onclick="applyTargetInputs()">Apply</button>
+    <button class="btn" onclick="resetTargets()">Reset to workbook</button>
+  </div>
+  <div id="tgtKpis" class="kpis"></div>
+  <div class="sec">
+    <div class="sh"><h3>Target versus actual</h3>
+      <button class="btn" onclick="exportCSV('tgtT','targets')">Export CSV</button></div>
+    <div class="tw"><table id="tgtT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>Where these came from</h3></div>
+    <div id="tgtNote" class="prose"></div></div>
+</section>
+
+
+
+<!-- ══════════ RECONCILIATION ══════════ -->
+<section id="p-recon" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Reconciliation with the workbook</h2></div>
+    <div class="sd">The bridge from raw rows to the published figure, for the current filters.</div>
+    <div id="rcKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>Step by step</h3>
+      <button class="btn" onclick="exportCSV('rcT','reconciliation')">Export CSV</button></div>
+    <div class="tw"><table id="rcT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>Why the definitions differ</h3></div>
+    <div id="rcNote" class="prose"></div></div>
+</section>
+
+<!-- ══════════ ENGLISH ══════════ -->
+<section id="p-english" class="page">
+  <div class="sec">
+    <div class="sh"><h2>English course</h2></div>
+    <div class="sd">Standalone and bundled English enrolments, on the Eng Report basis.</div>
+    <div id="engKpis" class="kpis"></div>
+  </div>
+  <div class="sec">
+    <div class="sh"><h3>By team lead</h3>
+      <button class="btn" onclick="exportCSV('engT','english')">Export CSV</button></div>
+    <div class="tw"><table id="engT"></table></div>
+  </div>
+  <div class="panel"><div class="sh"><h3>How to read English numbers</h3></div>
+    <div id="engNote" class="prose"></div></div>
+</section>
+
+
+<!-- ══════════ MONTH OVER MONTH ══════════ -->
+<section id="p-mom" class="page">
+  <div class="sec">
+    <div class="sh"><h2>Month-over-month</h2></div>
+    <div class="sd">Trend across every month loaded, full detail for recent ones and aggregate for older.</div>
+    <div id="momKpis" class="kpis"></div>
+  </div>
+  <div class="two">
+    <div class="panel"><div class="sh"><h3>Revenue by month</h3></div><div id="momBars"></div></div>
+    <div class="panel"><div class="sh"><h3>How to read this</h3></div><div id="momNote" class="prose"></div></div>
+  </div>
+  <div class="sec" style="margin-top:14px">
+    <div class="sh"><h3>Monthly detail</h3>
+      <button class="btn" onclick="exportCSV('momT','month_over_month')">Export CSV</button></div>
+    <div class="tw"><table id="momT"></table></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+
+<!-- ══════════ COPILOT ══════════ -->
+<button id="cpBtn" class="btn btn-p" onclick="toggleCP()">Ask the copilot</button>
+<div id="cp">
+  <div class="cp-h">
+    <div><h3>Business copilot</h3><div class="cp-scope" id="cpScope"></div></div>
+    <button class="cp-x" onclick="toggleCP()" aria-label="Close">&times;</button>
+  </div>
+  <div class="cp-body" id="cpBody">
+    <p id="cpIntro">Ask about the current filtered view. Answers are grounded in the same joined
+    figures shown on screen — including the caveats.</p>
+    <div class="cp-chips" id="cpChips">
+      <button class="cp-chip" onclick="askCP('Where is my biggest verified conversion leak and what is it worth?')">Biggest leak</button>
+      <button class="cp-chip" onclick="askCP('Which reps are genuinely below expectation, excluding gaps that are within sampling noise?')">Rep gaps</button>
+      <button class="cp-chip" onclick="askCP('Give me this week&#39;s five highest-value actions with owners.')">This week</button>
+      <button class="cp-chip" onclick="askCP('How much of my open pipeline is real, and what should I not trust?')">Pipeline reality</button>
+      <button class="cp-chip" onclick="askCP('Brief me on the current view in one paragraph.')">Brief me</button>
+    </div>
+  </div>
+  <div class="cp-warn" id="cpWarn"></div>
+  <div class="cp-f">
+    <input type="text" id="cpQ" maxlength="500" placeholder="Why is CA converting below US?">
+    <div class="cp-row">
+      <button class="btn btn-p" onclick="askCP()">Ask</button>
+      <button class="btn" onclick="resetCP()">Clear</button>
+    </div>
+    <div class="cp-meta" id="cpMeta"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════════════════════════
+   SIGN-IN (Nov 2026). This file holds no data and no token. People sign in
+   with their @expinfi.com Google account through the Daily KRA web app
+   (LOGIN_ENDPOINT), which returns a signed session valid for 12 hours. The
+   feed (SHEET_ENDPOINT) serves data only to a valid session. Who may sign in
+   is set on the Daily KRA Config tab (FEED_ACCESS, FEED_EMAILS).
+   ═══════════════════════════════════════════════════════════════════ */
+window.SHEET_ENDPOINT   = "https://script.google.com/macros/s/AKfycbzgdrWgakHIeDejDyMuLpIWBRr0q0EgPilBle2RgbIR3NXQgpeg95LYFvHzv4q3vnp5/exec";
+window.SHEET_TOKEN      = "";        // retired: access is by signed-in session
+window.LOGIN_ENDPOINT   = "https://script.google.com/macros/s/AKfycbw3_B9AFM1R2ZZtQ_jrr8Mm6F1age56WGjj6rjhRbOXkMRRxtBYuJIft577D2wn3k9n/exec";
+window.GOOGLE_CLIENT_ID = "677948027422-5kmt1uh3k0e566nrl02utb0djbfov84s.apps.googleusercontent.com";
+window.COPILOT_ENDPOINT = "";        // blank = reuse SHEET_ENDPOINT
+window.LOCK_CONFIG      = false;     // true hides the Live feed bar
+</script>
+<script>
+window.__DC__=null;   // no records are kept in this file; they load after sign-in
+window.__EN__=null;
+window.__LEADS__=null;
+window.__LAGCDF__=[0.6898222940226171,0.8675282714054927,0.8966074313408724,0.9305331179321487,0.9353796445880452,0.9450726978998385,0.9531502423263328,0.9563812600969306,0.962843295638126,0.9660743134087237,0.9773828756058158,0.9854604200323102,0.9870759289176091,0.9903069466882067,0.9903069466882067,0.9903069466882067,0.9935379644588045,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0];
+window.__ROSTER__={"RP":["Naeem-RP","Satyam-RP","Deepali-RP","Ishan Rout-RP","Prabhu-RP","Uday Kumar-RP","Pranesh-RP"],"OTP":["Prathuin Prakash","Umar Riyaz","Stenita Dalmeida"]};
+window.__HIST__={};
+window.__META__={};
+let PERIOD="";
+</script>
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   V7.4 ANALYTICS ENGINE
+   Every metric below is computed by joining DC -> EN on Linked Student
+   Lead Id. Conversion is a cohort rate: "of these demos, how many of
+   THESE leads later enrolled". It is never count(EN)/count(DC) across
+   two independently filtered sets, which is what V7.3 did and which is
+   why its headline DC2E read 32.8% against a true cohort rate of 24.4%.
+   ════════════════════════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const attr = v => esc(v).replace(/\\/g, '\\\\');
+
+const fmtN = v => v == null ? '—' : Math.round(v).toLocaleString('en-IN');
+function money(v) {
+  if (v == null) return '—';
+  const s = v < 0 ? '-' : '', a = Math.abs(v);
+  if (a >= 1e7) return s + '₹' + (a / 1e7).toFixed(2) + ' Cr';
+  if (a >= 1e5) return s + '₹' + (a / 1e5).toFixed(2) + ' L';
+  return s + '₹' + Math.round(a).toLocaleString('en-IN');
+}
+const money0 = v => v == null ? '—' : '₹' + Math.round(v).toLocaleString('en-IN');
+const pct = v => v == null ? '—' : (100 * v).toFixed(1) + '%';
+const pp = v => v == null ? '—' : (v >= 0 ? '+' : '') + (100 * v).toFixed(1) + 'pp';
+
+const revOf = e => +e.rev || 0;
+/* Field names are short keys now (id, date, tl, ...) rather than the raw
+   spreadsheet headers. The extract is cleaned at build time: DC-RP ships
+   1,977 formula-filler rows that date-stamp to Dec 1899, and they are
+   dropped before they reach this file. */
+
+/* ── Stage taxonomy ───────────────────────────────────────────────────
+   V7.3 treated Sub Stage as a forward-looking pipeline position and
+   attached hand-picked win probabilities to it. It is not: it is the
+   lead's CURRENT disposition. A lead still sitting at "Payment Link
+   Sent" is a lead that did not pay. Stages are classified here and
+   their win rates are measured, never assumed.                        */
+const WON_STAGES = new Set(['closed_won_automatic_payment', 'closed_won_finance_verified',
+  'closed_won_finance_pending', 'Partial Payment / Downpayment Closed Won']);
+const DEAD_STAGES = new Set(['AD Not Interested', 'Not Qualified', 'DND', 'Language Barrier',
+  'Duplicate Lead', 'RP - MISSED', 'RP - DROPPED', 'AD Attempt Exhausted']);
+function stageClass(s) {
+  if (WON_STAGES.has(s)) return 'won';
+  if (DEAD_STAGES.has(s)) return 'dead';
+  return 'open';
+}
+
+/* Laplace smoothing pulls thin cells toward the portfolio rate instead
+   of letting a 3-row stage swing the whole recoverable-revenue figure. */
+const SMOOTH_ALPHA = 12;
+const MIN_SEGMENT_N = 30;
+const Z_CRIT = 1.96;
+
+/* Month targets as published in the workbook's DC Summary tab:
+   OTP-US 618 + RP-US 1,407 + CA 805 demos over 21 working days.
+   Enrolment and revenue defaults are that tab's own till-date figures
+   grossed to the full month. Every one is editable in the UI. */
+const DEFAULT_TARGETS = { dc: 2830, en: 700, rev: 26000000, days: 21 };
+
+const state = {
+  /* Every filter holds an ARRAY of selected values. Empty means "all",
+     which keeps the no-selection case identical to the old single-select
+     behaviour. */
+  teamType: [], country: [], tl: [], source: [], eth: [], dcType: [],
+  page: 'exec', sort: {}, revTarget: 0, enTarget: 0, monthDays: 31,
+  /* mode: 'month' | 'week' | 'range' */
+  period: { mode: 'month', month: null, week: null, from: null, to: null },
+  targets: { ...DEFAULT_TARGETS },
+  /* subj: 'Math' | 'English'   basis: 'report' | 'traced'   roster: 1 | 0 */
+  subj: 'Math', basis: 'report', roster: 1, autoMins: 15
+};
+
+/* ── Two measurement conventions, both legitimate ──
+   REPORT PARITY reproduces the workbook exactly: sales are counted as
+   bundle-weighted UNITS (a bundle is one transaction listed on both the
+   Math and English reports, so it counts half on each and the two reports
+   sum to the truth), DC2E is units divided by demos in the same slice,
+   and only rostered team leads are included.
+   TRACED joins demo to sale on lead id and asks what share of THESE demos
+   produced a sale. It is the stricter question and always reads lower,
+   because sales whose demo fell outside the window have no denominator.
+   The dashboard defaults to report parity so its headline matches the
+   sheets the business already runs on; the traced figure travels beside
+   it rather than replacing it. */
+const isReport = () => state.basis === 'report';
+
+/* ── calendar, derived from the data rather than hard-coded ──
+   MONTHS and WEEKS repopulate whenever the datasets are swapped, so the
+   controls widen on their own as more history arrives. */
+let MONTHS = [], WEEKS = [], ALL_DATES = [];
+
+function isoWeek(ds) {
+  const d = new Date(ds + 'T00:00:00Z');
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const wk = Math.ceil(((t - y0) / 86400000 + 1) / 7);
+  return t.getUTCFullYear() + '-W' + String(wk).padStart(2, '0');
+}
+function weekStart(ds) {
+  const d = new Date(ds + 'T00:00:00Z');
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() - day + 1);
+  return d.toISOString().slice(0, 10);
+}
+const addDays = (ds, k) => {
+  const d = new Date(ds + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + k);
+  return d.toISOString().slice(0, 10);
+};
+const MONTH_LABEL = ds => new Date(ds + '-01T00:00:00Z')
+  .toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const DAY_LABEL = ds => new Date(ds + 'T00:00:00Z')
+  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+function buildCalendar() {
+  ALL_DATES = [...new Set(DC.map(x => x.date).filter(Boolean))].sort();
+  MONTHS = [...new Set(ALL_DATES.map(d => d.slice(0, 7)))].sort();
+  const wk = new Map();
+  for (const d of ALL_DATES) {
+    const k = isoWeek(d);
+    let r = wk.get(k);
+    if (!r) r = wk.set(k, { key: k, start: weekStart(d), days: [] }).get(k);
+    r.days.push(d);
+  }
+  WEEKS = [...wk.values()].sort((a, b) => a.start.localeCompare(b.start));
+  for (const w of WEEKS) {
+    w.end = addDays(w.start, 6);
+    /* A week is partial when the extract does not cover all seven days.
+       BOFU makes the same disclosure for month-straddling weeks; without
+       it a short week reads as a collapse in demand. */
+    w.complete = w.days.length === 7;
+    w.label = DAY_LABEL(w.start) + ' – ' + DAY_LABEL(w.end);
+  }
+  const p = state.period;
+  if (!p.month || !MONTHS.includes(p.month)) p.month = MONTHS[MONTHS.length - 1] || null;
+  if (!p.week || !WEEKS.some(w => w.key === p.week)) p.week = WEEKS.length ? WEEKS[WEEKS.length - 1].key : null;
+  if (!p.from) p.from = ALL_DATES[0] || null;
+  if (!p.to) p.to = ALL_DATES[ALL_DATES.length - 1] || null;
+}
+
+function periodBounds(p) {
+  if (p.mode === 'week') {
+    const w = WEEKS.find(x => x.key === p.week) || WEEKS[WEEKS.length - 1];
+    return w ? { from: w.start, to: w.end, week: w } : { from: '0000', to: '9999' };
+  }
+  if (p.mode === 'range') return { from: p.from || '0000', to: p.to || '9999' };
+  return { from: (p.month || '0000') + '-01', to: (p.month || '9999') + '-31' };
+}
+const periodKey = p => p.mode + '|' + periodBounds(p).from + '|' + periodBounds(p).to;
+
+/* The comparable prior window: previous week, previous month, or a range
+   of identical length immediately before the selected one. */
+function prevPeriod(p) {
+  if (p.mode === 'week') {
+    const i = WEEKS.findIndex(x => x.key === p.week);
+    return i > 0 ? { ...p, week: WEEKS[i - 1].key } : null;
+  }
+  if (p.mode === 'month') {
+    const i = MONTHS.indexOf(p.month);
+    return i > 0 ? { ...p, month: MONTHS[i - 1] } : null;
+  }
+  const b = periodBounds(p);
+  const len = Math.round((new Date(b.to) - new Date(b.from)) / 86400000) + 1;
+  return { ...p, from: addDays(b.from, -len), to: addDays(b.from, -1) };
+}
+function periodLabel(p) {
+  if (p.mode === 'week') {
+    const w = WEEKS.find(x => x.key === p.week);
+    return w ? w.label + (w.complete ? '' : ' (partial)') : '—';
+  }
+  if (p.mode === 'range') return DAY_LABEL(p.from) + ' – ' + DAY_LABEL(p.to);
+  return MONTH_LABEL(p.month || '2026-08');
+}
+
+let DC = [], EN = [], LEADS = [], LAGCDF = [], ROSTER = { RP: [], OTP: [] };
+let HIST = {}, META = {};
+
+/* ── attribution across months ─────────────────────────────────────────
+   With one month loaded, matching a sale to a demo by lead id alone was
+   safe. Across months it is not: a lead who demoed in July, did not buy,
+   demoed again in August and bought would match BOTH demos, crediting July
+   with an August sale and inflating that month's conversion.
+
+   Each sale is therefore attributed to the LATEST demo on or before the sale
+   date. A sale with no preceding demo attaches to nothing and is counted as
+   an orphan, which is what it is. Built once per course whenever the data
+   changes, not per filter change. */
+let _attr = null, _attrSubj = null;
+
+function buildAttribution(subj) {
+  if (_attr && _attrSubj === subj) return _attr;
+  const byLead = new Map();
+  DC.forEach((x, i) => {
+    if (x.subj !== subj) return;
+    let a = byLead.get(x.id);
+    if (!a) a = byLead.set(x.id, []).get(x.id);
+    a.push(i);
+  });
+  for (const a of byLead.values()) a.sort((p, q) => DC[p].date.localeCompare(DC[q].date));
+
+  /* saleIdx -> demo row index, or -1 when nothing precedes it */
+  const saleToDemo = new Map();
+  EN.forEach((e, j) => {
+    if (e.subj !== subj) return;
+    const a = byLead.get(e.id);
+    if (!a || !a.length) { saleToDemo.set(j, -1); return; }
+    let pick = -1;
+    for (let k = 0; k < a.length; k++) {
+      if (DC[a[k]].date <= e.date) pick = a[k]; else break;
+    }
+    /* A sale dated before every demo for that lead is a data quirk rather
+       than a match; leave it unattributed instead of guessing forward. */
+    saleToDemo.set(j, pick);
+  });
+  _attrSubj = subj;
+  return (_attr = { byLead, saleToDemo });
+}
+function resetAttribution() { _attr = null; _attrSubj = null; }
+
+/* Lead age arrives as a continuous day count now (median 2, tail past
+   1,000) rather than a pre-binned label, so the buckets are derived here
+   and the raw number is kept for the decay curve. */
+const AGE_ORDER = ['0–1 days', '2–3 days', '4–7 days', '8–15 days', '16–30 days', '31–90 days', '90+ days'];
+function ageBucketOf(a) {
+  if (a == null) return 'Unknown';
+  if (a <= 1) return '0–1 days'; if (a <= 3) return '2–3 days';
+  if (a <= 7) return '4–7 days'; if (a <= 15) return '8–15 days';
+  if (a <= 30) return '16–30 days'; if (a <= 90) return '31–90 days';
+  return '90+ days';
+}
+const HR_ORDER = ['00–03', '04–07', '08–11', '12–15', '16–19', '20–23'];
+const hrBandOf = h => h == null ? 'Unknown' : HR_ORDER[Math.floor(h / 4)];
+
+function decorate() {
+  /* Stamp the row index once. Looking it up with indexOf inside the join
+     would be O(n^2) — fine at 1,800 demos, 3.3 million comparisons per
+     render, and far worse across a year. */
+  DC.forEach((x, i) => { x._i = i; x.ageBucket = ageBucketOf(x.age); x.hrBand = hrBandOf(x.hr); });
+  EN.forEach((e, j) => { e._j = j; });
+  resetAttribution();
+}
+
+/* ── maturity ──
+   70% of sales close on the demo day itself and 96.5% within a week, so a
+   demo booked three days ago has had most, but not all, of its chance to
+   convert. LAGCDF[k] is the share of eventual closes that land within k
+   days, measured on demos old enough to be finished. Dividing observed
+   wins by the summed maturity of each demo gives the rate the window is
+   heading for, rather than the rate it has reached so far — without it
+   every recent week reads as a collapse. */
+const LAG_MAX = 30;
+const maturityAt = a => a == null ? 1 : LAGCDF[Math.max(0, Math.min(LAG_MAX, a))] ?? 1;
+const _cache = new Map();
+function clearCache() { _cache.clear(); }
+
+/* An empty selection matches everything; otherwise the value must be one of
+   the chosen ones. */
+const inSel = (arr, v) => !arr || !arr.length || arr.indexOf(v) >= 0;
+const selKey = a => (a && a.length ? a.slice().sort().join(',') : '');
+const filterKey = () => [selKey(state.teamType), selKey(state.country), selKey(state.tl),
+  selKey(state.source), selKey(state.eth), selKey(state.dcType),
+  state.subj, state.basis, state.roster].join('|');
+
+function matchDC(x, b) {
+  const dt = x.date;
+  if (b && (!dt || dt < b.from || dt > b.to)) return false;
+  if (x.subj !== state.subj) return false;
+  if (state.roster && !x.roster) return false;
+  return inSel(state.teamType, x.team)
+    && inSel(state.country, x.country)
+    && inSel(state.tl, x.tl)
+    && inSel(state.source, x.source)
+    /* Matched on ethD, the detailed value, because that is what the dropdown
+       lists. It previously compared against the coarse Indian / Non-Indian
+       rollup, so picking anything except "Indian" silently returned nothing. */
+    && inSel(state.eth, x.ethD)
+    && inSel(state.dcType, x.dcType);
+}
+function matchEN(x, b) {
+  const dt = x.date;
+  if (b && (!dt || dt < b.from || dt > b.to)) return false;
+  if (x.subj !== state.subj) return false;
+  if (state.roster && !x.roster) return false;
+  return inSel(state.teamType, x.team)
+    && inSel(state.country, x.country)
+    && inSel(state.tl, x.tl)
+    && inSel(state.source, x.source)
+    && inSel(state.eth, x.eth)
+    && inSel(state.dcType, x.saleType);
+}
+
+/* ════════ THE SINGLE COMPUTE PASS ════════
+   V7.3 called expectedRateForLead() once per lead, each doing four full
+   array scans, then recomputed M(d,n) inside a reduce, and ran the whole
+   thing three times per interaction — roughly 24 million row-touches at
+   1,147 rows, and ~15.9 billion projected at twelve months. Everything
+   here is built in a small fixed number of linear passes and memoised
+   on the filter key, so cost grows with n, not n².                     */
+function view(period) {
+  const p = period || state.period;
+  const k = filterKey() + '||' + periodKey(p);
+  if (_cache.has(k)) return _cache.get(k);
+  const b = periodBounds(p);
+
+  const d = DC.filter(x => matchDC(x, b));
+  const n = EN.filter(x => matchEN(x, b));
+
+  /* ── the join, on nearest preceding demo ── */
+  const A = buildAttribution(state.subj);
+  const enByLead = new Map();          // demo row index -> sales attributed to it
+  const inWindow = new Set(d.map(x => x._i));
+
+  const salesByDemo = new Map();
+  const orphans = [];
+  for (const e of n) {
+    const di = A.saleToDemo.get(e._j) ?? -1;
+    if (di < 0 || !inWindow.has(di)) { orphans.push(e); continue; }
+    let arr = salesByDemo.get(di);
+    if (!arr) arr = salesByDemo.set(di, []).get(di);
+    arr.push(e);
+  }
+  /* Kept keyed by lead id as well, because the rest of the engine and the
+     copilot snapshot look sales up that way. */
+  for (const [di, arr] of salesByDemo) enByLead.set(DC[di].id, arr);
+
+  let wonDC = 0, cohortRev = 0;
+  for (const [di, arr] of salesByDemo) {
+    wonDC++;
+    for (const s of arr) cohortRev += revOf(s);
+  }
+
+  const totalRev = n.reduce((a, e) => a + revOf(e), 0);
+  /* Units, not rows: a bundle counts 0.5 so Math and English do not each
+     claim the same transaction. This is what the workbook's "Overall Sale"
+     column contains, and it is why a row count reads 209 where the sheet
+     reads 201. */
+  const units = n.reduce((a, e) => a + (e.units ?? 1), 0);
+  const saleCount = isReport() ? units : n.length;
+  const ats = units ? totalRev / units : 0;
+  const cohortCv = d.length ? wonDC / d.length : 0;
+  const countCv = d.length ? saleCount / d.length : 0;
+  const headlineCv = isReport() ? countCv : cohortCv;
+
+  /* maturity: how much of its eventual conversion each demo has had time
+     to realise, given the last date present in the whole extract */
+  const asOf = ALL_DATES.length ? ALL_DATES[ALL_DATES.length - 1] : null;
+  let matSum = 0;
+  for (const x of d) {
+    x._mat = asOf && x.date
+      ? maturityAt(Math.round((new Date(asOf) - new Date(x.date)) / 86400000)) : 1;
+    matSum += x._mat;
+  }
+  const matCv = matSum ? wonDC / matSum : 0;
+
+  const m = {
+    dc: d.length, en: saleCount, enRows: n.length, units, wonDC, orphans: orphans.length,
+    matSum, matCv, matLift: matCv - (d.length ? wonDC / d.length : 0),
+    headlineCv, basisLabel: isReport() ? 'report parity' : 'traced cohort',
+    orphanRev: orphans.reduce((a, e) => a + revOf(e), 0),
+    rev: totalRev, cohortRev, ats,
+    cohortCv, countCv, inflation: countCv - cohortCv,
+    rpd: d.length ? cohortRev / d.length : 0
+  };
+
+  /* ── stage calibration: observed, not assumed ──
+     Learned over the FULL date range of the extract, not the selected
+     window, and deliberately so. Enrolment lags the demo, so a five-day
+     slice contains open demos that have not yet had time to convert;
+     calibrating on it would drive every open-stage rate to zero and
+     report an empty pipeline. Period scopes what you are looking at, not
+     what the model learns from. Non-date filters ARE honoured, so a CA
+     view uses CA rates, with a fallback to the whole extract when the
+     slice is too thin to support estimation.                            */
+  const calSrc = DC.filter(x => matchDC(x, null));
+  const calEN = EN.filter(x => matchEN(x, null));
+  const calByLead = new Set(calEN.map(e => e.id));
+  const calOpen = calSrc.filter(x => stageClass(x.stage) === 'open').length;
+  const calRows = calOpen >= 80 ? calSrc : DC;
+  const calWon = calOpen >= 80 ? calByLead : new Set(EN.map(e => e.id));
+  const calScoped = calOpen >= 80;
+  let calWonDC = 0;
+  for (const x of calRows) if (calWon.has(x.id)) calWonDC++;
+  const calBase = calRows.length ? calWonDC / calRows.length : 0;
+
+  const stageAgg = new Map();
+  for (const x of calRows) {
+    const s = x.stage || 'Unknown';
+    let r = stageAgg.get(s);
+    if (!r) { r = { stage: s, n: 0, won: 0, cls: stageClass(s) }; stageAgg.set(s, r); }
+    r.n++;
+    if (calWon.has(x.id)) r.won++;
+  }
+  /* The smoothing prior is the pooled rate of the stage's OWN class, not
+     the portfolio rate. Portfolio conversion is dominated by demos that
+     already closed won, so using it as a prior would drag every thin open
+     stage up toward a rate that open demos demonstrably do not achieve —
+     re-introducing a milder version of the error this build exists to fix. */
+  const classPrior = {};
+  for (const cls of ['won', 'open', 'dead']) {
+    let n = 0, w = 0;
+    for (const r of stageAgg.values()) if (r.cls === cls) { n += r.n; w += r.won; }
+    classPrior[cls] = n ? w / n : 0;
+  }
+  const calMeta = { rows: calRows.length, scoped: calScoped, base: calBase,
+                    span: ALL_DATES.length ? ALL_DATES[0] + ' – ' + ALL_DATES[ALL_DATES.length - 1] : '' };
+  const stages = [...stageAgg.values()].map(r => {
+    r.raw = r.n ? r.won / r.n : 0;
+    r.prior = classPrior[r.cls] ?? calBase;
+    r.p = (r.won + SMOOTH_ALPHA * r.prior) / (r.n + SMOOTH_ALPHA);
+    r.inWindow = 0;
+    r.ci = 1.96 * Math.sqrt(Math.max(r.p * (1 - r.p), 1e-9) / Math.max(1, r.n));
+    r.thin = r.n < MIN_SEGMENT_N;
+    return r;
+  }).sort((a, b) => b.n - a.n);
+  const stageP = new Map(stages.map(r => [r.stage, r.p]));
+  const stageIdx = new Map(stages.map(r => [r.stage, r]));
+  for (const x of d) {
+    const r = stageIdx.get(x.stage || 'Unknown');
+    if (r) r.inWindow++;
+  }
+
+  /* ── open pipeline, valued at measured rates ── */
+  const open = d.filter(x => stageClass(x.stage) === 'open'
+    && !enByLead.has(x.id));
+  const recoverable = open.reduce((a, x) => a + (stageP.get(x.stage) || 0) * ats, 0);
+
+  /* ── segment expectation tables, built once ──
+     Keyed tiers, most specific first. Per-owner contributions are stored
+     alongside so a rep's expectation can exclude their own rows without
+     rescanning: V7.3 benchmarked every rep partly against themselves,
+     which compressed measured gaps toward zero.                         */
+  const TIERS = [
+    x => (x.country ?? '~') + '|' + (x.source ?? '~') + '|' + (x.dcType ?? '~'),
+    x => (x.source ?? '~') + '|' + (x.dcType ?? '~'),
+    x => (x.country ?? '~') + '|' + (x.source ?? '~'),
+    x => (x.source ?? '~')
+  ];
+  const tierMaps = TIERS.map(() => new Map());
+  const tierOwn = TIERS.map(() => new Map());
+  for (const x of d) {
+    const w = enByLead.has(x.id) ? 1 : 0;
+    const owner = x.owner ?? 'Unknown';
+    TIERS.forEach((fn, i) => {
+      const key = fn(x);
+      let r = tierMaps[i].get(key);
+      if (!r) { r = { n: 0, w: 0 }; tierMaps[i].set(key, r); }
+      r.n++; r.w += w;
+      const ok = owner + '\u0000' + key;
+      let o = tierOwn[i].get(ok);
+      if (!o) { o = { n: 0, w: 0 }; tierOwn[i].set(ok, o); }
+      o.n++; o.w += w;
+    });
+  }
+  function expectedFor(x, owner) {
+    for (let i = 0; i < TIERS.length; i++) {
+      const key = TIERS[i](x);
+      const t = tierMaps[i].get(key); if (!t) continue;
+      const o = tierOwn[i].get(owner + '\u0000' + key) || { n: 0, w: 0 };
+      const nn = t.n - o.n, ww = t.w - o.w;
+      if (nn >= MIN_SEGMENT_N) return ww / nn;
+    }
+    return cohortCv;
+  }
+
+  /* ── salespeople ──
+     Two populations, and conflating them was a real bug. DEMOS belong to the
+     Opportunity Owner on the demo row. SALES belong to the Sales Owner on the
+     sale row. They are frequently different people: a rep can close a lead
+     whose demo somebody else ran, or whose demo fell outside the window.
+
+     The workbook's SMDC2E tab counts sales by Sales Owner, bundle-weighted.
+     Earlier builds only ever counted demos that were traced to a sale, which
+     is a different and always smaller number — 571 against 715 units across
+     this extract, and 75 of 121 people disagreed. Both are now carried, and
+     the basis toggle decides which one is the headline. */
+  const spSaleUnits = new Map(), spSaleRows = new Map(), spSaleRev = new Map();
+  for (const e of n) {
+    const k = e.owner || 'Unattributed';
+    spSaleUnits.set(k, (spSaleUnits.get(k) || 0) + (e.units ?? 1));
+    spSaleRows.set(k, (spSaleRows.get(k) || 0) + 1);
+    spSaleRev.set(k, (spSaleRev.get(k) || 0) + revOf(e));
+  }
+
+  const spMap = new Map();
+  for (const x of d) {
+    const kk = x.owner ?? 'Unknown';
+    let r = spMap.get(kk);
+    if (!r) {
+      r = { k: kk, tl: x.tl || null, dc: 0, tracedWon: 0, tracedRev: 0,
+            expSum: 0, open: 0, recover: 0 };
+      spMap.set(kk, r);
+    }
+    r.dc++;
+    r.expSum += expectedFor(x, kk);
+    const sales = enByLead.get(x.id);
+    if (sales) { r.tracedWon++; for (const s of sales) r.tracedRev += revOf(s); }
+    else if (stageClass(x.stage) === 'open') {
+      r.open++; r.recover += (stageP.get(x.stage) || 0) * ats;
+    }
+  }
+  /* People who closed sales but ran no demos in this window would otherwise
+     vanish from the table, taking their revenue with them. */
+  for (const k of spSaleUnits.keys()) {
+    if (!spMap.has(k)) spMap.set(k, { k, tl: null, dc: 0, tracedWon: 0, tracedRev: 0,
+      expSum: 0, open: 0, recover: 0 });
+  }
+  const sps = [...spMap.values()]
+    .filter(r => r.dc >= 5 || (spSaleUnits.get(r.k) || 0) > 0)
+    .map(r => {
+      r.saleUnits = spSaleUnits.get(r.k) || 0;
+      r.saleRows = spSaleRows.get(r.k) || 0;
+      r.saleRev = spSaleRev.get(r.k) || 0;
+      /* Parity: sale units by Sales Owner over demos received. This is the
+         SMDC2E column and should match it to the decimal. */
+      r.parityCv = r.dc ? r.saleUnits / r.dc : null;
+      r.tracedCv = r.dc ? r.tracedWon / r.dc : null;
+
+      const rep = isReport();
+      r.won = rep ? r.saleUnits : r.tracedWon;
+      r.rev = rep ? r.saleRev : r.tracedRev;
+      r.actual = rep ? (r.parityCv ?? 0) : (r.tracedCv ?? 0);
+      r.ats = r.won ? r.rev / r.won : 0;
+      r.rpd = r.dc ? r.rev / r.dc : 0;
+
+      /* Expectation and its significance test stay on the traced basis
+         throughout. It asks whether a rep's OWN demos convert better or worse
+         than their mix predicts, so pairing it with a sale-side numerator
+         would compare two different populations. */
+      r.exp = r.dc ? r.expSum / r.dc : 0;
+      r.gap = (r.tracedCv ?? 0) - r.exp;
+      const se = r.dc ? Math.sqrt(Math.max(r.exp * (1 - r.exp), 1e-9) / r.dc) : 0;
+      r.z = se ? r.gap / se : 0;
+      r.sig = r.dc >= 5 && Math.abs(r.z) >= Z_CRIT;
+      return r;
+    });
+
+  /* ── team leads ── */
+  const unitsByLead = new Map();
+  for (const e of n) unitsByLead.set(e.id, (unitsByLead.get(e.id) || 0) + (e.units ?? 1));
+  const tlUnits = new Map(), tlRev = new Map();
+  for (const e of n) {
+    const k = e.tl || 'Unattributed';
+    tlUnits.set(k, (tlUnits.get(k) || 0) + (e.units ?? 1));
+    tlRev.set(k, (tlRev.get(k) || 0) + revOf(e));
+  }
+  const tlMap = new Map();
+  for (const x of d) {
+    const kk = x.tl || 'Unattributed';
+    let r = tlMap.get(kk);
+    if (!r) r = tlMap.set(kk, { k: kk, dc: 0, won: 0, rev: 0, open: 0, recover: 0, hi: 0 }).get(kk);
+    r.dc++;
+    const sales = enByLead.get(x.id);
+    if (sales) { r.won++; for (const s of sales) r.rev += revOf(s); }
+    else if (stageClass(x.stage) === 'open') {
+      r.open++;
+      const p = stageP.get(x.stage) || 0;
+      r.recover += p * ats;
+      if (p >= cohortCv) r.hi++;
+    }
+  }
+  const tls = [...tlMap.values()].map(r => {
+    /* Under report parity a team lead's sales and revenue come from the
+       sale record's own team lead, matching the workbook; under traced
+       they come from the demo that produced them. */
+    if (isReport()) { r.won = tlUnits.get(r.k) || 0; r.rev = tlRev.get(r.k) || 0; }
+    r.cv = r.dc ? r.won / r.dc : 0;
+    r.ats = r.won ? r.rev / r.won : 0;
+    r.rpd = r.dc ? r.rev / r.dc : 0;
+    r.below = sps.filter(s => s.tl === r.k && s.sig && s.gap < 0).length;
+    return r;
+  }).sort((a, b) => b.rev - a.rev);
+
+  /* ── drivers, significance-tested ──
+     V7.3 admitted any segment with dc >= 20 and printed a rupee figure
+     beside it. On this dataset 16 of 37 such rows fail a 95% test, so
+     nearly half the "root causes" were random variation with a price
+     tag attached. Each row now carries z and a CI on the gap.          */
+  const DIMS = [['source', 'source'], ['utm', 'UTM'], ['country', 'Country'],
+  ['eth', 'Ethnicity'], ['grade', 'Grade'], ['tl', 'tl'],
+  ['dcType', 'Cohort Type'], ['ageBucket', 'Lead Age'], ['rpPitch', 'RP Pitch']];
+  const drivers = [];
+  for (const [key, label] of DIMS) {
+    const g = new Map();
+    for (const x of d) {
+      const v = x[key];
+      if (v == null || v === '' || v === 'Unknown') continue;
+      const s = String(v);
+      let r = g.get(s);
+      if (!r) r = g.set(s, { n: 0, w: 0, rev: 0 }).get(s);
+      r.n++;
+      const sales = enByLead.get(x.id);
+      if (sales) { r.w++; for (const q of sales) r.rev += revOf(q); }
+    }
+    for (const [v, r] of g) {
+      if (r.n < 20) continue;
+      const cv = r.w / r.n, gap = cv - cohortCv;
+      const se = Math.sqrt(Math.max(cohortCv * (1 - cohortCv), 1e-9) / r.n);
+      const z = se ? gap / se : 0;
+      drivers.push({
+        label, v, dc: r.n, sales: r.w, cv, gap, z,
+        sig: Math.abs(z) >= Z_CRIT, ci: Z_CRIT * se,
+        impact: gap * r.n * ats, rpd: r.rev / r.n
+      });
+    }
+  }
+  drivers.sort((a, b) => a.impact - b.impact);
+
+  /* ── priority queue: expected value from measured rates ── */
+  const AGE_W = { '0–7 days': 1, '8–15 days': .9, '16–30 days': .75, '31–60 days': .5, '61–90 days': .35, '90+ days': .3 };
+  const queue = open.map(x => {
+    const p = stageP.get(x.stage) || 0;
+    const rec = AGE_W[x.ageBucket] ?? .5;
+    return { x, p, ev: p * ats, score: p * rec };
+  }).sort((a, b) => b.ev - a.ev);
+
+  /* ── Lead -> Demo -> Enrolment ──
+     The Leads tab is the top of the funnel. Leads are matched to demos by
+     lead id, so a lead counts as converted only if that same lead appears
+     in the demo set — not by comparing two independent totals, which is
+     the error that inflated DC2E in V7.3. */
+  const leadFilterOK = l =>
+    inSel(state.country, l.country) && inSel(state.eth, l.eth);
+  const lf = LEADS.filter(l => leadFilterOK(l) && (!b || (l.date >= b.from && l.date <= b.to)));
+  const dcIdsAll = new Set(DC.map(x => x.id));
+  const enIdsAll = new Set(EN.map(e => e.id));
+  let l2d = 0, l2e = 0;
+  for (const l of lf) {
+    if (dcIdsAll.has(l.id)) { l2d++; if (enIdsAll.has(l.id)) l2e++; }
+  }
+  const funnel = {
+    leads: lf.length, demos: l2d, sales: l2e,
+    l2dRate: lf.length ? l2d / lf.length : 0,
+    d2eRate: l2d ? l2e / l2d : 0,
+    l2eRate: lf.length ? l2e / lf.length : 0,
+    /* Leads are matched across the whole demo history, so this is a lead
+       cohort's outcome, not a same-window ratio. */
+    coverage: lf.length ? 'lead cohort in window, outcomes tracked across the full extract' : ''
+  };
+
+  /* ── hour of day ──
+     Scheduled demo hour as recorded in Trial Session Scheduled Date/Time. */
+  const hrMap = new Map();
+  for (const x of d) {
+    if (x.hr == null) continue;
+    let r = hrMap.get(x.hr);
+    if (!r) r = hrMap.set(x.hr, { hr: x.hr, dc: 0, won: 0, rev: 0, mat: 0 }).get(x.hr);
+    r.dc++; r.mat += x._mat;
+    const sales = enByLead.get(x.id);
+    if (sales) { r.won++; for (const q of sales) r.rev += revOf(q); }
+  }
+  const hours = [...hrMap.values()].map(r => {
+    r.cv = r.dc ? r.won / r.dc : 0;
+    r.matCv = r.mat ? r.won / r.mat : 0;
+    r.rpd = r.dc ? r.rev / r.dc : 0;
+    const se = Math.sqrt(Math.max(cohortCv * (1 - cohortCv), 1e-9) / Math.max(1, r.dc));
+    r.z = se ? (r.cv - cohortCv) / se : 0;
+    r.sig = Math.abs(r.z) >= Z_CRIT;
+    r.thin = r.dc < MIN_SEGMENT_N;
+    r.label = String(r.hr).padStart(2, '0') + ':00';
+    return r;
+  }).sort((a, x) => a.hr - x.hr);
+
+  const daysSeen = new Set(d.map(x => x.date)).size || 1;
+
+  /* Detect a trailing day that is a fraction of a normal one — an extract
+     cut mid-day rather than a real collapse in demand. Left unflagged it
+     silently drags down any run-rate that divides by day count. */
+  const perDay = new Map();
+  for (const x of d) perDay.set(x.date, (perDay.get(x.date) || 0) + 1);
+  const dayList = [...perDay.entries()].sort((a, x) => a[0].localeCompare(x[0]));
+  const counts = dayList.map(e => e[1]).sort((a, x) => a - x);
+  const medDay = counts.length ? counts[Math.floor(counts.length / 2)] : 0;
+  const lastDay = dayList[dayList.length - 1];
+  const partialDay = lastDay && medDay && lastDay[1] < medDay * 0.4
+    ? { date: lastDay[0], dc: lastDay[1], share: lastDay[1] / medDay } : null;
+
+  const out = {
+    d, n, m, enByLead, orphans, stages, stageP, open, recoverable,
+    sps, tls, drivers, queue, daysSeen, expectedFor,
+    dayList, medDay, partialDay, bounds: b, period: p, calMeta,
+    funnel, hours, asOf, units, unitsByLead
+  };
+  if (_cache.size > 12) _cache.clear();
+  _cache.set(k, out);
+  return out;
+}
+
+/* Weekly series across the WHOLE extract, honouring non-date filters.
+   Used by the trend view, which needs every week regardless of the
+   currently selected window. */
+function weeklySeries() {
+  const key = 'wk||' + filterKey();
+  if (_cache.has(key)) return _cache.get(key);
+  const d = DC.filter(x => matchDC(x, null));
+  const wonSet = new Set(EN.filter(x => matchEN(x, null)).map(e => e.id));
+  const asOf = ALL_DATES[ALL_DATES.length - 1];
+  const g = new Map();
+  for (const x of d) {
+    const k = weekStart(x.date);
+    let r = g.get(k);
+    if (!r) r = g.set(k, { start: k, days: new Set(), dc: 0, won: 0, mat: 0 }).get(k);
+    r.dc++; r.days.add(x.date);
+    r.mat += maturityAt(Math.round((new Date(asOf) - new Date(x.date)) / 86400000));
+    if (wonSet.has(x.id)) r.won++;
+  }
+  const rows = [...g.values()].sort((a, b) => a.start.localeCompare(b.start)).map(r => ({
+    start: r.start, label: r.start, dayCount: r.days.size, complete: r.days.size === 7,
+    dc: r.dc, won: r.won, cv: r.dc ? r.won / r.dc : 0,
+    matCv: r.mat ? r.won / r.mat : 0, maturity: r.dc ? r.mat / r.dc : 1
+  }));
+  rows.forEach((r, i) => { r.prevCv = i ? rows[i - 1].cv : null; r.prevMatCv = i ? rows[i - 1].matCv : null; });
+  _cache.set(key, rows);
+  return rows;
+}
+
+/* The comparable prior window, or null at the start of the series. */
+function viewPrev() {
+  const pp = prevPeriod(state.period);
+  if (!pp) return null;
+  const b = periodBounds(pp);
+  if (b.to < ALL_DATES[0]) return null;
+  return view(pp);
+}
+
+/* ── generic segment aggregator: works for any field on either side,
+   because everything routes through the lead-id join.
+   V7.3 split fields into "both", "DC-only" and "EN-only" and told its
+   copilot that conversion by Lead Age or Product was "not computable".
+   It is: the join covers 82% of enrolments. That claim hid the single
+   most interesting row in the dataset — the 90+ day bucket, lowest
+   volume and highest revenue per demo.                               */
+function segment(key, opts = {}) {
+  const v = view(), out = new Map();
+  for (const x of v.d) {
+    const raw = x[key];
+    const s = raw == null || raw === '' ? 'Unknown' : String(raw);
+    let r = out.get(s);
+    if (!r) r = out.set(s, { seg: s, dc: 0, won: 0, rev: 0 }).get(s);
+    r.dc++;
+    const sales = v.enByLead.get(x.id);
+    if (sales) { r.won++; for (const q of sales) r.rev += revOf(q); }
+  }
+  const rows = [...out.values()].map(r => {
+    r.cv = r.dc ? r.won / r.dc : 0;
+    r.ats = r.won ? r.rev / r.won : 0;
+    r.rpd = r.dc ? r.rev / r.dc : 0;
+    const se = Math.sqrt(Math.max(v.m.cohortCv * (1 - v.m.cohortCv), 1e-9) / Math.max(1, r.dc));
+    r.z = se ? (r.cv - v.m.cohortCv) / se : 0;
+    r.sig = Math.abs(r.z) >= Z_CRIT;
+    r.thin = r.dc < MIN_SEGMENT_N;
+    return r;
+  });
+  return opts.order
+    ? rows.sort((a, b) => opts.order.indexOf(a.seg) - opts.order.indexOf(b.seg))
+    : rows.sort((a, b) => b.dc - a.dc);
+}
+
+/* Enrolment-side aggregation, for fields that genuinely exist only on
+   the sale (Product). No demo denominator exists, so no conversion rate
+   is reported — rather than substituting a different segment's rate. */
+function segmentEN(key) {
+  const v = view(), out = new Map();
+  for (const e of v.n) {
+    const s = e[key] == null || e[key] === '' ? 'Unknown' : String(e[key]);
+    let r = out.get(s);
+    if (!r) r = out.set(s, { seg: s, en: 0, rev: 0 }).get(s);
+    r.en++; r.rev += revOf(e);
+  }
+  return [...out.values()].map(r => {
+    r.ats = r.en ? r.rev / r.en : 0;
+    r.share = v.m.rev ? r.rev / v.m.rev : 0;
+    return r;
+  }).sort((a, b) => b.rev - a.rev);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   V7.4 UI LAYER
+   One table renderer used everywhere. Every column sorts; every table
+   exports. All interpolation goes through esc()/attr() — V7.3 wrote
+   values straight into innerHTML, so a salesperson with an apostrophe
+   in their name broke the drill-down handler.
+   ════════════════════════════════════════════════════════════════════ */
+
+const TABLES = {};
+
+/* cols: [{h:'Header', k:'key', f:formatter, cls:rowFn, num:bool, raw:rowFn}] */
+function table(id, cols, rows, opts = {}) {
+  TABLES[id] = { cols, rows, opts };
+  const s = state.sort[id] || opts.sort || { k: cols[1] ? cols[1].k : cols[0].k, dir: -1 };
+  state.sort[id] = s;
+  const sorted = rows.slice().sort((a, b) => {
+    const x = a[s.k], y = b[s.k];
+    if (typeof x === 'string' || typeof y === 'string')
+      return s.dir * String(x ?? '').localeCompare(String(y ?? ''));
+    return s.dir * ((x ?? 0) - (y ?? 0));
+  });
+  const head = cols.map(c =>
+    `<th class="${c.num === false ? 'l' : ''}${s.k === c.k ? ' srt' : ''}" `
+    + `onclick="sortBy('${attr(id)}','${attr(c.k)}')" title="Sort by ${esc(c.h)}">`
+    + `${esc(c.h)}${s.k === c.k ? (s.dir < 0 ? ' ▾' : ' ▴') : ''}</th>`).join('');
+  const body = sorted.length ? sorted.map(r => '<tr' + (opts.rowAttr ? opts.rowAttr(r) : '') + '>'
+    + cols.map(c => {
+      const val = c.render ? c.render(r) : (c.f ? c.f(r[c.k]) : esc(r[c.k]));
+      return `<td class="${c.num === false ? 'l' : ''}${c.cls ? ' ' + c.cls(r) : ''}">${val}</td>`;
+    }).join('') + '</tr>').join('')
+    : `<tr><td class="l empty" colspan="${cols.length}">No rows match the current filters.</td></tr>`;
+  const el = $(id);
+  if (el) el.innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body}</tbody>`;
+}
+
+window.sortBy = function (id, k) {
+  const cur = state.sort[id];
+  state.sort[id] = (cur && cur.k === k) ? { k, dir: -cur.dir } : { k, dir: -1 };
+  render();
+};
+
+window.exportCSV = function (id, name) {
+  const t = TABLES[id];
+  if (!t) return;
+  const s = state.sort[id];
+  const rows = t.rows.slice().sort((a, b) => {
+    const x = a[s.k], y = b[s.k];
+    if (typeof x === 'string' || typeof y === 'string')
+      return s.dir * String(x ?? '').localeCompare(String(y ?? ''));
+    return s.dir * ((x ?? 0) - (y ?? 0));
+  });
+  const q = v => {
+    const str = String(v ?? '');
+    return /[",\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+  };
+  const csv = [t.cols.map(c => q(c.h)).join(',')]
+    .concat(rows.map(r => t.cols.map(c => q(c.csv ? c.csv(r) : r[c.k])).join(',')))
+    .join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (name || id) + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ── shared cell formatters ── */
+const F = {
+  n: v => fmtN(v), money: v => money(v), money0: v => money0(v),
+  pct: v => pct(v), pp: v => pp(v), txt: v => esc(v),
+  z: v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1)
+};
+/* Colour thresholds are relative to the portfolio rate, not fixed at
+   30/18%. Once conversion is measured on a cohort basis the absolute
+   level shifts, and a hard-coded ramp would paint the whole table amber. */
+const cvClass = r => {
+  const base = view().m.cohortCv || 0;
+  if (r.cv >= base * 1.15) return 'pos';
+  if (r.cv >= base * 0.85) return '';
+  return 'neg';
+};
+const gapClass = r => !r.sig ? 'muted' : r.gap >= 0 ? 'pos' : 'neg';
+
+/* Week-over-week / month-over-month chip. Rates move in percentage
+   POINTS, counts move in percent — conflating the two is the classic
+   way a dashboard reports "+40%" on a rate that rose four points. */
+function delta(cur, prev, isRate) {
+  if (prev == null || cur == null) return '';
+  if (isRate) {
+    const d = cur - prev;
+    if (Math.abs(d) < 0.0005) return '';
+    return `<span class="dl ${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'}${Math.abs(d * 100).toFixed(1)}pp</span>`;
+  }
+  if (!prev) return cur ? '<span class="dl up">▲new</span>' : '';
+  const c = (cur - prev) / Math.abs(prev) * 100;
+  if (Math.abs(c) < 0.5) return '';
+  return `<span class="dl ${c >= 0 ? 'up' : 'dn'}">${c >= 0 ? '▲' : '▼'}${Math.abs(c).toFixed(0)}%</span>`;
+}
+
+function basisBar() {
+  const subj = [['Math', 'Math'], ['English', 'English']]
+    .map(([v, l]) => `<button class="sg${state.subj === v ? ' on' : ''}" onclick="setSubj('${v}')">${l}</button>`).join('');
+  const basis = [['report', 'Report parity'], ['traced', 'Traced cohort']]
+    .map(([v, l]) => `<button class="sg${state.basis === v ? ' on' : ''}" onclick="setBasis('${v}')">${l}</button>`).join('');
+  const m = view().m;
+  $('basisBar').innerHTML =
+    `<span class="clbl">Course</span><span class="seg">${subj}</span>`
+    + `<span class="clbl">Basis</span><span class="seg">${basis}</span>`
+    + `<label class="chk"><input type="checkbox" ${state.roster ? 'checked' : ''} onchange="setRoster(this.checked)"> Rostered team leads only</label>`
+    + `<span class="pscope">${isReport()
+      ? 'sales counted as bundle-weighted units · DC2E = units ÷ demos'
+      : 'sales joined to demos on lead id · DC2E = demos that enrolled ÷ demos'}</span>`;
+}
+window.setSubj = v => { state.subj = v; rebuildFilters(); render(); };
+window.setBasis = v => { state.basis = v; render(); };
+window.setRoster = v => { state.roster = v ? 1 : 0; rebuildFilters(); render(); };
+
+function periodBar() {
+  const p = state.period;
+  const seg = [['month', 'Month'], ['week', 'Week'], ['range', 'Date range']]
+    .map(([v, l]) => `<button class="sg${p.mode === v ? ' on' : ''}" onclick="setMode('${v}')">${l}</button>`).join('');
+
+  let ctl = '';
+  if (p.mode === 'month') {
+    ctl = `<span class="clbl">Month</span><select onchange="setMonth(this.value)">`
+      + MONTHS.map(m => `<option value="${attr(m)}"${m === p.month ? ' selected' : ''}>${esc(MONTH_LABEL(m))}</option>`).join('')
+      + `</select>`;
+    if (MONTHS.length < 2) ctl += `<span class="pnote">one month in this extract</span>`;
+  } else if (p.mode === 'week') {
+    ctl = `<span class="clbl">Week</span><select onchange="setWeek(this.value)">`
+      + WEEKS.map(w => `<option value="${attr(w.key)}"${w.key === p.week ? ' selected' : ''}>${esc(w.label)}${w.complete ? '' : ' · partial'}</option>`).join('')
+      + `</select>`;
+    const w = WEEKS.find(x => x.key === p.week);
+    if (w && !w.complete) ctl += `<span class="pnote warn">${w.days.length} of 7 days in the extract — do not compare its totals to a full week</span>`;
+  } else {
+    ctl = `<span class="clbl">From</span><input type="date" value="${attr(p.from)}" min="${attr(ALL_DATES[0])}" max="${attr(ALL_DATES[ALL_DATES.length - 1])}" onchange="setRange('from',this.value)">`
+      + `<span class="clbl">To</span><input type="date" value="${attr(p.to)}" min="${attr(ALL_DATES[0])}" max="${attr(ALL_DATES[ALL_DATES.length - 1])}" onchange="setRange('to',this.value)">`
+      + `<span class="pnote">extract covers ${esc(DAY_LABEL(ALL_DATES[0]))} – ${esc(DAY_LABEL(ALL_DATES[ALL_DATES.length - 1]))}</span>`;
+  }
+  const prev = viewPrev();
+  $('periodBar').innerHTML = `<span class="clbl">View</span><span class="seg">${seg}</span>${ctl}`
+    + `<span class="pscope">${esc(periodLabel(p))}${prev ? ' · vs ' + esc(periodLabel(prevPeriod(p))) : ' · no prior period to compare'}</span>`;
+}
+
+window.setMode = m => { state.period.mode = m; render(); };
+window.setMonth = m => { state.period.month = m; render(); };
+window.setWeek = w => { state.period.week = w; render(); };
+window.setRange = (which, val) => {
+  const p = state.period;
+  p[which] = val;
+  if (p.from && p.to && p.from > p.to) { if (which === 'from') p.to = val; else p.from = val; }
+  render();
+};
+
+function kpis(id, items) {
+  const el = $(id); if (!el) return;
+  el.innerHTML = items.map(([label, value, sub, tone]) =>
+    `<div class="kpi${tone ? ' k-' + tone : ''}"><div class="k-l">${esc(label)}</div>`
+    + `<div class="k-v">${value}</div>`
+    + (sub ? `<div class="k-s">${sub}</div>` : '') + `</div>`).join('');
+}
+
+function bars(id, rows, opts = {}) {
+  const el = $(id); if (!el) return;
+  if (!rows.length) { el.innerHTML = '<p class="empty">Nothing to show for these filters.</p>'; return; }
+  const max = Math.max(1, ...rows.map(r => r.v));
+  el.innerHTML = rows.map(r =>
+    `<div class="bar"><span class="b-n" title="${attr(r.k)}">${esc(r.k)}</span>`
+    + `<span class="b-t"><span class="b-f${r.tone ? ' bf-' + r.tone : ''}" style="width:${Math.max(1, 100 * r.v / max)}%"></span></span>`
+    + `<span class="b-v">${r.label ?? fmtN(r.v)}</span></div>`).join('');
+}
+
+/* ════════════════════ INTEGRITY STRIP ════════════════════
+   Pinned to the header on every page. V7.3 published one conversion
+   number with no indication that it was assembled from two unjoined
+   populations. Both figures now travel together, permanently.        */
+function integrity() {
+  const v = view(), m = v.m;
+  const bad = m.inflation >= 0.02;
+  $('intStrip').innerHTML =
+    `<span class="int-item"><b>${pct(m.countCv)}</b> DC2E · report parity<span class="int-s">${fmtN(m.en)} sale units ÷ ${fmtN(m.dc)} demos</span></span>`
+    + `<span class="int-item"><b>${pct(m.cohortCv)}</b> DC2E · traced<span class="int-s">${fmtN(m.wonDC)} of these demos enrolled</span></span>`
+    + `<span class="int-item ${bad ? 'int-bad' : ''}"><b>${pp(m.inflation)}</b> spread<span class="int-s">${bad ? 'definitional, see Reconciliation' : 'within tolerance'}</span></span>`
+    + `<span class="int-item"><b>${pct(m.matCv)}</b> maturity-adjusted<span class="int-s">${m.matLift >= 0.0005 ? pp(m.matLift) + ' still to land' : 'window fully mature'}</span></span>`
+    + `<span class="int-item"><b>${fmtN(m.orphans)}</b> sales without a demo<span class="int-s">${money(m.orphanRev)} · ${pct(m.enRows ? m.orphans / m.enRows : 0)} of sales</span></span>`;
+}
+
+/* ════════════════════ PAGES ════════════════════ */
+
+function pageExec() {
+  const v = view(), m = v.m;
+  const topDriver = v.drivers.find(x => x.sig && x.gap < 0);
+  const bestTL = v.tls.filter(t => t.dc >= 20).sort((a, b) => b.cv - a.cv)[0];
+  const q = viewPrev(), pm = q ? q.m : null;
+  kpis('execKpis', [
+    ['Demos', fmtN(m.dc) + delta(m.dc, pm && pm.dc)],
+    [isReport() ? 'Sale units' : 'Enrolments', fmtN(m.en) + delta(m.en, pm && pm.en),
+      isReport() ? `${fmtN(m.enRows)} sale rows, bundle-weighted` : `${fmtN(m.wonDC)} traced to a demo`],
+    ['DC2E · ' + m.basisLabel, pct(m.headlineCv) + delta(m.headlineCv, pm && pm.headlineCv, true),
+      isReport() ? 'units ÷ demos, matches the sheet' : 'of these demos, enrolled'],
+    ['Maturity-adjusted', pct(m.matCv), m.matLift >= 0.0005 ? 'where the window is heading' : 'window fully mature', 'good'],
+    ['Revenue', money(m.rev) + delta(m.rev, pm && pm.rev), `${money(m.cohortRev)} demo-traced`],
+    ['ATS', money(m.ats) + delta(m.ats, pm && pm.ats)],
+    ['Revenue per demo', money(m.rpd) + delta(m.rpd, pm && pm.rpd), 'traced revenue ÷ demos']
+  ]);
+
+  const worth = m.dc * 0.01 * m.ats;
+  $('execSignals').innerHTML = [
+    topDriver
+      ? `<p><span class="sig-t neg">Largest verified leak</span> <b>${esc(topDriver.label)} · ${esc(topDriver.v)}</b> converts at ${pct(topDriver.cv)} against a portfolio ${pct(m.cohortCv)} — a gap of ${pp(topDriver.gap)} across ${fmtN(topDriver.dc)} demos (z=${topDriver.z.toFixed(1)}, significant). Closing it to portfolio would be worth about <b>${money(Math.abs(topDriver.impact))}</b>.</p>`
+      : `<p><span class="sig-t muted">No verified leak</span> No segment differs from the portfolio rate beyond what sampling noise explains at this filter depth.</p>`,
+    `<p><span class="sig-t">Conversion leverage</span> Each +1pp of cohort DC2E is worth about <b>${money(worth)}</b> at the current ATS of ${money(m.ats)}.</p>`,
+    `<p><span class="sig-t">Open pipeline</span> ${fmtN(v.open.length)} demos are still live, worth <b>${money(v.recoverable)}</b> at measured stage win rates. This is a calibrated figure, not the assumed one — see Model Calibration.</p>`,
+    bestTL ? `<p><span class="sig-t pos">Strongest team</span> <b>${esc(bestTL.k)}</b> at ${pct(bestTL.cv)} across ${fmtN(bestTL.dc)} demos.</p>` : ''
+  ].join('');
+
+  const maxDay = Math.max(1, ...v.dayList.map(e => e[1]));
+  $('execTrend').innerHTML = v.dayList.length < 2
+    ? '<p class="empty">A single day in view — switch to Month or a wider range to see a trend.</p>'
+    : v.dayList.map(([dt, c]) => {
+      const partial = v.partialDay && v.partialDay.date === dt;
+      return `<div class="bar"><span class="b-n">${esc(DAY_LABEL(dt))}${partial ? ' <span class="pnote warn">partial</span>' : ''}</span>`
+        + `<span class="b-t"><span class="b-f${partial ? ' bf-warn' : ''}" style="width:${100 * c / maxDay}%"></span></span>`
+        + `<span class="b-v">${fmtN(c)}</span></div>`;
+    }).join('');
+
+  bars('execTeamBars', v.tls.filter(t => t.dc >= 10)
+    .sort((a, b) => b.rpd - a.rpd).slice(0, 12)
+    .map(t => ({ k: t.k, v: t.rpd, label: money(t.rpd), tone: t.cv >= m.cohortCv ? 'pos' : 'neg' })));
+}
+
+function pageIntegrity() {
+  const v = view(), m = v.m;
+  kpis('intKpis', [
+    ['Cohort DC2E', pct(m.cohortCv), 'demos that enrolled ÷ demos', 'good'],
+    ['Count-based DC2E', pct(m.countCv), 'the figure V7.3 published', 'warn'],
+    ['Overstatement', pp(m.inflation), m.inflation >= 0.02 ? 'material' : 'tolerable', m.inflation >= 0.02 ? 'bad' : 'good'],
+    ['Sales without a demo', fmtN(m.orphans), money(m.orphanRev)]
+  ]);
+
+  const noTL = v.d.filter(x => !x.tl);
+  const noStage = v.d.filter(x => !x.stage);
+  const dupes = v.d.length - new Set(v.d.map(x => x.id)).size;
+  const attrDC = v.d.length - noTL.length;
+  const attrWon = v.d.filter(x => x.tl && v.enByLead.has(x.id)).length;
+
+  table('intT', [
+    { h: 'Check', k: 'check', num: false },
+    { h: 'Count', k: 'count', f: F.n },
+    { h: 'Share', k: 'share', f: F.pct },
+    { h: 'What it means for your numbers', k: 'note', num: false, cls: () => 'wrap', render: r => esc(r.note) }
+  ], [
+    {
+      check: 'Sales with no demo in window', count: m.orphans, share: m.en ? m.orphans / m.en : 0,
+      note: 'Counted in every segment numerator but belong to no denominator. This is the entire source of the gap between the two DC2E figures.'
+    },
+    {
+      check: 'Demos with no team lead', count: noTL.length, share: m.dc ? noTL.length / m.dc : 0,
+      note: 'Excluded from team and rep tables. Attributed-only DC2E is ' + pct(attrDC ? attrWon / attrDC : 0) + '.'
+    },
+    {
+      check: 'Demos with no sub stage', count: noStage.length, share: m.dc ? noStage.length / m.dc : 0,
+      note: 'Cannot be placed in the funnel or valued in the open pipeline.'
+    },
+    {
+      check: 'Duplicate demo rows', count: dupes, share: m.dc ? dupes / m.dc : 0,
+      note: 'Same lead id appears more than once. Inflates the denominator slightly.'
+    }
+  ], { sort: { k: 'count', dir: -1 } });
+
+  $('intNote').innerHTML =
+    `<p>V7.3 computed conversion as <code>count(sales in filter) ÷ count(demos in filter)</code> over two arrays that were filtered separately and never joined. `
+    + `Because ${fmtN(m.orphans)} sales have no demo in the window, they landed in the numerator of every segment while contributing to no denominator. `
+    + `The published rate of ${pct(m.countCv)} therefore overstated true conversion by ${pp(m.inflation)}.</p>`
+    + `<p>Everything in this build joins on <code>Linked Student Lead Id</code> first. Where a rate cannot be computed, it reads “—” rather than borrowing a rate from elsewhere.</p>`;
+}
+
+function pageCalibration() {
+  const v = view();
+  const ASSUMED = {
+    'Payment Link Sent': .70, 'AD Positive': .50, 'AD Reactivation': .30,
+    'AD May Buy Later': .25, 'AD-WIP': .18, 'AD Attempted': .10, 'AD Attempt Exhausted': .04
+  };
+  let assumedTotal = 0;
+  for (const x of v.open) assumedTotal += (ASSUMED[x.stage] || 0) * v.m.ats;
+
+  kpis('calKpis', [
+    ['Open pipeline, calibrated', money(v.recoverable), 'at measured win rates', 'good'],
+    ['Same pool, V7.3 assumptions', money(assumedTotal), 'hand-picked probabilities', 'bad'],
+    ['Overstatement', assumedTotal && v.recoverable ? (assumedTotal / v.recoverable).toFixed(1) + '×' : '—',
+      money(assumedTotal - v.recoverable) + ' of phantom pipeline', 'bad'],
+    ['Open demos', fmtN(v.open.length), 'live, not yet won or dead']
+  ]);
+
+  table('calT', [
+    { h: 'Sub stage', k: 'stage', num: false },
+    { h: 'Class', k: 'cls', num: false, render: r => `<span class="tag t-${r.cls}">${esc(r.cls)}</span>` },
+    { h: 'Demos (calibration)', k: 'n', f: F.n },
+    { h: 'In this window', k: 'inWindow', f: F.n, cls: () => 'muted' },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'Observed rate', k: 'raw', f: F.pct, cls: r => r.thin ? 'muted' : '' },
+    { h: 'Smoothed', k: 'p', f: F.pct, render: r => `${pct(r.p)} <span class="ci">±${(100 * r.ci).toFixed(1)}</span>` },
+    { h: 'Class prior', k: 'prior', f: F.pct, cls: () => 'muted' },
+    { h: 'V7.3 assumed', k: 'assumed', render: r => r.assumed == null ? '<span class="muted">—</span>' : pct(r.assumed) },
+    { h: 'Error', k: 'err', render: r => r.assumed == null ? '<span class="muted">—</span>' : `<span class="${Math.abs(r.assumed - r.raw) > .1 ? 'neg' : 'muted'}">${pp(r.assumed - r.raw)}</span>` }
+  ], v.stages.map(r => ({ ...r, assumed: ASSUMED[r.stage] ?? null, err: ASSUMED[r.stage] != null ? ASSUMED[r.stage] - r.raw : null })),
+    { sort: { k: 'n', dir: -1 } });
+
+  $('calNote').innerHTML =
+    `<p>V7.3 attached fixed win probabilities to <code>Sub Stage</code> — 70% for “Payment Link Sent”, 50% for “AD Positive”, and so on — on the assumption that these describe a forward-looking pipeline position.</p>`
+    + `<p>They describe the lead's <b>current, terminal</b> disposition. A lead still sitting at “Payment Link Sent” is a lead that did not pay. Measured against the join, that stage converts at a fraction of the assumed rate, and “AD May Buy Later” and “AD Positive” convert at zero. Applying the assumed ladder to the open pool produced a recoverable-revenue figure roughly ${assumedTotal && v.recoverable ? (assumedTotal / v.recoverable).toFixed(0) : '30'}× larger than the evidence supports.</p>`
+    + `<p><b>Rates are learned over the whole extract (${esc(v.calMeta.span)}), not the selected window.</b> `
+    + `Enrolment lags the demo, so a short window contains open demos that simply have not had time to convert yet — calibrating on it would drive every open rate to zero and report an empty pipeline. The period control scopes what you are looking at, not what the model learns from. `
+    + (v.calMeta.scoped
+        ? `Your current non-date filters are applied to the calibration set (${fmtN(v.calMeta.rows)} demos), so these are rates for the slice you are viewing.`
+        : `The current filters leave too few open demos to estimate from, so rates fall back to the full extract (${fmtN(v.calMeta.rows)} demos).`)
+    + `</p>`
+    + `<p>Rates are re-measured on every filter change, smoothed toward the pooled rate of the stage's own class (α=${SMOOTH_ALPHA}) — open stages toward the open-stage rate of ${pct(v.stages.length ? v.stages.find(r=>r.cls==='open')?.prior ?? 0 : 0)}, not toward the portfolio rate, which is dominated by demos that already closed so a three-row stage cannot swing the total, and shown with a 95% interval. Rows below ${MIN_SEGMENT_N} demos are dimmed.</p>`;
+}
+
+function pageDiagnosis() {
+  const v = view(), m = v.m;
+  const sig = v.drivers.filter(x => x.sig);
+  const neg = sig.filter(x => x.gap < 0);
+  kpis('diagKpis', [
+    ['Portfolio DC2E', pct(m.cohortCv), 'cohort basis'],
+    ['Segments tested', fmtN(v.drivers.length), 'at 20+ demos'],
+    ['Statistically significant', fmtN(sig.length), `${fmtN(v.drivers.length - sig.length)} rejected as noise`, 'good'],
+    ['Value of +1pp', money(m.dc * .01 * m.ats)]
+  ]);
+
+  table('diagT', [
+    { h: 'Dimension', k: 'label', num: false },
+    { h: 'Segment', k: 'v', num: false },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'sales', f: F.n },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass },
+    { h: 'Gap vs portfolio', k: 'gap', render: r => `${pp(r.gap)} <span class="ci">±${(100 * r.ci).toFixed(1)}</span>`, cls: r => r.sig ? (r.gap < 0 ? 'neg' : 'pos') : 'muted' },
+    { h: 'z', k: 'z', f: F.z, cls: r => r.sig ? '' : 'muted' },
+    { h: 'Verdict', k: 'sig', num: false, render: r => r.sig ? '<span class="tag t-sig">signal</span>' : '<span class="tag t-noise">noise</span>' },
+    { h: 'Directional ₹', k: 'impact', render: r => r.sig ? money(r.impact) : '<span class="muted">—</span>', csv: r => r.sig ? Math.round(r.impact) : '' }
+  ], v.drivers, { sort: { k: 'z', dir: 1 } });
+
+  $('diagText').innerHTML = neg.length
+    ? `<p>${neg.slice(0, 3).map(x => `<b>${esc(x.label)}: ${esc(x.v)}</b> at ${pct(x.cv)} (${pp(x.gap)}, z=${x.z.toFixed(1)})`).join(', ')} are the verified underperformers.</p>`
+    + `<p>${fmtN(v.drivers.length - sig.length)} of ${fmtN(v.drivers.length)} tested segments fail a 95% two-proportion test against the portfolio rate. They are shown for completeness but carry no rupee figure, because acting on them is acting on sampling noise. V7.3 ranked all of them by impact with no test applied.</p>`
+    : `<p>No segment differs from the portfolio rate beyond sampling noise at this filter depth. Widen the filters or wait for more volume before drawing conclusions.</p>`;
+}
+
+function pageBenchmark() {
+  const v = view();
+  const above = v.sps.filter(x => x.sig && x.gap > 0).length;
+  const below = v.sps.filter(x => x.sig && x.gap < 0).length;
+  kpis('benchKpis', [
+    ['Reps analysed', fmtN(v.sps.length), 'with 5+ demos'],
+    ['Verified above expectation', fmtN(above), 'significant at 95%', 'good'],
+    ['Verified below expectation', fmtN(below), 'significant at 95%', 'bad'],
+    ['Indistinguishable from expected', fmtN(v.sps.length - above - below), 'gap within noise']
+  ]);
+
+  table('benchT', [
+    { h: 'Salesperson', k: 'k', num: false },
+    { h: 'Team lead', k: 'tl', num: false, render: r => esc(r.tl || '—') },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Traced enrolments', k: 'tracedWon', f: F.n },
+    { h: 'Actual (traced)', k: 'tracedCv', render: r => r.tracedCv == null ? '<span class="muted">—</span>' : pct(r.tracedCv), csv: r => r.tracedCv == null ? '' : (100 * r.tracedCv).toFixed(1) },
+    { h: 'Expected', k: 'exp', f: F.pct },
+    { h: 'Gap', k: 'gap', f: F.pp, cls: gapClass },
+    { h: 'z', k: 'z', f: F.z, cls: r => r.sig ? '' : 'muted' },
+    { h: 'Verdict', k: 'sig', num: false, render: r => !r.sig ? '<span class="tag t-noise">within noise</span>' : r.gap > 0 ? '<span class="tag t-good">outperforming</span>' : '<span class="tag t-bad">underperforming</span>' },
+    { h: 'Rev/demo', k: 'rpd', f: F.money }
+  ], v.sps, { sort: { k: 'gap', dir: 1 } });
+
+  $('benchNote').innerHTML =
+    `<p class="note"><b>This page is always on the traced basis, whatever the Basis toggle says.</b> It asks whether a rep's own demos convert better or worse than their mix predicts, so the numerator must be sales from those same demos. Pairing a sale-side count with a demo-side denominator would compare two different populations. For the figure that matches the workbook's SMDC2E tab, use Salesperson intelligence.</p>`
+    + `<p>Expected conversion is mix-adjusted on Country × Source × Cohort type, falling back to broader tiers until a cell holds at least ${MIN_SEGMENT_N} demos.</p>`
+    + `<p>Each rep's expectation <b>excludes their own demos</b>. V7.3 built the benchmark from the full filtered set, so a high-volume rep was partly benchmarked against themselves and their measured gap was pulled toward zero. The z column tests whether a gap is distinguishable from sampling noise at that rep's demo count — a −8pp gap on 6 demos is not evidence, and is labelled accordingly.</p>`;
+}
+
+function pageReps() {
+  const v = view();
+  table('repsT', [
+    {
+      h: 'Salesperson', k: 'k', num: false,
+      render: r => `<a href="#" onclick="showRep('${attr(r.k)}');return false">${esc(r.k)}</a>`
+    },
+    { h: 'Team lead', k: 'tl', num: false, render: r => esc(r.tl || '—') },
+    { h: 'Demos received', k: 'dc', f: F.n },
+    { h: 'Sale count', k: 'saleUnits', f: F.n, cls: () => 'pos' },
+    { h: 'DC2E', k: 'parityCv', render: r => r.parityCv == null ? '<span class="muted">—</span>' : pct(r.parityCv), csv: r => r.parityCv == null ? '' : (100 * r.parityCv).toFixed(1) },
+    { h: 'Traced to own demo', k: 'tracedWon', f: F.n, cls: () => 'muted' },
+    { h: 'Traced DC2E', k: 'tracedCv', render: r => r.tracedCv == null ? '<span class="muted">—</span>' : pct(r.tracedCv), csv: r => r.tracedCv == null ? '' : (100 * r.tracedCv).toFixed(1) },
+    { h: 'Open', k: 'open', f: F.n },
+    { h: 'Revenue', k: 'saleRev', f: F.money }
+  ], v.sps, { sort: { k: 'saleUnits', dir: -1 } });
+
+  const diff = v.sps.filter(r => r.saleUnits !== r.tracedWon).length;
+  $('repsNote').innerHTML =
+    `<p><span class="sig-t">Sale count</span> Bundle-weighted sale units credited to this person as <b>Sales Owner</b>. This is the column the workbook's SMDC2E tab publishes, and it matches it to the decimal.</p>`
+    + `<p><span class="sig-t">Traced to own demo</span> How many of those sales came from a demo this person personally ran inside the window. It is always the smaller number: a rep can close a lead whose demo someone else took, or whose demo happened before the window opened.</p>`
+    + `<p>${fmtN(diff)} of ${fmtN(v.sps.length)} people show a difference between the two. That is normal and not a data error — but quote <b>Sale count</b> when comparing against the sheet, and <b>Traced</b> when asking whether someone's own demos convert.</p>`;
+  const top = v.sps.slice().sort((a, b) => b.recover - a.recover)[0];
+  if (top) showRep(top.k);
+}
+
+window.showRep = function (name) {
+  const v = view();
+  const r = v.sps.find(x => x.k === name);
+  if (!r) return;
+  const leads = v.d.filter(x => (x.owner ?? 'Unknown') === name);
+  const openLeads = leads.filter(x => stageClass(x.stage) === 'open'
+    && !v.enByLead.has(x.id))
+    .map(x => ({ x, p: v.stageP.get(x.stage) || 0 }))
+    .sort((a, b) => b.p - a.p).slice(0, 6);
+  const stages = {};
+  for (const x of leads) stages[x.stage || 'Unknown'] = (stages[x.stage || 'Unknown'] || 0) + 1;
+  const topStage = Object.entries(stages).sort((a, b) => b[1] - a[1])[0];
+
+  $('repCard').innerHTML =
+    `<div class="rc-head"><h3>${esc(r.k)}</h3><span class="rc-tl">${esc(r.tl || 'No team lead')}</span></div>`
+    + `<div class="kpis kpis-6">`
+    + [['Demos received', fmtN(r.dc)],
+    ['Sale count', fmtN(r.saleUnits), 'as Sales Owner'],
+    ['DC2E', r.parityCv == null ? '—' : pct(r.parityCv), 'matches the sheet'],
+    ['Traced to own demo', fmtN(r.tracedWon), r.tracedCv == null ? '' : pct(r.tracedCv)],
+    ['Expected (traced)', pct(r.exp), r.sig ? pp(r.gap) + ', significant' : pp(r.gap) + ', within noise'],
+    ['Revenue', money(r.saleRev)]]
+      .map(([l, val, s]) => `<div class="kpi"><div class="k-l">${esc(l)}</div><div class="k-v">${val}</div>${s ? `<div class="k-s">${esc(s)}</div>` : ''}</div>`).join('')
+    + `</div>`
+    + `<p class="rc-note">${r.sig
+      ? `This gap is distinguishable from noise at ${fmtN(r.dc)} demos (z=${r.z.toFixed(1)}), so it is a coaching signal.`
+      : `At ${fmtN(r.dc)} demos this gap is <b>not</b> distinguishable from sampling noise (z=${r.z.toFixed(1)}). Treat it as inconclusive rather than as evidence of performance.`}</p>`
+    + `<p class="rc-note">Largest disposition pool: <b>${esc(topStage ? topStage[0] : '—')}</b> (${topStage ? topStage[1] : 0} demos).</p>`
+    + (openLeads.length
+      ? `<div class="rc-leads"><div class="rc-lh">Highest-probability open demos</div>`
+      + openLeads.map(o => `<div class="rc-lead"><span class="mono">${esc(o.x.id).slice(0, 14)}…</span>`
+        + `<span>${esc(o.x.stage)}</span><span>${esc(o.x.ageBucket || '—')}</span>`
+        + `<span class="mono">${pct(o.p)} · ${money(o.p * v.m.ats)}</span></div>`).join('') + `</div>`
+      : `<p class="rc-note empty">No open demos for this rep in the current filter.</p>`);
+};
+
+function pageTL() {
+  const v = view();
+  kpis('tlKpis', [
+    ['Open pipeline value', money(v.recoverable), 'measured rates'],
+    ['Open demos', fmtN(v.open.length)],
+    ['Reps verified below expectation', fmtN(v.sps.filter(x => x.sig && x.gap < 0).length), 'significant only', 'bad'],
+    ['Teams with open pipeline', fmtN(v.tls.filter(t => t.recover > 0).length)]
+  ]);
+
+  table('tlT', [
+    {
+      h: 'Team lead', k: 'k', num: false,
+      render: r => `<a href="#" onclick="drillTL('${attr(r.k)}');return false">${esc(r.k)}</a>`
+    },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money },
+    { h: 'Rev/demo', k: 'rpd', f: F.money },
+    { h: 'Open', k: 'open', f: F.n },
+    { h: 'Open value', k: 'recover', f: F.money },
+    { h: 'Reps below exp.', k: 'below', f: F.n, cls: r => r.below ? 'neg' : 'muted' }
+  ], v.tls, { sort: { k: 'recover', dir: -1 } });
+
+  const top = v.tls.slice().sort((a, b) => b.recover - a.recover)[0];
+  if (top) drillTL(top.k);
+  const weak = v.sps.filter(x => x.sig && x.gap < 0).sort((a, b) => a.gap - b.gap).slice(0, 3);
+  $('tlActions').innerHTML =
+    (top ? `<p><span class="sig-t">Largest open pipeline</span> <b>${esc(top.k)}</b> holds ${money(top.recover)} across ${fmtN(top.open)} live demos.</p>` : '')
+    + (weak.length
+      ? `<p><span class="sig-t neg">Coaching, evidence-backed</span> ${weak.map(x => `<b>${esc(x.k)}</b> (${pp(x.gap)} vs expected, z=${x.z.toFixed(1)}, ${fmtN(x.dc)} demos)`).join('; ')}.</p>`
+      : `<p><span class="sig-t muted">Coaching</span> No rep is below expectation by more than sampling noise explains. Nobody on this list needs an intervention conversation on the strength of these numbers.</p>`)
+    + `<p><span class="sig-t">Note</span> Only statistically significant gaps appear here. V7.3 listed the three worst raw gaps regardless of demo count, which routinely surfaced reps with fewer than ten demos.</p>`;
+}
+
+window.drillTL = function (k) {
+  const v = view();
+  const rows = v.sps.filter(s => s.tl === k);
+  $('drillTitle').textContent = k + ' — salespeople';
+  table('drillT', [
+    { h: 'Salesperson', k: 'k', num: false },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'DC2E', k: 'actual', f: F.pct },
+    { h: 'Expected', k: 'exp', f: F.pct },
+    { h: 'Gap', k: 'gap', f: F.pp, cls: gapClass },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'Rev/demo', k: 'rpd', f: F.money }
+  ], rows, { sort: { k: 'rev', dir: -1 } });
+};
+
+function pageQuadrant() {
+  const v = view();
+  const z = v.sps.filter(x => x.dc >= 10);
+  if (!z.length) { $('quads').innerHTML = '<p class="empty">Not enough demos per rep at this filter depth.</p>'; return; }
+  const med = arr => { const s = arr.slice().sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+  const mc = med(z.map(x => x.actual)), mr = med(z.map(x => x.rpd));
+  const QS = [
+    ['Strong on both', x => x.actual >= mc && x.rpd >= mr, 'pos'],
+    ['Converts well, lower value', x => x.actual >= mc && x.rpd < mr, 'warn'],
+    ['High value, lower conversion', x => x.actual < mc && x.rpd >= mr, 'warn'],
+    ['Below median on both', x => x.actual < mc && x.rpd < mr, 'neg']
+  ];
+  $('quads').innerHTML = QS.map(([t, f, tone]) =>
+    `<div class="quad q-${tone}"><h4>${esc(t)}</h4><div class="q-body">`
+    + (z.filter(f).map(x => `<span class="chip"><b>${esc(x.k)}</b>${pct(x.actual)} · ${money(x.rpd)}/demo</span>`).join('') || '<span class="empty">None</span>')
+    + `</div></div>`).join('');
+  $('quadNote').innerHTML = `<p>Medians across ${fmtN(z.length)} reps with 10+ demos on the <b>${esc(view().m.basisLabel)}</b> basis: DC2E ${pct(mc)}, revenue per demo ${money(mr)}. Quadrant position is descriptive, not a performance verdict — see Conversion Benchmark for mix-adjusted, significance-tested gaps.</p>`;
+}
+
+function pageOpportunity() {
+  const v = view();
+  kpis('oppKpis', [
+    ['Open demos', fmtN(v.open.length)],
+    ['Open pipeline value', money(v.recoverable), 'measured stage rates', 'good'],
+    ['Current ATS', money(v.m.ats)],
+    ['Above-portfolio stages', fmtN(v.open.filter(x => (v.stageP.get(x.stage) || 0) >= v.m.cohortCv).length), 'better than average odds']
+  ]);
+
+  const byStage = new Map();
+  for (const x of v.open) {
+    const s = x.stage;
+    let r = byStage.get(s);
+    if (!r) r = byStage.set(s, { stage: s, cases: 0, p: v.stageP.get(s) || 0 }).get(s);
+    r.cases++;
+  }
+  const rows = [...byStage.values()].map(r => ({ ...r, ev: r.cases * r.p * v.m.ats }));
+  table('oppStageT', [
+    { h: 'Sub stage', k: 'stage', num: false },
+    { h: 'Open demos', k: 'cases', f: F.n },
+    { h: 'Measured win rate', k: 'p', f: F.pct },
+    { h: 'Expected revenue', k: 'ev', f: F.money }
+  ], rows, { sort: { k: 'ev', dir: -1 } });
+
+  const byTL = new Map();
+  for (const x of v.open) {
+    const t = x.tl || 'Unattributed';
+    let r = byTL.get(t);
+    if (!r) r = byTL.set(t, { tl: t, cases: 0, ev: 0 }).get(t);
+    r.cases++; r.ev += (v.stageP.get(x.stage) || 0) * v.m.ats;
+  }
+  table('oppTLT', [
+    { h: 'Team lead', k: 'tl', num: false },
+    { h: 'Open demos', k: 'cases', f: F.n },
+    { h: 'Expected revenue', k: 'ev', f: F.money }
+  ], [...byTL.values()], { sort: { k: 'ev', dir: -1 } });
+}
+
+function pagePriority() {
+  const v = view();
+  const q = v.queue;
+  kpis('priKpis', [
+    ['Queue length', fmtN(q.length)],
+    ['Total expected value', money(q.reduce((a, x) => a + x.ev, 0))],
+    ['Fresh leads in queue', fmtN(q.filter(x => x.x.ageBucket === '0–7 days').length), 'under 7 days old'],
+    ['Median expected value', money(q.length ? q[Math.floor(q.length / 2)].ev : 0)]
+  ]);
+
+  table('priT', [
+    { h: 'Lead', k: 'id', num: false, render: r => `<span class="mono">${esc(r.id).slice(0, 16)}…</span>`, csv: r => r.id },
+    { h: 'Sub stage', k: 'stage', num: false },
+    { h: 'Win rate', k: 'p', f: F.pct },
+    { h: 'Expected value', k: 'ev', f: F.money },
+    { h: 'Owner', k: 'owner', num: false },
+    { h: 'Team lead', k: 'tl', num: false },
+    { h: 'Country', k: 'country', num: false },
+    { h: 'source', k: 'source', num: false },
+    { h: 'Lead age', k: 'age', num: false }
+  ], q.slice(0, 300).map(o => ({
+    id: o.x.id, stage: o.x.stage, p: o.p, ev: o.ev,
+    owner: o.x.owner || '—', tl: o.x.tl || '—',
+    country: o.x.country || '—', source: o.x.source || '—',
+    age: o.x.ageBucket || '—'
+  })), { sort: { k: 'ev', dir: -1 } });
+
+  $('priNote').innerHTML =
+    `<p>Ranked by expected value: the stage's <b>measured</b> win rate × current ATS. V7.3 ranked on a hand-weighted score (stage intent 50/45/40/35/25/15/8, plus recency and source points) that was never validated against outcomes, and multiplied it by assumed probabilities that overstated the pool by roughly thirty-fold.</p>`
+    + `<p>Top 300 shown; export for the full queue.</p>`;
+}
+
+function segTable(id, key, title, opts = {}) {
+  const rows = segment(key, opts);
+  /* Ordered dimensions (lead age, grade) carry an explicit rank so the
+     first column sorts by bucket sequence rather than alphabetically —
+     otherwise "16–30 days" lands between "0–7" and "31–60". */
+  if (opts.order) rows.forEach(r => { r.ord = opts.order.indexOf(r.seg); });
+  table(id, [
+    { h: title, k: opts.order ? 'ord' : 'seg', num: false, render: r => esc(r.seg), csv: r => r.seg },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass },
+    { h: 'vs portfolio', k: 'z', render: r => r.sig ? `<span class="${r.cv >= view().m.cohortCv ? 'pos' : 'neg'}">${F.z(r.z)}</span>` : '<span class="muted">noise</span>', csv: r => r.z.toFixed(2) },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money },
+    { h: 'Rev/demo', k: 'rpd', f: F.money }
+  ], rows, opts.sort ? { sort: opts.sort } : {});
+  return rows;
+}
+
+function pageLeadAge() {
+  const order = ['0–7 days', '8–15 days', '16–30 days', '31–60 days', '61–90 days', '90+ days', 'Unknown'];
+  const rows = segTable('ageT', 'ageBucket', 'Lead age', { order, sort: { k: 'ord', dir: 1 } });
+  bars('ageBars', rows.map(r => ({ k: r.seg, v: r.rpd, label: money(r.rpd), tone: r.cv >= view().m.cohortCv ? 'pos' : 'neg' })));
+  const best = rows.filter(r => r.dc >= 20).sort((a, b) => b.rpd - a.rpd)[0];
+  $('ageNote').innerHTML =
+    `<p>V7.3 could not show this table. Its copilot was told, in <code>data_integrity.unavailable_metrics</code>, that “Lead Age exists only on DC rows, so enrolments cannot be attributed to an age bucket”. That was not true — the lead id joins both sides.</p>`
+    + (best ? `<p>The consequence was material: <b>${esc(best.seg)}</b> carries the highest revenue per demo in the portfolio at <b>${money(best.rpd)}</b>, and the dashboard was structurally unable to see it.</p>` : '');
+}
+
+function pageSources() {
+  segTable('sourceT', 'source', 'source');
+  segTable('utmT', 'utm', 'UTM source');
+}
+
+function pageProduct() {
+  const rows = segmentEN('product');
+  table('prodT', [
+    { h: 'product', k: 'seg', num: false },
+    { h: 'Enrolments', k: 'en', f: F.n },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money },
+    { h: 'Share of revenue', k: 'share', f: F.pct },
+    { h: 'DC2E', k: 'na', num: false, render: () => '<span class="muted">—</span>', csv: () => '' }
+  ], rows, { sort: { k: 'rev', dir: -1 } });
+  segTable('gradeT', 'grade', 'Grade');
+  $('prodNote').innerHTML =
+    `<p>Product exists only on the sale, never on the demo, so no demo denominator exists and the DC2E column reads “—” rather than borrowing a rate from another segment.</p>`;
+}
+
+function pageEthnicity() {
+  segTable('ethT', 'ethD', 'Ethnicity');
+  const v = view();
+  const eths = segment('ethD').slice(0, 14).map(r => r.seg);
+  const cs = ['US', 'CA'];
+  const rows = eths.map(e => {
+    const row = { seg: e };
+    for (const c of cs) {
+      const sub = v.d.filter(x => x.ethD === e && x.country === c);
+      const w = sub.filter(x => v.enByLead.has(x.id)).length;
+      row[c] = sub.length ? w / sub.length : null;
+      row[c + '_n'] = sub.length; row[c + '_w'] = w;
+    }
+    return row;
+  });
+  table('matrixT', [
+    { h: 'Ethnicity', k: 'seg', num: false },
+    { h: 'US', k: 'US', render: r => r.US_n < 20 ? `<span class="muted">${r.US_n ? pct(r.US) : '—'}<span class="ci"> n=${r.US_n}</span></span>` : `${pct(r.US)}<span class="ci"> n=${r.US_n}</span>`, csv: r => r.US == null ? '' : (100 * r.US).toFixed(1) },
+    { h: 'CA', k: 'CA', render: r => r.CA_n < 20 ? `<span class="muted">${r.CA_n ? pct(r.CA) : '—'}<span class="ci"> n=${r.CA_n}</span></span>` : `${pct(r.CA)}<span class="ci"> n=${r.CA_n}</span>`, csv: r => r.CA == null ? '' : (100 * r.CA).toFixed(1) },
+    { h: 'US demos', k: 'US_n', f: F.n },
+    { h: 'CA demos', k: 'CA_n', f: F.n }
+  ], rows, { sort: { k: 'US_n', dir: -1 } });
+  $('ethNote').innerHTML =
+    `<p>This dimension is for equity diagnosis only — checking whether outcomes differ across groups in ways that warrant review. It is not a targeting or routing dimension. Cells below 20 demos are dimmed because they cannot support a conclusion.</p>`;
+}
+
+function pageMix() {
+  const v = view();
+  const sr = segment('dcType');
+  kpis('mixKpis', sr.map(r => [r.seg, pct(r.cv), `${fmtN(r.dc)} demos · ${money(r.rev)}`]));
+  const rows = [];
+  for (const tt of ['RP', 'Non-RP']) for (const st of ['Same Month', 'Rolling']) {
+    const sub = v.d.filter(x => x.team === tt && x.dcType === st);
+    const won = sub.filter(x => v.enByLead.has(x.id));
+    let rev = 0; for (const x of won) for (const e of v.enByLead.get(x.id)) rev += revOf(e);
+    rows.push({
+      team: tt, type: st, dc: sub.length, won: won.length,
+      cv: sub.length ? won.length / sub.length : 0,
+      rev, ats: won.length ? rev / won.length : 0, rpd: sub.length ? rev / sub.length : 0
+    });
+  }
+  table('mixT', [
+    { h: 'Team', k: 'team', num: false }, { h: 'Cohort type', k: 'type', num: false },
+    { h: 'Demos', k: 'dc', f: F.n }, { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass }, { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money }, { h: 'Rev/demo', k: 'rpd', f: F.money }
+  ], rows, { sort: { k: 'rev', dir: -1 } });
+}
+
+function pageTeams() {
+  const v = view();
+  const parts = ['RP', 'Non-RP'].map(t => {
+    const sub = v.d.filter(x => x.team === t);
+    const won = sub.filter(x => v.enByLead.has(x.id));
+    let rev = 0; for (const x of won) for (const e of v.enByLead.get(x.id)) rev += revOf(e);
+    return [t, sub.length, won.length, sub.length ? won.length / sub.length : 0, rev];
+  });
+  kpis('teamKpis', parts.map(([t, dc, w, cv, rev]) =>
+    [t, pct(cv), `${fmtN(dc)} demos · ${fmtN(w)} enrolled · ${money(rev)}`]));
+  for (const [t, id] of [['RP', 'rpT'], ['Non-RP', 'otpT']]) {
+    const map = new Map();
+    for (const x of v.d.filter(y => y.team === t)) {
+      const k = x.tl || 'Unattributed';
+      let r = map.get(k);
+      if (!r) r = map.set(k, { k, dc: 0, won: 0, rev: 0 }).get(k);
+      r.dc++;
+      const s = v.enByLead.get(x.id);
+      if (s) { r.won++; for (const e of s) r.rev += revOf(e); }
+    }
+    table(id, [
+      { h: 'Team lead', k: 'k', num: false }, { h: 'Demos', k: 'dc', f: F.n },
+      { h: 'Enrolled', k: 'won', f: F.n }, { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass },
+      { h: 'Revenue', k: 'rev', f: F.money }, { h: 'Rev/demo', k: 'rpd', f: F.money }
+    ], [...map.values()].map(r => {
+      r.cv = r.dc ? r.won / r.dc : 0; r.rpd = r.dc ? r.rev / r.dc : 0; return r;
+    }), { sort: { k: 'rev', dir: -1 } });
+  }
+}
+
+function pageFunnel() {
+  const v = view();
+  const cls = { won: 'pos', open: 'warn', dead: 'neg' };
+  bars('funnelBars', v.stages.map(r => ({ k: r.stage, v: r.n, label: fmtN(r.n), tone: cls[r.cls] })));
+  const openRows = v.stages.filter(r => r.cls === 'open');
+  bars('poolBars', openRows.map(r => ({
+    k: r.stage, v: r.n * r.p * v.m.ats, label: money(r.n * r.p * v.m.ats), tone: 'warn'
+  })));
+  $('funnelNote').innerHTML =
+    `<p>Stages are classified as won, open or dead from their disposition, then valued at measured rates. The right-hand panel is the open pool only — won and dead stages carry no forward value.</p>`;
+}
+
+function pageCohort() {
+  const v = view();
+  /* The old cohort-offset page relied on DC Cohort / Cohort Offset columns
+     that this extract does not carry, and with a single month its M+1..M+4
+     columns were structurally empty anyway. Enrolments now carry the
+     originating demo date, which supports a far more useful question: how
+     fast does a demo turn into a sale? */
+  const lags = v.n.filter(e => e.lag != null && e.lag >= 0);
+  const buckets = [[0, 0, 'Same day'], [1, 1, 'Next day'], [2, 3, '2–3 days'],
+  [4, 7, '4–7 days'], [8, 14, '8–14 days'], [15, 999, '15+ days']];
+  let cum = 0;
+  const rows = buckets.map(([lo, hi, lab], i) => {
+    const n = lags.filter(e => e.lag >= lo && e.lag <= hi).length;
+    const rev = lags.filter(e => e.lag >= lo && e.lag <= hi).reduce((a, e) => a + revOf(e), 0);
+    cum += n;
+    return { ord: i, bucket: lab, sales: n, share: lags.length ? n / lags.length : 0,
+             cumShare: lags.length ? cum / lags.length : 0, rev, ats: n ? rev / n : 0 };
+  });
+  const med = lags.length ? lags.map(e => e.lag).sort((a, b) => a - b)[Math.floor(lags.length / 2)] : null;
+  kpis('cohortKpis', [
+    ['Sales with a demo date', fmtN(lags.length), `of ${fmtN(v.n.length)} sales`],
+    ['Median days to close', med == null ? '—' : fmtN(med)],
+    ['Closed same day', pct(rows[0].share), 'the demo converts on the call', 'good'],
+    ['Closed within a week', pct(rows[3].cumShare)]
+  ]);
+  table('cohortT', [
+    { h: 'Time to close', k: 'ord', num: false, render: r => esc(r.bucket), csv: r => r.bucket },
+    { h: 'Sales', k: 'sales', f: F.n },
+    { h: 'Share', k: 'share', f: F.pct },
+    { h: 'Cumulative', k: 'cumShare', f: F.pct },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money }
+  ], rows, { sort: { k: 'ord', dir: 1 } });
+  $('cohortNote').innerHTML =
+    `<p>Closing is fast: the bulk of sales land on the demo day itself, and the tail is short. That has two consequences worth acting on.</p>`
+    + `<p><span class="sig-t">One</span> A demo that has not converted within roughly a week is unlikely to, so open pipeline older than that should be valued far below a fresh one — the Open pipeline page already does this through measured stage rates.</p>`
+    + `<p><span class="sig-t">Two</span> It is why the maturity adjustment is small here but still matters at the edge: only the last two or three days are meaningfully incomplete.</p>`
+    + `<p class="caveat">${fmtN(v.n.length - lags.length)} sales carry no usable demo date and are excluded from this table.</p>`;
+}
+
+function pageForecast() {
+  const v = view(), m = v.m;
+  const full = v.dayList.filter(([dt]) => !(v.partialDay && v.partialDay.date === dt));
+  const elapsed = full.length || v.dayList.length || 1;
+  /* Projection horizon follows the selected view. Extrapolating a
+     five-day custom range out to 31 days is not a forecast, it is a
+     multiplication, and it produced absurd figures when the horizon was
+     hard-wired to the month. */
+  const mode = state.period.mode;
+  const md = mode === 'month' ? (state.monthDays || 31) : mode === 'week' ? 7 : elapsed;
+  const horizon = mode === 'month' ? 'the month' : mode === 'week' ? 'a full week' : 'the selected range';
+  const canProject = md > elapsed;
+  const projRev = canProject ? (m.rev / elapsed) * md : m.rev;
+  const projEn = canProject ? (m.en / elapsed) * md : m.en;
+  const rt = state.revTarget, et = state.enTarget;
+  const remaining = Math.max(0, md - elapsed);
+
+  kpis('fcKpis', [
+    ['Revenue to date', money(m.rev), `over ${fmtN(elapsed)} active days`],
+    [canProject ? 'Projected to ' + horizon : 'Actual for range',
+      money(projRev), canProject ? 'run-rate only, not probabilistic' : 'window complete — nothing to project'],
+    ['Enrolments to date', fmtN(m.en)],
+    [canProject ? 'Projected enrolments' : 'Enrolments in range', fmtN(projEn)],
+    ['Revenue vs target', rt ? pct(m.rev / rt) : '—', rt ? money(rt) + ' target' : 'set a target below'],
+    ['Enrolments vs target', et ? pct(m.en / et) : '—', et ? fmtN(et) + ' target' : 'set a target below']
+  ]);
+
+  const gap = rt ? rt - m.rev : 0;
+  $('fcText').innerHTML =
+    (canProject
+      ? `<p><span class="sig-t">Run-rate view</span> ${fmtN(elapsed)} full days of demo activity have produced ${money(m.rev)}. Extrapolated flat across ${fmtN(md)} days of ${horizon}, that lands at <b>${money(projRev)}</b>.</p>`
+      : `<p><span class="sig-t">Run-rate view</span> ${fmtN(elapsed)} full days have produced <b>${money(m.rev)}</b>. A custom range is already complete, so there is nothing to project — switch to Month or Week for a forward figure.</p>`)
+    + (rt ? `<p><span class="sig-t">Target</span> Remaining gap is <b>${money(gap)}</b>${remaining ? `, or ${money(gap / remaining)} per day across the ${fmtN(remaining)} days left` : ''}.</p>` : '')
+    + `<p><span class="sig-t">Pipeline view</span> ${money(m.rev)} booked plus ${money(v.recoverable)} of open pipeline at measured win rates gives <b>${money(m.rev + v.recoverable)}</b>.</p>`
+    + (v.partialDay
+      ? `<p class="caveat"><b>${esc(DAY_LABEL(v.partialDay.date))} looks like a partial extract day</b> — ${fmtN(v.partialDay.dc)} demos against a median of ${fmtN(v.medDay)}, about ${pct(v.partialDay.share)} of a normal day. It is excluded from the ${fmtN(elapsed)}-day denominator above, because counting it would understate the daily rate and drag the projection down. It is still included in the totals.</p>`
+      : '')
+    + `<p class="caveat">The straight-line figure divides by <b>full days present in the filtered data</b>, not by the calendar day of the last row. V7.3 used the latter, so filtering to a rep who had been inactive for a week silently divided by the wrong number of elapsed days and inflated their run-rate.</p>`;
+}
+
+function pageDecomp() {
+  const v = view(), m = v.m;
+  const c = m.dc * .01 * m.ats, vol = m.rev * .05, a = m.rev * .05;
+  kpis('decompKpis', [
+    ['Demos', fmtN(m.dc)], ['Cohort DC2E', pct(m.cohortCv)],
+    ['ATS', money(m.ats)], ['Revenue', money(m.rev)]
+  ]);
+  bars('leverBars', [
+    { k: '+1pp conversion', v: c, label: money(c), tone: 'pos' },
+    { k: '+5% demo volume', v: vol, label: money(vol), tone: 'pos' },
+    { k: '+5% average ticket', v: a, label: money(a), tone: 'pos' }
+  ]);
+  const best = [['conversion', c], ['demo volume', vol], ['average ticket', a]].sort((x, y) => y[1] - x[1])[0];
+  $('decompText').innerHTML =
+    `<p>Across these three standardised scenarios, <b>${best[0]}</b> produces the largest incremental value at roughly <b>${money(best[1])}</b>.</p>`
+    + `<p class="caveat">These are equal-sized nudges to each lever, not equal-effort ones. A percentage point of conversion and five percent more demo volume rarely cost the same to obtain, so read this as sizing the prize, not ranking the projects.</p>`;
+}
+
+
+/* ════════════════════ LEAD → DEMO → ENROLMENT ════════════════════ */
+function pageFunnel3() {
+  const v = view(), f = v.funnel;
+  kpis('f3Kpis', [
+    ['Leads', fmtN(f.leads), 'created in window'],
+    ['Reached a demo', fmtN(f.demos), pct(f.l2dRate) + ' of leads'],
+    ['Enrolled', fmtN(f.sales), pct(f.l2eRate) + ' of leads'],
+    ['Lead → Demo', pct(f.l2dRate), 'the larger leak', f.l2dRate < f.d2eRate ? 'bad' : ''],
+    ['Demo → Enrolment', pct(f.d2eRate), 'of demoed leads', f.d2eRate < f.l2dRate ? 'bad' : '']
+  ]);
+
+  const steps = [['Leads', f.leads, null], ['Demo completed', f.demos, f.l2dRate],
+  ['Enrolled', f.sales, f.d2eRate]];
+  $('f3Bars').innerHTML = steps.map(([lab, n, rate], i) =>
+    `<div class="bar"><span class="b-n">${esc(lab)}</span>`
+    + `<span class="b-t"><span class="b-f${i === 1 ? ' bf-warn' : i === 2 ? ' bf-pos' : ''}" style="width:${Math.max(1, 100 * n / Math.max(1, f.leads))}%"></span></span>`
+    + `<span class="b-v">${fmtN(n)}${rate != null ? ' <span class="ci">' + pct(rate) + '</span>' : ''}</span></div>`).join('');
+
+  /* Leak sizing: how many extra enrolments a point of each stage buys. */
+  const perPtL2D = f.leads * 0.01 * f.d2eRate;
+  const perPtD2E = f.demos * 0.01;
+  $('f3Note').innerHTML =
+    `<p><span class="sig-t">Where the loss is</span> Of ${fmtN(f.leads)} leads, ${fmtN(f.leads - f.demos)} never reach a demo and ${fmtN(f.demos - f.sales)} demo but do not buy. `
+    + `The bigger absolute loss is at <b>${(f.leads - f.demos) > (f.demos - f.sales) ? 'Lead → Demo' : 'Demo → Enrolment'}</b>.</p>`
+    + `<p><span class="sig-t">Leverage</span> One point on Lead → Demo yields about <b>${(perPtL2D).toFixed(1)} extra enrolments</b> (${money(perPtL2D * v.m.ats)}); one point on Demo → Enrolment yields about <b>${perPtD2E.toFixed(1)}</b> (${money(perPtD2E * v.m.ats)}).</p>`
+    + `<p class="caveat">Leads are counted by creation date inside the window; their demo and sale outcomes are tracked across the whole extract, so this is a lead cohort's fate rather than a ratio of two same-window totals. Leads created in the last few days are still working through the funnel, so the most recent window understates Lead → Demo.</p>`;
+
+  const g = new Map();
+  for (const l of LEADS) {
+    if (l.date < v.bounds.from || l.date > v.bounds.to) continue;
+    if (!inSel(state.country, l.country)) continue;
+    const k = l.utm || 'Unknown';
+    let r = g.get(k);
+    if (!r) r = g.set(k, { seg: k, leads: 0, demos: 0, sales: 0 }).get(k);
+    r.leads++;
+    if (v.dcIdsAll ? v.dcIdsAll.has(l.id) : DC.some(x => x.id === l.id)) r.demos++;
+  }
+  const dcIds = new Set(DC.map(x => x.id)), enIds = new Set(EN.map(e => e.id));
+  for (const r of g.values()) { r.demos = 0; r.sales = 0; }
+  for (const l of LEADS) {
+    if (l.date < v.bounds.from || l.date > v.bounds.to) continue;
+    if (!inSel(state.country, l.country)) continue;
+    const r = g.get(l.utm || 'Unknown');
+    if (dcIds.has(l.id)) { r.demos++; if (enIds.has(l.id)) r.sales++; }
+  }
+  table('f3T', [
+    { h: 'UTM source', k: 'seg', num: false },
+    { h: 'Leads', k: 'leads', f: F.n },
+    { h: 'Demos', k: 'demos', f: F.n },
+    { h: 'Enrolled', k: 'sales', f: F.n },
+    { h: 'Lead → Demo', k: 'l2d', f: F.pct },
+    { h: 'Demo → Enrol', k: 'd2e', f: F.pct },
+    { h: 'Lead → Enrol', k: 'l2e', f: F.pct }
+  ], [...g.values()].filter(r => r.leads >= 15).map(r => ({
+    ...r, l2d: r.leads ? r.demos / r.leads : 0,
+    d2e: r.demos ? r.sales / r.demos : 0, l2e: r.leads ? r.sales / r.leads : 0
+  })), { sort: { k: 'leads', dir: -1 } });
+}
+
+/* ════════════════════ MATURITY ════════════════════ */
+function pageMaturity() {
+  const v = view(), m = v.m;
+  kpis('matKpis', [
+    ['Raw cohort DC2E', pct(m.cohortCv), 'what has landed so far'],
+    ['Maturity-adjusted', pct(m.matCv), 'where the window is heading', 'good'],
+    ['Uplift', pp(m.matLift), 'closes still expected'],
+    ['Effective denominator', fmtN(m.matSum), `of ${fmtN(m.dc)} demos, maturity-weighted`]
+  ]);
+
+  const rows = weeklySeries();
+  table('matT', [
+    { h: 'Week beginning', k: 'label', num: false, render: r => esc(DAY_LABEL(r.start)) + (r.complete ? '' : ' <span class="tag t-noise">partial</span>'), csv: r => r.start },
+    { h: 'Days', k: 'dayCount', f: F.n },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'Raw DC2E', k: 'cv', f: F.pct },
+    { h: 'Maturity-adjusted', k: 'matCv', f: F.pct, cls: () => 'pos' },
+    { h: 'Window maturity', k: 'maturity', f: F.pct, cls: r => r.maturity < 0.98 ? 'warn' : 'muted' },
+    { h: 'WoW (adjusted)', k: 'wow', render: r => r.prevMatCv == null ? '<span class="muted">—</span>' : delta(r.matCv, r.prevMatCv, true) || '<span class="muted">flat</span>', csv: r => r.prevMatCv == null ? '' : ((r.matCv - r.prevMatCv) * 100).toFixed(1) }
+  ], rows, { sort: { k: 'start', dir: 1 } });
+
+  const last = rows[rows.length - 1];
+  const cdfPts = [0, 1, 2, 3, 7, 14].map(k => `F(${k}d)=${(LAGCDF[k] * 100).toFixed(0)}%`).join(' · ');
+  $('matNote').innerHTML =
+    `<p><span class="sig-t">The problem</span> A demo that happened yesterday has had almost no chance to convert; one from three weeks ago has had all of it. Comparing them directly makes every recent week look like a decline that is really just youth.</p>`
+    + `<p><span class="sig-t">The correction</span> Measured on demos old enough to be finished, closes land fast: ${esc(cdfPts)}. Each demo is weighted by how much of its conversion window has elapsed, and observed wins are divided by that summed maturity instead of a raw headcount.</p>`
+    + (last ? `<p><span class="sig-t">Right now</span> The latest week reads ${pct(last.cv)} raw but <b>${pct(last.matCv)}</b> adjusted, at ${pct(last.maturity)} maturity. ${last.complete ? '' : `It is also a partial week (${fmtN(last.dayCount)} of 7 days), so its totals are not comparable to a full one.`}</p>` : '')
+    + `<p class="caveat">Because closes are so fast here, the adjustment is small in aggregate — it matters at the edge, in the last few days, which is exactly where people look for a trend.</p>`;
+}
+
+/* ════════════════════ HOUR OF DAY ════════════════════ */
+function pageHours() {
+  const v = view();
+  const hs = v.hours.filter(h => h.dc >= 10);
+  if (!hs.length) { $('hrNote').innerHTML = '<p class="empty">Not enough demos per hour at this filter depth.</p>'; return; }
+  /* Best and weakest are chosen from slots that clear the significance
+     test, not from the raw extremes. The raw extremes are almost always
+     the thinnest hours — a 100% slot with one demo is not a finding, and
+     naming it here would contradict the standard the rest of this build
+     holds itself to. */
+  const sigSlots = hs.filter(h => h.sig);
+  const pool = sigSlots.length ? sigSlots : [];
+  const best = pool.slice().sort((a, b) => b.cv - a.cv)[0];
+  const worst = pool.slice().sort((a, b) => a.cv - b.cv)[0];
+  const peak = hs.slice().sort((a, b) => b.dc - a.dc)[0];
+  kpis('hrKpis', [
+    best ? ['Strongest verified slot', best.label, `${pct(best.cv)} across ${fmtN(best.dc)} demos`, 'good']
+      : ['Strongest verified slot', '—', 'no slot beats the portfolio rate significantly'],
+    worst ? ['Weakest verified slot', worst.label, `${pct(worst.cv)} across ${fmtN(worst.dc)} demos`, 'bad']
+      : ['Weakest verified slot', '—', 'no slot trails significantly'],
+    ['Busiest slot', peak.label, `${fmtN(peak.dc)} demos`],
+    ['Verified slots', fmtN(sigSlots.length), `of ${fmtN(hs.length)} with 10+ demos`]
+  ]);
+
+  const maxDc = Math.max(...v.hours.map(h => h.dc));
+  $('hrGrid').innerHTML = v.hours.map(h => {
+    const tone = h.dc < 10 ? 'thin' : h.sig ? (h.cv > v.m.cohortCv ? 'hi' : 'lo') : 'mid';
+    return `<div class="hc hc-${tone}" title="${attr(h.label + ' · ' + fmtN(h.dc) + ' demos · ' + pct(h.cv))}">`
+      + `<div class="hc-h">${esc(h.label)}</div>`
+      + `<div class="hc-v">${pct(h.cv)}</div>`
+      + `<div class="hc-n">${fmtN(h.dc)} demos</div>`
+      + `<div class="hc-b"><span style="width:${100 * h.dc / maxDc}%"></span></div></div>`;
+  }).join('');
+
+  table('hrT', [
+    { h: 'Slot', k: 'label', num: false },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Enrolled', k: 'won', f: F.n },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: cvClass },
+    { h: 'Maturity-adjusted', k: 'matCv', f: F.pct },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'Rev/demo', k: 'rpd', f: F.money },
+    { h: 'z', k: 'z', f: F.z, cls: r => r.sig ? '' : 'muted' },
+    { h: 'Verdict', k: 'sig', num: false, render: r => r.thin ? '<span class="tag t-noise">thin</span>' : r.sig ? (r.cv > view().m.cohortCv ? '<span class="tag t-good">strong</span>' : '<span class="tag t-bad">weak</span>') : '<span class="tag t-noise">noise</span>' }
+  ], v.hours, { sort: { k: 'hr', dir: 1 } });
+
+  const sig = hs.filter(h => h.sig);
+  $('hrNote').innerHTML =
+    (sig.length
+      ? `<p><span class="sig-t">Verified slots</span> ${sig.map(h => `<b>${esc(h.label)}</b> at ${pct(h.cv)} (z=${h.z.toFixed(1)}, ${fmtN(h.dc)} demos)`).join('; ')}. Moving demo capacity toward the stronger slots is one of the few levers that costs nothing but scheduling.</p>`
+      : `<p><span class="sig-t">No verified slot effect</span> No hour differs from the portfolio rate beyond sampling noise. Do not reschedule on the strength of this table yet.</p>`)
+    + `<p class="caveat">Hour comes from <code>Trial Session Scheduled Date/Time</code> exactly as recorded in the workbook; no timezone conversion is applied, so read these as scheduling slots rather than the customer's local clock. Slots under 10 demos are greyed and excluded from the best/weakest picks.</p>`;
+}
+
+/* ════════════════════ TARGETS ════════════════════ */
+function pageTargets() {
+  const v = view(), m = v.m, T = state.targets;
+  const elapsed = v.dayList.filter(([dt]) => !(v.partialDay && v.partialDay.date === dt)).length || 1;
+  const paceDC = T.days ? T.dc * (elapsed / T.days) : 0;
+  const paceEN = T.days ? T.en * (elapsed / T.days) : 0;
+  const paceRev = T.days ? T.rev * (elapsed / T.days) : 0;
+
+  kpis('tgtKpis', [
+    ['Demos', fmtN(m.dc), `${T.dc ? pct(m.dc / T.dc) : '—'} of ${fmtN(T.dc)} target`, m.dc >= paceDC ? 'good' : 'bad'],
+    ['Pace needed by now', fmtN(paceDC), `day ${fmtN(elapsed)} of ${fmtN(T.days)}`],
+    ['Enrolments', fmtN(m.en), `${T.en ? pct(m.en / T.en) : '—'} of ${fmtN(T.en)} target`, m.en >= paceEN ? 'good' : 'bad'],
+    ['Revenue', money(m.rev), `${T.rev ? pct(m.rev / T.rev) : '—'} of ${money(T.rev)} target`, m.rev >= paceRev ? 'good' : 'bad']
+  ]);
+
+  const rows = [
+    { metric: 'Demos', actual: m.dc, target: T.dc, pace: paceDC },
+    { metric: 'Enrolments', actual: m.en, target: T.en, pace: paceEN },
+    { metric: 'Revenue', actual: m.rev, target: T.rev, pace: paceRev, money: true }
+  ].map(r => ({
+    ...r, ach: r.target ? r.actual / r.target : null,
+    vsPace: r.pace ? r.actual / r.pace - 1 : null,
+    gap: r.target - r.actual,
+    runRate: elapsed ? (r.actual / elapsed) * T.days : 0
+  }));
+
+  table('tgtT', [
+    { h: 'Metric', k: 'metric', num: false },
+    { h: 'Actual', k: 'actual', render: r => r.money ? money(r.actual) : fmtN(r.actual), csv: r => Math.round(r.actual) },
+    { h: 'Target', k: 'target', render: r => r.money ? money(r.target) : fmtN(r.target), csv: r => Math.round(r.target) },
+    { h: 'Achievement', k: 'ach', f: F.pct },
+    { h: 'Pace to date', k: 'pace', render: r => r.money ? money(r.pace) : fmtN(r.pace), csv: r => Math.round(r.pace) },
+    { h: 'vs pace', k: 'vsPace', render: r => r.vsPace == null ? '—' : `<span class="${r.vsPace >= 0 ? 'pos' : 'neg'}">${(r.vsPace >= 0 ? '+' : '') + (r.vsPace * 100).toFixed(0)}%</span>`, csv: r => r.vsPace == null ? '' : (r.vsPace * 100).toFixed(1) },
+    { h: 'Projected full month', k: 'runRate', render: r => r.money ? money(r.runRate) : fmtN(r.runRate), csv: r => Math.round(r.runRate) },
+    { h: 'Remaining gap', k: 'gap', render: r => r.gap <= 0 ? '<span class="pos">met</span>' : (r.money ? money(r.gap) : fmtN(r.gap)), csv: r => Math.round(r.gap) }
+  ], rows, { sort: { k: 'metric', dir: 1 } });
+
+  $('tgtNote').innerHTML =
+    `<p><span class="sig-t">Source</span> Defaults come from the <code>DC Summary</code> tab of the workbook: OTP-US 618, RP-US 1,407 and CA 805 demos over 21 working days, summing to ${fmtN(2830)}. Every field above is editable — change it and the whole page recalculates.</p>`
+    + `<p class="note" style="margin-top:8px"><b>These targets do not reconcile with the extract, so confirm them before acting.</b> The workbook's own “DC till date” totals 1,449 demos and 417 enrolments, while the DC-RP and Enrollment-RP tabs contain ${fmtN(DC.length)} demos and ${fmtN(EN.length)} enrolments for the same period. The two are counting different populations — most likely a Math-only versus all-subject split, or a different desk boundary. Until that is settled, treat achievement percentages as indicative.</p>`;
+}
+
+window.applyTargetInputs = function () {
+  state.targets = {
+    dc: +$('tDC').value || 0, en: +$('tEN').value || 0,
+    rev: +$('tRev').value || 0, days: +$('tDays').value || 21
+  };
+  render();
+};
+window.resetTargets = function () {
+  state.targets = { ...DEFAULT_TARGETS };
+  syncTargetInputs();
+  render();
+};
+function syncTargetInputs() {
+  const T = state.targets;
+  if ($('tDC')) { $('tDC').value = T.dc; $('tEN').value = T.en; $('tRev').value = T.rev; $('tDays').value = T.days; }
+}
+
+
+/* ════════════════════ RECONCILIATION ════════════════════ */
+function pageRecon() {
+  const v = view(), m = v.m;
+  /* Rebuild the same slice under each rule so the bridge is arithmetic,
+     not assertion. */
+  const b = v.bounds;
+  const inWin = x => x.date >= b.from && x.date <= b.to;
+  const sameFilters = x =>
+    inSel(state.teamType, x.team) && inSel(state.country, x.country)
+    && inSel(state.source, x.source) && inSel(state.tl, x.tl);
+  const dAll = DC.filter(x => x.subj === state.subj && inWin(x) && sameFilters(x)
+    && inSel(state.dcType, x.dcType));
+  const nAll = EN.filter(x => x.subj === state.subj && inWin(x) && sameFilters(x)
+    && inSel(state.dcType, x.saleType));
+  const dRost = dAll.filter(x => x.roster), nRost = nAll.filter(x => x.roster);
+  const rows = nRost.length, unit = nRost.reduce((a, x) => a + (x.units ?? 1), 0);
+  const wonSet = new Set(nRost.map(x => x.id));
+  const traced = dRost.filter(x => wonSet.has(x.id)).length;
+
+  const steps = [
+    { step: 'All demos in window, any team lead', dc: dAll.length, sale: nAll.length,
+      cv: dAll.length ? nAll.length / dAll.length : 0,
+      note: 'Every row in the extract for this slice.' },
+    { step: 'Rostered team leads only', dc: dRost.length, sale: rows,
+      cv: dRost.length ? rows / dRost.length : 0,
+      note: `Drops ${fmtN(dAll.length - dRost.length)} demos under team leads absent from the published roster — OJT and unmapped names.` },
+    { step: 'Sales counted as bundle-weighted units', dc: dRost.length, sale: unit,
+      cv: dRost.length ? unit / dRost.length : 0,
+      note: `A bundle is one transaction listed on both subject reports, so it counts 0.5 on each. Removes ${(rows - unit).toFixed(1)} from the count without touching revenue.` },
+    { step: 'Report parity — what the sheet publishes', dc: dRost.length, sale: unit,
+      cv: dRost.length ? unit / dRost.length : 0, hl: 'good',
+      note: 'This row should equal the workbook figure for the same slice.' },
+    { step: 'Traced cohort — the stricter question', dc: dRost.length, sale: traced,
+      cv: dRost.length ? traced / dRost.length : 0, hl: 'warn',
+      note: `Only demos whose own lead later enrolled. ${fmtN(unit - traced)} units came from leads whose demo sits outside this window.` }
+  ];
+
+  kpis('rcKpis', [
+    ['Report parity DC2E', pct(dRost.length ? unit / dRost.length : 0), 'matches the sheet', 'good'],
+    ['Traced DC2E', pct(dRost.length ? traced / dRost.length : 0), 'demos that enrolled'],
+    ['Demos dropped by roster', fmtN(dAll.length - dRost.length), 'unmapped team leads'],
+    ['Units removed by bundling', (rows - unit).toFixed(1), `${fmtN(rows)} rows → ${unit.toFixed(0)} units`]
+  ]);
+
+  table('rcT', [
+    { h: 'Step', k: 'step', num: false },
+    { h: 'Demos', k: 'dc', f: F.n },
+    { h: 'Sales', k: 'sale', render: r => r.sale % 1 ? r.sale.toFixed(1) : fmtN(r.sale), csv: r => r.sale },
+    { h: 'DC2E', k: 'cv', f: F.pct, cls: r => r.hl === 'good' ? 'pos' : r.hl === 'warn' ? 'warn' : '' },
+    { h: 'What this step does', k: 'note', num: false, cls: () => 'wrap', render: r => esc(r.note) }
+  ], rows === 0 && dAll.length === 0 ? [] : steps, { sort: { k: 'dc', dir: -1 } });
+
+  $('rcNote').innerHTML =
+    `<p>Three definitions separate this dashboard's figures from the workbook's, and none of them is an error — they answer different questions. This page walks the bridge for whatever slice is currently filtered, so any gap can be traced to a step rather than argued about.</p>`
+    + `<p><span class="sig-t">Roster</span> The published reports list a fixed set of team leads. Demos booked under names outside that list — on-the-job trainees, unmapped owners — are excluded there but present in the raw tab.</p>`
+    + `<p><span class="sig-t">Units versus rows</span> A bundle sale is a single transaction that appears on both the Math and the English report. Counting rows on each and adding them double-counts the customer, so the workbook halves it. Revenue is never halved, which is why revenue agrees to the rupee even when the sale count does not.</p>`
+    + `<p><span class="sig-t">Parity versus traced</span> Report parity divides sales in the window by demos in the window. Traced asks which of <em>these</em> demos produced a sale. The second is always lower, because a sale can arrive in August from a demo held in July. Neither is wrong; quote parity when talking to the business and traced when judging whether a demo cohort performed.</p>`;
+}
+
+/* ════════════════════ ENGLISH ════════════════════ */
+function pageEnglish() {
+  const prevSubj = state.subj;
+  const eDC = DC.filter(x => x.subj === 'English' && (!state.roster || x.roster));
+  const eEN = EN.filter(x => x.subj === 'English' && (!state.roster || x.roster));
+  const mDC = DC.filter(x => x.subj === 'Math' && (!state.roster || x.roster));
+  const mEN = EN.filter(x => x.subj === 'Math' && (!state.roster || x.roster));
+  const eRev = eEN.reduce((a, x) => a + revOf(x), 0);
+  const bundles = eEN.filter(x => x.bundle === 'Bundle').length;
+  const stand = eEN.length - bundles;
+  const mIds = new Set(mEN.map(x => x.id));
+  const overlap = eEN.filter(x => mIds.has(x.id));
+  const overlapRev = overlap.reduce((a, x) => a + revOf(x), 0);
+
+  kpis('engKpis', [
+    ['English demos', fmtN(eDC.length), `vs ${fmtN(mDC.length)} Math`],
+    ['English sales', fmtN(eEN.length), `${fmtN(stand)} standalone, ${fmtN(bundles)} bundled`],
+    ['Standalone DC2E', pct(eDC.length ? stand / eDC.length : 0), 'the workbook’s Eng Report basis'],
+    ['All-sales DC2E', pct(eDC.length ? eEN.length / eDC.length : 0), 'including bundles', 'warn'],
+    ['English revenue', money(eRev), 'overlaps Math — see below']
+  ]);
+
+  const g = new Map();
+  for (const x of eDC) {
+    const k = x.tl || 'Unattributed';
+    let r = g.get(k);
+    if (!r) r = g.set(k, { tl: k, dc: 0, stand: 0, bundle: 0, rev: 0 }).get(k);
+    r.dc++;
+  }
+  for (const x of eEN) {
+    const k = x.tl || 'Unattributed';
+    let r = g.get(k);
+    if (!r) r = g.set(k, { tl: k, dc: 0, stand: 0, bundle: 0, rev: 0 }).get(k);
+    if (x.bundle === 'Bundle') r.bundle++; else r.stand++;
+    r.rev += revOf(x);
+  }
+  table('engT', [
+    { h: 'Team lead', k: 'tl', num: false },
+    { h: 'English demos', k: 'dc', f: F.n },
+    { h: 'Standalone', k: 'stand', f: F.n },
+    { h: 'Bundled', k: 'bundle', f: F.n },
+    { h: 'Total enrolments', k: 'total', f: F.n },
+    { h: 'DC2E (standalone)', k: 'cv', f: F.pct, cls: r => r.cv > 1 ? 'neg' : '' },
+    { h: 'Revenue', k: 'rev', f: F.money }
+  ], [...g.values()].map(r => ({ ...r, total: r.stand + r.bundle, cv: r.dc ? r.stand / r.dc : null })),
+    { sort: { k: 'total', dir: -1 } });
+
+  $('engNote').innerHTML =
+    `<p><span class="sig-t neg">Do not add Math and English revenue</span> Every one of the ${fmtN(overlap.length)} English sales in this extract is also present in the Math file — they are bundle transactions written to both subject reports. Summing the two would double-count <b>${money(overlapRev)}</b>. Treat English as a lens on those transactions, not as a separate revenue stream.</p>`
+    + `<p><span class="sig-t">Why a DC2E above 100% appears</span> The workbook's Eng Report divides standalone English enrolments by English demos. A student can buy English without ever taking an English demo — they came through a Math demo and bought a bundle — so the numerator is not a subset of the denominator and the ratio can exceed one. Rows where that happens are flagged red above rather than silently capped.</p>`
+    + `<p><span class="sig-t">Volume</span> English is small: ${fmtN(eDC.length)} demos against ${fmtN(mDC.length)} for Math. Most cuts on it will not reach significance, so the course switch at the top gives English its own full set of pages, but read the significance verdicts carefully at this sample size.</p>`;
+}
+
+
+/* ════════════════════ MONTH OVER MONTH ════════════════════
+   Blends the aggregated history the feed returns for older months with the
+   raw rows held for recent ones, so the trend spans everything loaded even
+   though only the recent window carries row-level detail. */
+function pageMoM() {
+  const v = view(), subj = state.subj;
+  const rows = [];
+
+  for (const m of Object.keys(HIST || {}).sort()) {
+    const b = HIST[m] && HIST[m][subj];
+    if (!b) continue;
+    rows.push({
+      month: m, source: 'history', demos: b.demos, won: b.won, units: b.units,
+      rev: b.rev, leads: HIST[m].leads || 0,
+      parity: b.demos ? b.units / b.demos : 0,
+      traced: b.demos ? b.won / b.demos : 0,
+      ats: b.units ? b.rev / b.units : 0
+    });
+  }
+
+  /* Recent months come from the raw rows, honouring every non-date filter.
+     Deliberately ignores the period selector: a trend page that only showed
+     the month you already had selected would have nothing to compare. */
+  const allD = DC.filter(x => matchDC(x, null));
+  const allN = EN.filter(x => matchEN(x, null));
+  const A = buildAttribution(subj);
+  const attributed = new Set();
+  for (const e of allN) {
+    const di = A.saleToDemo.get(e._j) ?? -1;
+    if (di >= 0) attributed.add(di);
+  }
+  const byMonth = new Map();
+  for (const x of allD) {
+    const m = x.date.slice(0, 7);
+    let r = byMonth.get(m);
+    if (!r) r = byMonth.set(m, { month: m, source: 'raw', demos: 0, won: 0, units: 0, rev: 0, leads: 0 }).get(m);
+    r.demos++;
+    if (attributed.has(x._i)) r.won++;
+  }
+  for (const e of allN) {
+    const m = e.date.slice(0, 7);
+    let r = byMonth.get(m);
+    if (!r) r = byMonth.set(m, { month: m, source: 'raw', demos: 0, won: 0, units: 0, rev: 0, leads: 0 }).get(m);
+    r.units += (e.units ?? 1); r.rev += revOf(e);
+  }
+  for (const l of LEADS) {
+    if (!inSel(state.country, l.country)) continue;
+    const m = l.date.slice(0, 7);
+    const r = byMonth.get(m);
+    if (r) r.leads++;
+  }
+  for (const r of byMonth.values()) {
+    r.parity = r.demos ? r.units / r.demos : 0;
+    r.traced = r.demos ? r.won / r.demos : 0;
+    r.ats = r.units ? r.rev / r.units : 0;
+    rows.push(r);
+  }
+  rows.sort((a, b) => a.month.localeCompare(b.month));
+  rows.forEach((r, i) => {
+    const p = rows[i - 1];
+    r.dRev = p && p.rev ? r.rev / p.rev - 1 : null;
+    r.dParity = p ? r.parity - p.parity : null;
+    r.dDemos = p && p.demos ? r.demos / p.demos - 1 : null;
+  });
+
+  if (rows.length < 2) {
+    $('momKpis').innerHTML = '';
+    $('momBars').innerHTML = '';
+    $('momT').innerHTML = '';
+    $('momNote').innerHTML =
+      `<p class="empty">Only one month is loaded, so there is nothing to compare yet.</p>`
+      + `<p>Add the next month's workbook to the <code>SOURCES</code> list in Code.gs and redeploy. `
+      + `This page, the Month selector, the week-over-week chips and the cohort view all become useful the moment a second month arrives.</p>`;
+    return;
+  }
+
+  const last = rows[rows.length - 1], prev = rows[rows.length - 2];
+  kpis('momKpis', [
+    ['Months loaded', fmtN(rows.length), `${rows.filter(r => r.source === 'raw').length} in full detail`],
+    ['Latest month', last.month, `${fmtN(last.demos)} demos`],
+    ['DC2E movement', pp(last.parity - prev.parity), `${pct(prev.parity)} → ${pct(last.parity)}`,
+      last.parity >= prev.parity ? 'good' : 'bad'],
+    ['Revenue movement', last.dRev == null ? '—' : (last.dRev >= 0 ? '+' : '') + (last.dRev * 100).toFixed(0) + '%',
+      `${money(prev.rev)} → ${money(last.rev)}`, (last.dRev || 0) >= 0 ? 'good' : 'bad']
+  ]);
+
+  const maxRev = Math.max(1, ...rows.map(r => r.rev));
+  $('momBars').innerHTML = rows.map(r =>
+    `<div class="bar"><span class="b-n">${esc(r.month)}${r.source === 'history' ? ' <span class="tag t-noise">agg</span>' : ''}</span>`
+    + `<span class="b-t"><span class="b-f" style="width:${Math.max(1, 100 * r.rev / maxRev)}%"></span></span>`
+    + `<span class="b-v">${money(r.rev)}</span></div>`).join('');
+
+  table('momT', [
+    { h: 'Month', k: 'month', num: false },
+    { h: 'Detail', k: 'source', num: false, render: r => r.source === 'raw'
+        ? '<span class="tag t-good">full</span>' : '<span class="tag t-noise">aggregate</span>' },
+    { h: 'Leads', k: 'leads', f: F.n },
+    { h: 'Demos', k: 'demos', f: F.n },
+    { h: 'vs prev', k: 'dDemos', render: r => r.dDemos == null ? '—'
+        : `<span class="${r.dDemos >= 0 ? 'pos' : 'neg'}">${(r.dDemos >= 0 ? '+' : '') + (r.dDemos * 100).toFixed(0)}%</span>`,
+      csv: r => r.dDemos == null ? '' : (r.dDemos * 100).toFixed(1) },
+    { h: 'Sale units', k: 'units', f: F.n },
+    { h: 'DC2E parity', k: 'parity', f: F.pct, cls: cvClass },
+    { h: 'vs prev', k: 'dParity', render: r => r.dParity == null ? '—' : pp(r.dParity),
+      cls: r => r.dParity == null ? 'muted' : r.dParity >= 0 ? 'pos' : 'neg',
+      csv: r => r.dParity == null ? '' : (r.dParity * 100).toFixed(1) },
+    { h: 'DC2E traced', k: 'traced', f: F.pct },
+    { h: 'Revenue', k: 'rev', f: F.money },
+    { h: 'ATS', k: 'ats', f: F.money }
+  ], rows, { sort: { k: 'month', dir: 1 } });
+
+  const nHist = rows.filter(r => r.source === 'history').length;
+  $('momNote').innerHTML =
+    `<p><span class="sig-t">Two levels of detail</span> The ${fmtN(rows.length - nHist)} most recent months are held as full rows, so every page and filter works on them. `
+    + (nHist ? `The ${fmtN(nHist)} older months are held as a monthly aggregate — enough for this trend and the team leaderboards, but row-level pages such as the priority queue only ever cover the recent window. That split is what keeps a year of history inside a payload that will actually load.` : `No months have aged out of the raw window yet.`)
+    + `</p>`
+    + `<p><span class="sig-t">Filters</span> Raw months respond to every filter above. Aggregated months carry only month, course and team lead, so they ignore the finer filters — a row marked <b>aggregate</b> is always the whole month for that course.</p>`
+    + `<p class="caveat">Sales are attributed to the latest demo on or before the sale date. Without that rule a lead who demoed in two different months would credit a sale to both, inflating the earlier month.</p>`;
+}
+
+/* ════════════════════ ROUTER ════════════════════ */
+const PAGES = {
+  exec: pageExec, mom: pageMoM, recon: pageRecon, english: pageEnglish, funnel3: pageFunnel3, maturity: pageMaturity, hours: pageHours,
+  targets: pageTargets, integrity: pageIntegrity, calibration: pageCalibration,
+  diagnosis: pageDiagnosis, benchmark: pageBenchmark, reps: pageReps, tl: pageTL,
+  quadrant: pageQuadrant, opportunity: pageOpportunity, priority: pagePriority,
+  funnel: pageFunnel, leadage: pageLeadAge, sources: pageSources, product: pageProduct,
+  ethnicity: pageEthnicity, mix: pageMix, teams: pageTeams, cohort: pageCohort,
+  forecast: pageForecast, decomp: pageDecomp
+};
+
+function render() {
+  periodBar();
+  basisBar();
+  integrity();
+  const fn = PAGES[state.page];
+  if (fn) fn();
+  const v = view();
+  $('scopeLine').textContent =
+    [selLong(state.teamType, 'all teams'), selLong(state.country, 'all countries'),
+    selLong(state.tl, 'all team leads'), selLong(state.source, 'all sources'),
+    selLong(state.eth, 'all ethnicities'), selLong(state.dcType, 'same month + rolling')].join(' · ')
+    + ` — ${fmtN(v.m.dc)} demos, ${fmtN(v.m.en)} enrolments`;
+  $('mPeriod').firstChild && (0);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   V7.4 BOOT · NAV · COPILOT
+   ════════════════════════════════════════════════════════════════════ */
+
+const NAV = [
+  ['Business pulse', [['exec', 'Executive pulse'], ['mom', 'Month-over-month'], ['targets', 'Targets'],
+  ['forecast', 'Forecast'], ['decomp', 'Revenue decomposition']]],
+  ['Trust', [['recon', 'Reconciliation'], ['integrity', 'Data integrity'],
+  ['maturity', 'Maturity adjustment'], ['calibration', 'Model calibration']]],
+  ['Sales command', [['tl', 'TL command centre'], ['reps', 'Salesperson intelligence'],
+  ['benchmark', 'Conversion benchmark'], ['quadrant', 'Performance quadrant']]],
+  ['Funnel', [['funnel3', 'Lead → Demo → Enrol'], ['diagnosis', 'Funnel diagnosis'],
+  ['hours', 'Demo slot yield'], ['funnel', 'Disposition funnel'],
+  ['opportunity', 'Open pipeline value'], ['priority', 'Priority queue'], ['leadage', 'Lead age'],
+  ['cohort', 'Speed to close']]],
+  ['Customer & market', [['english', 'English course'], ['sources', 'Source & UTM'], ['product', 'Product & grade'],
+  ['ethnicity', 'Ethnicity'], ['mix', 'Same month / rolling'], ['teams', 'RP / Non-RP']]]
+];
+
+function buildNav() {
+  $('nav').innerHTML = NAV.map(([g, items]) =>
+    `<div class="ngroup"><div class="nglabel">${esc(g)}</div>`
+    + items.map(([id, label]) =>
+      `<button class="nav${state.page === id ? ' on' : ''}" data-p="${attr(id)}">${esc(label)}</button>`).join('')
+    + `</div>`).join('');
+  document.querySelectorAll('.nav[data-p]').forEach(b => b.onclick = () => goto(b.dataset.p));
+}
+
+function goto(p) {
+  state.page = p;
+  document.querySelectorAll('.nav[data-p]').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  document.querySelectorAll('.page').forEach(s => s.classList.toggle('on', s.id === 'p-' + p));
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function fillSelect(id, values) {
+  const el = $(id);
+  for (const v of values) {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    el.appendChild(o);
+  }
+}
+const uniq = (arr, k) => [...new Set(arr.map(x => x[k]).filter(v => v != null && v !== ''))].sort();
+
+window.resetFilters = function () {
+  FILTERS.forEach(f => { state[f.k] = []; });
+  rebuildFilters();
+  render();
+};
+
+window.applyTargets = function () {
+  state.revTarget = +$('fRevTarget').value || 0;
+  state.enTarget = +$('fEnTarget').value || 0;
+  state.monthDays = +$('fDays').value || 31;
+  render();
+};
+
+/* ════════ COPILOT ════════
+   Endpoint is read from a global so it can be pointed at a deployed
+   service without editing the file. V7.3 hard-coded localhost:8787,
+   which worked only on the machine that authored it and is blocked as
+   mixed content on any HTTPS host.                                     */
+window.COPILOT_ENDPOINT = window.COPILOT_ENDPOINT || '';
+let cpHistory = [];
+
+const r3 = x => Math.round((x || 0) * 1000) / 1000;
+const r0 = x => Math.round(x || 0);
+
+function snapshot() {
+  const v = view(), m = v.m;
+  const sig = v.drivers.filter(x => x.sig);
+  return {
+    scope: {
+      team_type: state.teamType.length ? state.teamType : 'RP+Non-RP',
+      country: state.country.length ? state.country : 'all',
+      team_lead: state.tl.length ? state.tl : null,
+      source: state.source.length ? state.source : null,
+      ethnicity: state.eth.length ? state.eth : null,
+      cohort_type: state.dcType.length ? state.dcType : 'Same Month+Rolling',
+      multi_select_note: 'Filters are multi-select. An array means several values are combined into one view; null or a summary word means no filter is applied.',
+      period: PERIOD, course: state.subj, basis: state.basis,
+      rostered_team_leads_only: !!state.roster,
+      unfiltered: { demos: DC.length, enrolments: EN.length }
+    },
+    portfolio: {
+      demos: m.dc, enrolments: m.en, demos_that_enrolled: m.wonDC,
+      dc2e_cohort: r3(m.cohortCv), dc2e_count_based: r3(m.countCv),
+      dc2e_maturity_adjusted: r3(m.matCv),
+      revenue: r0(m.rev), revenue_traced_to_a_demo: r0(m.cohortRev),
+      ats: r0(m.ats), revenue_per_demo: r0(m.rpd),
+      value_of_1pp_conversion: r0(m.dc * .01 * m.ats)
+    },
+    /* Corrected. V7.3's equivalent block asserted that conversion by
+       Lead Age, Product and Sub Stage was "not computable" and gave the
+       model the wrong month. Both were wrong and both suppressed real
+       answers.                                                          */
+    measurement: {
+      basis_note: state.basis === 'report'
+        ? 'Report parity: sales counted as bundle-weighted units, DC2E = units / demos in the same window, rostered team leads only. This reproduces the workbook exactly. Quote this to the business.'
+        : 'Traced cohort: demo joined to sale on lead id. Stricter and always lower. Quote this when judging whether a demo cohort performed.',
+      conversion_basis: 'Cohort. demos whose lead id later appears on an enrolment, divided by demos. Quote dc2e_cohort.',
+      dc2e_count_based_warning: 'dc2e_count_based divides enrolments by demos across two independently filtered sets. It is reported only to show the size of the distortion. Do not quote it as the conversion rate.',
+      enrolments_without_a_demo: m.orphans,
+      inflation_pp: r3(m.inflation) * 100,
+      stage_rates: 'Measured from outcomes on every filter change, Laplace-smoothed toward the pooled rate of the stage class. Not assumed.',
+      maturity: 'dc2e_maturity_adjusted weights each demo by how much of its conversion window has elapsed, using the observed close-lag curve (70% of sales close on the demo day, 96.5% within a week). Use it when discussing recent weeks; raw cohort understates them.',
+      expected_conversion: 'Mix-adjusted on Country x Source x Cohort type, minimum ' + MIN_SEGMENT_N + ' demos, tiered fallback. Each rep excluded from their own benchmark.',
+      significance: 'Two-proportion z-test against the portfolio rate. |z| >= 1.96 is treated as signal; anything below is noise and must not be presented as a finding.',
+      computable_via_join: 'Lead id joins both datasets, so conversion by Lead Age, Sub Stage, Owner and any demo-side field is available.',
+      genuinely_unavailable: [
+        'Conversion by Product — Product is recorded only on the sale, so no demo denominator exists.',
+        'Any month-over-month or seasonality metric — this extract covers August 2026 only.',
+        'A separate VC or demo-attended stage — Trial Session Scheduled falls on the same date as DC Date for every row, so it is the demo itself, not a prior step.',
+        'Stall or AD-not-interested reason codes — the extract carries Sub Stage but no reason field.'
+      ]
+    },
+    lead_funnel: {
+      leads: v.funnel.leads, reached_a_demo: v.funnel.demos, enrolled: v.funnel.sales,
+      lead_to_demo: r3(v.funnel.l2dRate), demo_to_enrol: r3(v.funnel.d2eRate),
+      lead_to_enrol: r3(v.funnel.l2eRate),
+      note: 'Leads counted by creation date in window; demo and sale outcomes tracked across the whole extract.'
+    },
+    demo_slots: v.hours.filter(h => h.dc >= 10).map(h => ({
+      slot: h.label, demos: h.dc, enrolled: h.won, dc2e: r3(h.cv),
+      z: Math.round(h.z * 10) / 10, significant: h.sig
+    })),
+    targets: {
+      source: 'DC Summary tab of the workbook, editable in the UI',
+      demos: state.targets.dc, enrolments: state.targets.en,
+      revenue: state.targets.rev, working_days: state.targets.days,
+      caveat: 'Workbook DC-till-date (1,449) does not reconcile with the ' + DC.length + ' demos in DC-RP. Flag this rather than quoting achievement as settled.'
+    },
+    stages: v.stages.map(r => ({
+      stage: r.stage, class: r.cls, demos: r.n, enrolled: r.won,
+      observed_rate: r3(r.raw), smoothed_rate: r3(r.p), thin_sample: r.thin
+    })),
+    pipeline: {
+      open_demos: v.open.length, value_at_measured_rates: r0(v.recoverable),
+      note: 'Open means the demo is neither won nor in a dead disposition and the lead has not enrolled.'
+    },
+    team_leads: v.tls.slice(0, 14).map(t => ({
+      team_lead: t.k, demos: t.dc, enrolled: t.won, dc2e: r3(t.cv),
+      revenue: r0(t.rev), ats: r0(t.ats), revenue_per_demo: r0(t.rpd),
+      open_demos: t.open, open_value: r0(t.recover), reps_verified_below_expectation: t.below
+    })),
+    salespeople: v.sps.slice().sort((a, b) => a.gap - b.gap).slice(0, 10)
+      .concat(v.sps.slice().sort((a, b) => b.gap - a.gap).slice(0, 6))
+      .map(s => ({
+        salesperson: s.k, team_lead: s.tl, demos: s.dc, enrolled: s.won,
+        actual: r3(s.actual), expected: r3(s.exp), gap_pp: Math.round(s.gap * 1000) / 10,
+        z: Math.round(s.z * 10) / 10, significant: s.sig,
+        open_demos: s.open, open_value: r0(s.recover)
+      })),
+    salespeople_summary: {
+      analysed: v.sps.length,
+      verified_above: v.sps.filter(x => x.sig && x.gap > 0).length,
+      verified_below: v.sps.filter(x => x.sig && x.gap < 0).length,
+      within_noise: v.sps.filter(x => !x.sig).length
+    },
+    drivers_significant: sig.map(x => ({
+      dimension: x.label, segment: x.v, demos: x.dc, enrolled: x.sales,
+      dc2e: r3(x.cv), gap_pp: Math.round(x.gap * 1000) / 10,
+      z: Math.round(x.z * 10) / 10, directional_rupee_impact: r0(x.impact)
+    })),
+    drivers_rejected_as_noise: v.drivers.filter(x => !x.sig).length,
+    segments: {
+      source: segment('Source').slice(0, 8).map(compact),
+      utm: segment('Lead UTM Source').slice(0, 10).map(compact),
+      country: segment('Country 2Letter').map(compact),
+      lead_age: segment('Lead Age Bucket').map(compact),
+      grade: segment('Student Grade').slice(0, 10).map(compact),
+      ethnicity: segment('Ethnicity_M').slice(0, 10).map(compact),
+      cohort_type: segment('dc Type').map(compact),
+      product: segmentEN('Product').slice(0, 8).map(r => ({
+        segment: r.seg, enrolments: r.en, revenue: r0(r.rev), ats: r0(r.ats),
+        dc2e: null, note: 'sale-side field, no demo denominator'
+      }))
+    },
+    guidance: {
+      ethnicity: 'Equity diagnosis only. Never an action, routing or targeting dimension.',
+      noise: 'Never present a segment or rep gap as a finding unless significant is true.',
+      unknowns: 'If a figure is not in this snapshot, say so plainly and name what is missing. Never estimate it from a neighbouring segment.'
+    }
+  };
+}
+function compact(r) {
+  return {
+    segment: r.seg, demos: r.dc, enrolled: r.won, dc2e: r3(r.cv),
+    revenue: r0(r.rev), ats: r0(r.ats), revenue_per_demo: r0(r.rpd),
+    z: Math.round(r.z * 10) / 10, significant: r.sig
+  };
+}
+
+window.toggleCP = function () {
+  const p = $('cp'), opening = !p.classList.contains('on');
+  p.classList.toggle('on', opening);
+  $('cpBtn').style.display = opening ? 'none' : '';
+  if (opening) {
+    const s = snapshot().scope;
+    $('cpScope').textContent = [s.course, s.basis === 'report' ? 'report parity' : 'traced',
+      s.team_type, s.country, s.team_lead || 'all TLs'].join(' · ');
+    $('cpQ').focus();
+  }
+};
+window.resetCP = function () {
+  cpHistory = [];
+  $('cpBody').innerHTML = '<p>Cleared. Ask about the current filtered view.</p>';
+  $('cpWarn').style.display = 'none';
+  $('cpMeta').textContent = '';
+};
+
+function cpMarkup(t) {
+  return esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/^[-•]\s+(.*)$/gm, '<span class="cp-li">$1</span>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+window.askCP = function (preset) {
+  const input = $('cpQ');
+  const q = (preset || input.value || '').trim();
+  if (!q) return;
+  input.value = '';
+  const body = $('cpBody');
+  $('cpChips')?.remove();
+  $('cpIntro')?.remove();
+  body.insertAdjacentHTML('beforeend',
+    `<div class="cp-q">${esc(q)}</div><div id="cpPending" class="cp-think">Reading the current view…</div>`);
+  body.scrollTop = body.scrollHeight;
+
+  const url = (window.COPILOT_ENDPOINT || window.SHEET_ENDPOINT || '').trim();
+  if (!url) {
+    $('cpPending')?.remove();
+    body.insertAdjacentHTML('beforeend',
+      `<p>No copilot endpoint is configured. It normally shares the Apps Script URL used for the live feed.</p>`);
+    return;
+  }
+
+  let snap;
+  try { snap = snapshot(); }
+  catch (err) {
+    $('cpPending')?.remove();
+    body.insertAdjacentHTML('beforeend', `<p class="neg">Could not build the snapshot: ${esc(err.message)}</p>`);
+    return;
+  }
+
+  /* text/plain is deliberate. Declaring application/json would make the
+     browser fire a CORS preflight, and Apps Script web apps do not answer
+     OPTIONS, so the request would die before reaching the script. text/plain
+     keeps this a simple request. The body is still JSON. */
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'copilot', session: BCC_AUTH.session(),
+      question: q, snapshot: snap, history: cpHistory.slice(-6)
+    })
+  })
+    .then(r => r.text())
+    .then(txt => {
+      let d;
+      try { d = JSON.parse(txt); }
+      catch (e) { throw new Error('Unexpected response from the endpoint.'); }
+      $('cpPending')?.remove();
+      if (!d.ok) {
+        body.insertAdjacentHTML('beforeend', `<p class="neg">${esc(d.error || 'Request failed.')}</p>`);
+        return;
+      }
+      body.insertAdjacentHTML('beforeend', `<div class="cp-a">${cpMarkup(d.answer || '')}</div>`);
+      cpHistory.push({ role: 'user', content: q }, { role: 'assistant', content: d.answer });
+      const meta = d.meta || {};
+      $('cpMeta').textContent = [meta.model, meta.ms ? (meta.ms / 1000).toFixed(1) + 's' : null,
+        meta.in_tokens ? meta.in_tokens + ' in / ' + meta.out_tokens + ' out' : null]
+        .filter(Boolean).join(' · ');
+      body.scrollTop = body.scrollHeight;
+    })
+    .catch(err => {
+      $('cpPending')?.remove();
+      body.insertAdjacentHTML('beforeend',
+        `<p class="neg">Could not reach the copilot. ${esc(err.message)}</p>`
+        + `<p class="cp-hint">Check that Code.gs has been redeployed since the copilot was added, and that ANTHROPIC_API_KEY is set under Project Settings → Script Properties.</p>`);
+    });
+};
+
+/* ════════ LIVE DATA ════════
+   Points at an Apps Script web app that reads the workbook and returns the
+   cleaned payload. See Code.gs. Two transports:
+
+   JSONP is the default because this file is usually opened straight from
+   disk, where the page origin is "null" and a cross-origin fetch is refused
+   before it leaves the browser. A script tag is not subject to CORS, so it
+   works from file://, from a shared drive, and from a web host alike.
+
+   fetch() is used when the page is served over http(s) and the endpoint sets
+   permissive CORS, which gives real error codes instead of JSONP's single
+   opaque failure mode.
+
+   Either way a failed refresh leaves the baked-in extract untouched and says
+   so — a dashboard showing yesterday's numbers with a visible timestamp is
+   far safer than one showing an empty screen or, worse, a half-loaded one. */
+
+let lastSync = null, syncTimer = null, syncing = false;
+
+function endpointURL(extra) {
+  const base = (window.SHEET_ENDPOINT || '').trim();
+  if (!base) return null;
+  const u = base + (base.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+  const ses = BCC_AUTH.session();
+  return u + (ses ? '&session=' + encodeURIComponent(ses) : '') + (extra || '');
+}
+
+function jsonp(timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const cb = '__sync' + Math.random().toString(36).slice(2);
+    const url = endpointURL('&callback=' + cb);
+    if (!url) return reject(new Error('No endpoint configured.'));
+    const el = document.createElement('script');
+    /* async is essential. A plain injected script blocks the document's load
+       event, so a feed that takes fifteen or twenty seconds — normal for Apps
+       Script reading several tabs, more on a cold start — makes the whole page
+       look frozen and can trip the browser's own navigation timeout. */
+    el.async = true;
+    const done = (fn, arg) => {
+      clearTimeout(timer); delete window[cb];
+      if (el.parentNode) el.parentNode.removeChild(el);
+      fn(arg);
+    };
+    /* Apps Script routinely needs 15-25s to read five tabs, and a cold start
+       or several months of sources can double that. A short timeout here
+       reports a healthy endpoint as unreachable, which is misleading. */
+    const timer = setTimeout(() => done(reject,
+      new Error('Timed out after ' + Math.round((timeoutMs || 120000) / 1000)
+        + 's. The endpoint may be reading a lot of data — try Refresh now, or reduce RAW_MONTHS in Code.gs.')),
+      timeoutMs || 120000);
+    window[cb] = data => done(resolve, data);
+    el.onerror = () => done(reject, new Error('Could not load the endpoint. Check the /exec URL.'));
+    el.src = url;
+    document.head.appendChild(el);
+  });
+}
+
+async function fetchJSON() {
+  const url = endpointURL();
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function applyPayload(data) {
+  if (!data) throw new Error('Empty response.');
+  /* The owner can revoke the feed server-side. Copies keep whatever they
+     last loaded rather than blanking, and say plainly that they are frozen. */
+  if (data.disabled) {
+    setSync('warn', (data.error || 'Live feed disabled by the sheet owner.')
+      + ' Showing the last loaded data.');
+    if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+    return;
+  }
+  if (data.auth === false) { BCC_AUTH.expired(); throw new Error('Your sign-in has ended. Sign in again.'); }
+  if (data.ok === false) throw new Error(data.error || 'Endpoint reported an error.');
+  if (!Array.isArray(data.DC) || !Array.isArray(data.EN))
+    throw new Error('Response is missing DC or EN arrays.');
+  if (!data.DC.length) throw new Error('Endpoint returned zero demos — refusing to blank the dashboard.');
+
+  DC = data.DC; EN = data.EN;
+  if (Array.isArray(data.LEADS)) LEADS = data.LEADS;
+  if (Array.isArray(data.LAGCDF) && data.LAGCDF.length) LAGCDF = data.LAGCDF;
+  if (data.ROSTER) ROSTER = data.ROSTER;
+  HIST = data.HIST || {};
+  META = data.meta || {};
+
+  clearCache();
+  decorate();
+  buildCalendar();
+  rebuildFilters();
+  render();
+
+  lastSync = new Date();
+  const meta = data.meta || {};
+  setSync('ok', 'Synced ' + lastSync.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    + (meta.generated ? ' · sheet read ' + meta.generated : ''));
+  $('mLeads').textContent = fmtN(LEADS.length);
+  $('mDC').textContent = fmtN(DC.filter(x => x.subj === 'Math').length);
+  $('mEN').textContent = fmtN(EN.filter(x => x.subj === 'Math').length);
+  /* The masthead range describes the data actually loaded, so a refresh that
+     brings a different window is visible rather than silently contradicting
+     the header. */
+  $('mPeriod').textContent = ALL_DATES.length
+    ? ALL_DATES[0] + ' to ' + ALL_DATES[ALL_DATES.length - 1] : PERIOD;
+}
+
+window.refreshNow = async function (silent) {
+  if (syncing) return;
+  if (!(window.SHEET_ENDPOINT || '').trim()) {
+    setSync('warn', 'No live endpoint set — showing the built-in extract.');
+    return;
+  }
+  if (!BCC_AUTH.session()) { BCC_AUTH.expired(); return; }
+  syncing = true;
+  const t0 = Date.now();
+  setSync('busy', 'Refreshing…');
+  const tick = setInterval(() => {
+    if (syncing) setSync('busy', 'Refreshing… ' + Math.round((Date.now() - t0) / 1000) + 's');
+  }, 3000);
+  try {
+    const served = location.protocol === 'http:' || location.protocol === 'https:';
+    let data;
+    try {
+      data = served ? await fetchJSON() : await jsonp();
+    } catch (first) {
+      data = served ? await jsonp() : await fetchJSON();
+    }
+    applyPayload(data);
+  } catch (err) {
+    let hint = err.message;
+    if (/sign in/i.test(hint)) hint = 'Your sign-in has ended.';
+    else if (/timed out|could not load|failed to fetch/i.test(hint)) hint = 'Endpoint unreachable — check the deployment is live and "Who has access" is set to Anyone.';
+    setSync('bad', 'Refresh failed — still showing '
+      + (lastSync ? 'the ' + lastSync.toLocaleTimeString('en-IN') + ' data' : 'the built-in extract')
+      + '. ' + hint);
+  } finally { syncing = false; clearInterval(tick); }
+};
+
+function setSync(tone, msg) {
+  const el = $('syncPill');
+  if (!el) return;
+  el.className = 'sync sync-' + tone;
+  el.textContent = msg;
+  el.title = msg;
+}
+
+window.setAutoRefresh = function (mins) {
+  state.autoMins = +mins || 0;
+  if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+  if (state.autoMins) syncTimer = setInterval(() => refreshNow(true), state.autoMins * 60000);
+  setSync(state.autoMins ? 'ok' : 'warn',
+    state.autoMins ? 'Auto-refresh every ' + state.autoMins + ' min' : 'Auto-refresh off');
+};
+
+window.setEndpoint = function () {
+  window.SHEET_ENDPOINT = $('cfgUrl').value.trim();
+  refreshNow();
+};
+
+/* ── multi-select filters ──────────────────────────────────────────────
+   Native <select multiple> needs ctrl-click and shows a scrolling box that
+   is unusable at these list lengths, so each filter is a button that opens a
+   checkbox panel. Selecting nothing means "all", which keeps behaviour
+   identical to the old single-select when untouched. */
+const FILTERS = [
+  { k: 'teamType', field: 'team', all: 'All teams', noun: 'teams' },
+  { k: 'country', field: 'country', all: 'All countries', noun: 'countries' },
+  { k: 'tl', field: 'tl', all: 'All team leads', noun: 'team leads' },
+  { k: 'source', field: 'source', all: 'All sources', noun: 'sources' },
+  { k: 'eth', field: 'ethD', all: 'All ethnicities', noun: 'ethnicities' },
+  { k: 'dcType', field: 'dcType', all: 'Same month + rolling', noun: 'cohort types' }
+];
+
+function filterPool() {
+  return DC.filter(x => x.subj === state.subj && (!state.roster || x.roster));
+}
+
+function selText(arr, allLabel) {
+  if (!arr || !arr.length) return allLabel;
+  if (arr.length === 1) return arr[0];
+  return arr.length + ' selected';
+}
+/* The button is narrow, so it shows "2 selected"; the scope line has room to
+   name them, which matters when a figure is screenshotted and the reader
+   needs to know what was actually included. */
+function selLong(arr, allLabel) {
+  if (!arr || !arr.length) return allLabel;
+  if (arr.length <= 3) return arr.join(' + ');
+  return arr.slice(0, 2).join(' + ') + ' +' + (arr.length - 2) + ' more';
+}
+
+function rebuildFilters() {
+  const pool = filterPool();
+  const host = $('filterRow');
+  if (!host) return;
+  host.innerHTML = FILTERS.map(f => {
+    const vals = uniq(pool, f.field);
+    /* Drop selections that no longer exist in the current course or roster
+       scope, so switching to English cannot leave an invisible Math team lead
+       filtering everything down to nothing. */
+    state[f.k] = (state[f.k] || []).filter(v => vals.indexOf(v) >= 0);
+    const n = state[f.k].length;
+    return `<div class="ms" data-k="${attr(f.k)}">`
+      + `<button type="button" class="ms-b${n ? ' on' : ''}" onclick="msOpen('${attr(f.k)}')">`
+      + `<span class="ms-t">${esc(selText(state[f.k], f.all))}</span>`
+      + (n > 1 ? `<span class="ms-n">${n}</span>` : '')
+      + `<span class="ms-x">▾</span></button>`
+      + `<div class="ms-p" hidden>`
+      + (vals.length > 8 ? `<input class="ms-s" placeholder="Search ${esc(f.noun)}…" oninput="msFilter('${attr(f.k)}',this.value)">` : '')
+      + `<div class="ms-acts"><button type="button" onclick="msAll('${attr(f.k)}')">Select all</button>`
+      + `<button type="button" onclick="msClear('${attr(f.k)}')">Clear</button></div>`
+      + `<div class="ms-l">` + vals.map(v =>
+        `<label class="ms-o" data-v="${attr(String(v).toLowerCase())}">`
+        + `<input type="checkbox" ${state[f.k].indexOf(v) >= 0 ? 'checked' : ''} `
+        + `onchange="msPick('${attr(f.k)}',this.value,this.checked)" value="${attr(v)}">`
+        + `<span>${esc(v)}</span></label>`).join('')
+      + `</div></div></div>`;
+  }).join('') + `<button class="btn" onclick="resetFilters()">Reset</button>`
+    + `<span class="scope" id="scopeLine"></span>`;
+}
+
+function msPanel(k) { return document.querySelector('.ms[data-k="' + k + '"] .ms-p'); }
+
+window.msOpen = function (k) {
+  const p = msPanel(k), wasOpen = p && !p.hidden;
+  document.querySelectorAll('.ms-p').forEach(el => { el.hidden = true; });
+  if (p && !wasOpen) {
+    p.hidden = false;
+    const s = p.querySelector('.ms-s');
+    if (s) s.focus();
+  }
+};
+window.msFilter = function (k, q) {
+  const t = q.trim().toLowerCase();
+  msPanel(k).querySelectorAll('.ms-o').forEach(o => {
+    o.style.display = !t || o.dataset.v.indexOf(t) >= 0 ? '' : 'none';
+  });
+};
+window.msPick = function (k, v, on) {
+  const arr = state[k];
+  const i = arr.indexOf(v);
+  if (on && i < 0) arr.push(v);
+  if (!on && i >= 0) arr.splice(i, 1);
+  refreshFilterLabel(k);
+  render();
+};
+window.msAll = function (k) {
+  const f = FILTERS.find(x => x.k === k);
+  state[k] = uniq(filterPool(), f.field);
+  const p = msPanel(k);
+  p.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = true; });
+  refreshFilterLabel(k); render();
+};
+window.msClear = function (k) {
+  state[k] = [];
+  const p = msPanel(k);
+  p.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = false; });
+  refreshFilterLabel(k); render();
+};
+function refreshFilterLabel(k) {
+  const f = FILTERS.find(x => x.k === k);
+  const wrap = document.querySelector('.ms[data-k="' + k + '"]');
+  if (!wrap || !f) return;
+  const n = state[k].length;
+  wrap.querySelector('.ms-t').textContent = selText(state[k], f.all);
+  wrap.querySelector('.ms-b').classList.toggle('on', n > 0);
+  let badge = wrap.querySelector('.ms-n');
+  if (n > 1) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'ms-n';
+      wrap.querySelector('.ms-x').before(badge);
+    }
+    badge.textContent = n;
+  } else if (badge) badge.remove();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ms')) document.querySelectorAll('.ms-p').forEach(el => { el.hidden = true; });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.ms-p').forEach(el => { el.hidden = true; });
+});
+
+/* ════════ INIT ════════
+   Runs once, after sign-in, with the first live payload already in
+   window.__DC__ / __EN__ / __LEADS__ (see BCC_AUTH below). */
+function init() {
+  DC = window.__DC__; EN = window.__EN__; LEADS = window.__LEADS__; LAGCDF = window.__LAGCDF__;
+  ROSTER = window.__ROSTER__ || { RP: [], OTP: [] };
+  HIST = window.__HIST__ || {}; META = window.__META__ || {};
+  delete window.__DC__; delete window.__EN__; delete window.__LEADS__;
+
+  decorate();
+  state.targets = { ...DEFAULT_TARGETS };
+  buildCalendar();
+  buildNav();
+  rebuildFilters();
+
+  $('cpQ').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askCP(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('cp').classList.contains('on')) toggleCP();
+  });
+
+  syncTargetInputs();
+  $('mDC').textContent = fmtN(DC.filter(x => x.subj === 'Math').length);
+  $('mEN').textContent = fmtN(EN.filter(x => x.subj === 'Math').length);
+  $('mLeads').textContent = fmtN(LEADS.length);
+  $('mPeriod').textContent = PERIOD;
+
+  render();
+
+  /* Locked builds hide the connection controls so a recipient cannot
+     repoint, clear or break the feed by accident. This is a usability lock,
+     not a security boundary: the values still live in the file and anyone
+     who opens it in a text editor can read them. Real revocation is the
+     ENABLED switch in Code.gs, which lives on the server.
+     Owner escape hatch: append #config to the URL, or press Ctrl+Shift+K. */
+  const wantConfig = location.hash === '#config';
+  if (window.LOCK_CONFIG && !wantConfig) {
+    const bar = $('syncBar');
+    if (bar) bar.style.display = 'none';
+  }
+  document.addEventListener('keydown', ev => {
+    if (ev.ctrlKey && ev.shiftKey && (ev.key === 'K' || ev.key === 'k')) {
+      const bar = $('syncBar');
+      if (bar) bar.style.display = bar.style.display === 'none' ? '' : 'none';
+    }
+  });
+
+  $('cfgUrl').value = window.SHEET_ENDPOINT || '';
+  $('cfgWho').textContent = BCC_AUTH.email() ? 'Signed in as ' + BCC_AUTH.email() : '';
+  $('cfgAuto').value = String(state.autoMins || 0);
+  setAutoRefresh(state.autoMins);
+}
+
+</script>
+
+<style>
+#bccGate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(244,247,250,.97);font-family:'Inter',system-ui,sans-serif}
+#bccGate[hidden]{display:none}
+#bccGate .card{background:var(--surface,#fff);border:1px solid var(--line,#dce5ed);border-radius:14px;box-shadow:var(--shadow);padding:28px 28px 24px;max-width:420px;width:100%}
+#bccGate h2{font-family:var(--display);font-size:22px;margin:0 0 6px;color:var(--ink,#0e1d2a)}
+#bccGate p{margin:0;color:var(--mute,#57708a);font-size:14px;line-height:1.5}
+#bccGate .err{margin-top:12px;color:var(--neg,#b8382a);font-size:13px}
+#bccGate .btnrow{margin-top:18px;min-height:44px}
+</style>
+<div id="bccGate"><div class="card"><h2>Business Command Centre</h2><p id="bccGateMsg">Sign in with your @expinfi.com Google account.</p><div class="btnrow" id="bccGbtn"></div><p class="err" id="bccGateErr"></p></div></div>
+<script>
+/* ════════ SIGN-IN ════════
+   The page opens on this gate. Google sign-in goes to the Daily KRA web app
+   (feed.login), which checks the account and returns a signed session for
+   12 hours. The session is kept in this browser and sent with every feed
+   request; the feed refuses anything without a valid one. Nothing renders
+   until the first live payload has arrived. */
+const BCC_AUTH = (() => {
+  const KEY = 'bcc.session';
+  let ses = null, mail = '', started = false, gsiLoaded = false;
+  const gate = $('bccGate');
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (v && v.s && v.x > Date.now() + 60000) { ses = v.s; mail = v.e || ''; } } catch (e) { } };
+  const save = (s, x, e) => { ses = s; mail = e || ''; try { localStorage.setItem(KEY, JSON.stringify({ s, x, e })); } catch (_) { } };
+  const clear = () => { ses = null; try { localStorage.removeItem(KEY); } catch (_) { } };
+  const msg = (m, err) => { $('bccGateMsg').textContent = m; $('bccGateErr').textContent = err || ''; };
+
+  function showGate(err) {
+    gate.hidden = false;
+    msg('Sign in with your @expinfi.com Google account.', err);
+    const go = () => {
+      google.accounts.id.initialize({ client_id: window.GOOGLE_CLIENT_ID, callback: r => onCredential(r.credential), hd: 'expinfi.com', auto_select: true });
+      $('bccGbtn').innerHTML = '';
+      google.accounts.id.renderButton($('bccGbtn'), { theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'pill' });
+      google.accounts.id.prompt();
+    };
+    if (window.google && google.accounts) return go();
+    if (gsiLoaded) return;
+    gsiLoaded = true;
+    const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = go;
+    s.onerror = () => msg('Couldn’t load Google sign-in.', 'Check your connection and reload the page.');
+    document.head.appendChild(s);
+  }
+
+  async function onCredential(idToken) {
+    $('bccGbtn').innerHTML = ''; msg('Signing you in…');
+    let r;
+    try {
+      const res = await fetch(window.LOGIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'feed.login', idToken }) });
+      r = await res.json();
+    } catch (e) { r = { ok: false, message: 'Couldn’t reach the sign-in server. Try again.' }; }
+    if (!r || !r.ok) return showGate((r && r.message) || 'Sign-in failed.');
+    save(r.session, r.exp, r.email);
+    start();
+  }
+
+  async function getData() {
+    const served = location.protocol === 'http:' || location.protocol === 'https:';
+    try { return served ? await fetchJSON() : await jsonp(); }
+    catch (first) { return served ? await jsonp() : await fetchJSON(); }
+  }
+
+  async function start() {
+    if (started) { gate.hidden = true; setAutoRefresh(state.autoMins); return refreshNow(); }   // signed in again after expiry
+    gate.hidden = false; $('bccGbtn').innerHTML = ''; msg('Loading the command centre…');
+    let data;
+    try { data = await getData(); } catch (e) { return msg('Couldn’t load the numbers.', e.message + ' Reload the page to try again.'); }
+    if (data && data.auth === false) { clear(); return showGate('Your sign-in has ended. Sign in again.'); }
+    if (!data || data.ok === false) return msg('Couldn’t load the numbers.', (data && data.error) || 'Empty response.');
+    if (!Array.isArray(data.DC) || !data.DC.length) return msg('Couldn’t load the numbers.', 'The feed returned no demos.');
+    window.__DC__ = data.DC; window.__EN__ = data.EN; window.__LEADS__ = data.LEADS || [];
+    if (Array.isArray(data.LAGCDF) && data.LAGCDF.length) window.__LAGCDF__ = data.LAGCDF;
+    if (data.ROSTER) window.__ROSTER__ = data.ROSTER;
+    window.__HIST__ = data.HIST || {}; window.__META__ = data.meta || {};
+    if (ALL_DATES_RANGE(data.DC)) PERIOD = ALL_DATES_RANGE(data.DC);
+    init();
+    started = true;
+    lastSync = new Date();
+    const m = data.meta || {};
+    setSync('ok', 'Synced ' + lastSync.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + (m.prepared || m.generated ? ' · sheet read ' + (m.prepared || m.generated) : ''));
+    gate.hidden = true;
+  }
+  function ALL_DATES_RANGE(rows) { let lo = '', hi = ''; rows.forEach(r => { if (!r.date) return; if (!lo || r.date < lo) lo = r.date; if (!hi || r.date > hi) hi = r.date; }); return lo ? lo + ' to ' + hi : ''; }
+
+  return {
+    session: () => ses, email: () => mail,
+    expired() { clear(); if (syncTimer) { clearInterval(syncTimer); syncTimer = null; } showGate('Your sign-in has ended. Sign in again to keep the numbers updating.'); },
+    signOut() { clear(); try { google.accounts.id.disableAutoSelect(); } catch (e) { } location.reload(); },
+    boot() { load(); if (ses) start(); else showGate(); }
+  };
+})();
+BCC_AUTH.boot();
+</script>
+</body></html>
