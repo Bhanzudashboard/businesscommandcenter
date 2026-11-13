@@ -1226,12 +1226,13 @@ const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } 
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del: k => { try { localStorage.removeItem(k); } catch (e) { } } };
 let SESSION = IS_LIVE ? store.get('kra.session') : null;
 
-async function api(action, payload = {}) {
+async function api(action, payload = {}, tries = 0) {
   let res;
   try {
     const r = await fetch(LIVE.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, session: SESSION, ...payload }) });
     res = await r.json();
   } catch (e) { return { ok: false, message: 'Couldn’t reach the KRA server. Check your connection and try again.' }; }
+  if (res && res.busy && tries < 3) { await new Promise(r => setTimeout(r, 1500 + Math.random() * 2500)); return api(action, payload, tries + 1); }   // not applied, safe to resend
   if (res && res.auth === false) { signOut(true); }
   return res || { ok: false, message: 'Empty reply from the server.' };
 }
