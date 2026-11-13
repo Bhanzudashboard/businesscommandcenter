@@ -3600,7 +3600,7 @@ const BCC_AUTH = (() => {
     } catch (e) { r = { ok: false, message: 'Couldn’t reach the sign-in server. Try again.' }; }
     if (!r || !r.ok) return showGate((r && r.message) || 'Sign-in failed.');
     save(r.session, r.exp, r.email);
-    start();
+    start(true);
   }
 
   async function getData() {
@@ -3609,12 +3609,12 @@ const BCC_AUTH = (() => {
     catch (first) { return served ? await jsonp() : await fetchJSON(); }
   }
 
-  async function start() {
+  async function start(fresh) {
     if (started) { gate.hidden = true; setAutoRefresh(state.autoMins); return refreshNow(); }   // signed in again after expiry
     gate.hidden = false; $('bccGbtn').innerHTML = ''; msg('Loading the command centre…');
     let data;
     try { data = await getData(); } catch (e) { return msg('Couldn’t load the numbers.', e.message + ' Reload the page to try again.'); }
-    if (data && data.auth === false) { clear(); return showGate('Your sign-in has ended. Sign in again.'); }
+    if (data && data.auth === false) { clear(); return showGate(fresh ? 'You are signed in, but the live feed did not accept it. The Master DB script needs the same FEED_SECRET as the Daily KRA script (its owner can run checkFeedSecret).' : 'Your sign-in has ended. Sign in again.'); }
     if (!data || data.ok === false) return msg('Couldn’t load the numbers.', (data && data.error) || 'Empty response.');
     if (!Array.isArray(data.DC) || !data.DC.length) return msg('Couldn’t load the numbers.', 'The feed returned no demos.');
     window.__DC__ = data.DC; window.__EN__ = data.EN; window.__LEADS__ = data.LEADS || [];
