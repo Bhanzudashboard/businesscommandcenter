@@ -1589,20 +1589,23 @@ function rosterStatus(t, w) {
   const late = R.at > istMs(w, 7, 0);
   return `<span class="st ${late ? 'st-break' : 'st-complete'}">${late ? 'Submitted late' : 'Submitted'}</span> <span class="note">${fmtDay(key(new Date(R.at + IST)))} ${fmtT(R.at)} · ${R.via === 'upload' ? 'Excel upload' : 'grid'}</span>`;
 }
+// From Sunday's shift (it runs past midnight into Monday) the roster that is due is next week's.
+const rosterDueW = () => dow(SHIFT) === 0 ? addDays(wkOf(SHIFT), 7) : wkOf(SHIFT);
+const rosterPastOk = w => w >= rosterDueW() || confirm(`You are saving the roster for the week of ${fmtDay(w)}, which is ending. The roster due now is for the week of ${fmtDay(rosterDueW())}.\n\nSave the old week anyway?`);
 function vRoster() {
-  const t = TL(meId()), thisW = wkOf(SHIFT); if (!S.rw) S.rw = thisW;
+  const t = TL(meId()), thisW = wkOf(SHIFT), dueW = rosterDueW(); if (!S.rw) S.rw = dueW;
   const w = S.rw, L = icsOf(t.id), { saved, plan } = rosterOf(t.id, w), past = w < thisW, days = wdays(w);
   L.forEach(ic => { plan[ic.id] = plan[ic.id] || {}; });
   const offs = ic => days.filter(k => plan[ic.id][k] === 'off').length;
-  $('view').innerHTML = `<div class="fbar"><div class="segs">${[[-7, 'Last week'], [0, 'This week'], [7, 'Next week']].map(([d, l]) => `<button class="${w === addDays(thisW, d) ? 'on' : ''}" data-act="rw" data-v="${addDays(thisW, d)}">${l}</button>`).join('')}</div>
-      <span class="note">Week of ${fmtDay(w)} – ${fmtDay(addDays(w, 6))}</span><span style="margin-left:auto">${rosterStatus(t, w)}</span></div>
+  $('view').innerHTML = `<div class="fbar"><div class="segs">${[[-7, 'Last week'], [0, 'This week'], [7, 'Next week']].map(([d, l]) => `<button class="${w === addDays(thisW, d) ? 'on' : ''}" data-act="rw" data-v="${addDays(thisW, d)}">${l} · ${fmtDay(addDays(thisW, d)).replace(/^\w+,?\s*/, '')}</button>`).join('')}</div>
+      <span class="note">Week of ${fmtDay(w)} – ${fmtDay(addDays(w, 6))}${w < dueW && !past ? ' · <b style="color:#b4532a">this week ends tonight; the roster due now is for the week of ' + fmtDay(dueW) + '</b>' : ''}</span><span style="margin-left:auto">${rosterStatus(t, w)}</span></div>
     <section class="panel" style="margin-top:14px"><div class="ph"><h2>Weekly roster</h2><p>Shift start and week off for each person. Week offs here are never LOP; you can still mark leave day by day.</p>
       ${past ? '' : `<div class="r" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s" data-act="rcopy">Copy last week</button><button class="btn btn-s" data-act="rtpl">Download Excel template</button><label class="btn btn-s" style="cursor:pointer">Upload Excel<input type="file" id="rfile" accept=".xlsx,.xls,.csv" hidden></label></div>`}</div>
     <div class="pb tw"><table class="rgrid"><tr><th>Team member</th>${days.map(k => `<th>${fmtDay(k)}</th>`).join('')}<th class="n">Week offs</th></tr>
     ${L.map(ic => `<tr><td><span class="tl-n"><span class="av">${initials(ic.name)}</span>${esc(ic.name)}</span></td>${days.map(k => { const v = plan[ic.id][k];
       return `<td>${past ? cellLabel(v) : `<select class="inp rc${v === 'off' ? ' off' : v === 'leave' ? ' lv' : ''}" data-rc="${ic.id}|${k}" aria-label="${esc(ic.name)} ${fmtDay(k)}"><option value="">—</option>${SLOTS.map(s => `<option value="${s}"${v === s ? ' selected' : ''}>${fmtT(T(s))}</option>`).join('')}<option value="off"${v === 'off' ? ' selected' : ''}>Week off</option><option value="leave"${v === 'leave' ? ' selected' : ''}>Leave</option></select>`}</td>`; }).join('')}
       <td class="n ${offs(ic) === 1 ? '' : 'bad'}">${offs(ic)}</td></tr>`).join('')}</table>
-    ${past ? '' : `<div class="acts" style="margin-top:14px"><button class="btn btn-p" data-act="rsubmit">${saved ? 'Update roster' : 'Submit roster'}</button></div>`}
+    ${past ? '' : `<div class="acts" style="margin-top:14px"><button class="btn btn-p" data-act="rsubmit">${saved ? 'Update' : 'Submit'} roster for week of ${fmtDay(w).replace(/^\w+,?\s*/, '')}</button></div>`}
     <p class="note" style="margin-top:12px">Due every Monday. Reminders go out at 12:20 AM and every 3 hours until it’s in; your BM is told at 7:00 AM if it’s still missing. Tonight’s floor is checked against this roster 1 hour 30 minutes after the rostered start.</p></div></section>`;
 }
 function rosterTemplate(t, w) {
@@ -1711,7 +1714,7 @@ document.addEventListener('click', ev => {
   if (a === 'rcopy') { const t = TL(meId()), w = S.rw, prev = (DB.roster[t.id] || {})[addDays(w, -7)], { plan } = rosterOf(t.id, w);
     if (!prev) return toast('No roster last week to copy.');
     icsOf(t.id).forEach(ic => { plan[ic.id] = {}; wdays(w).forEach((k, i) => plan[ic.id][k] = (prev.plan[ic.id] || {})[addDays(w, i - 7)] || ''); }); render(); toast('Copied last week. Adjust anything that changed, then submit.'); }
-  if (a === 'rsubmit') { const t = TL(meId()), w = S.rw, { plan } = rosterOf(t.id, w), L = icsOf(t.id), days = wdays(w);
+  if (a === 'rsubmit') { const t = TL(meId()), w = S.rw, { plan } = rosterOf(t.id, w), L = icsOf(t.id), days = wdays(w); if (!rosterPastOk(w)) return;
     const empty = L.filter(ic => days.some(k => !(plan[ic.id] || {})[k])), noOff = L.filter(ic => !days.some(k => plan[ic.id][k] === 'off'));
     if (empty.length) return toast(`Fill every day for ${empty.map(x => first(x.name)).slice(0, 3).join(', ')}${empty.length > 3 ? '…' : ''}.`);
     if (noOff.length) return toast(`Give ${noOff.map(x => first(x.name)).slice(0, 3).join(', ')} a week off.`);
@@ -1952,10 +1955,10 @@ if (IS_LIVE) document.addEventListener('click', async ev => {
       return done(await tapi('team.mark', { email: P(el.dataset.id).email, k: el.dataset.k, status: ex ? 'excused' : v, why: ex ? v.slice(3) : '', reason: ($('xn') || {}).value || '' }), 'Saved.'); }
     case 'resetDev': { stop(); const who = P(el.dataset.id); if (!confirm(`Reset the attendance laptop for ${who.name}? The next laptop they clock in from becomes their attendance laptop.`)) return;
       return done(await tapi('team.resetDevice', { email: who.email }), `Laptop reset for ${who.name}. The next laptop they clock in from is registered.`, false); }
-    case 'rsubmit': { stop(); const t = TL(meId()), w = S.rw, { plan } = rosterOf(t.id, w), out = {};
+    case 'rsubmit': { stop(); const t = TL(meId()), w = S.rw, { plan } = rosterOf(t.id, w), out = {}; if (!rosterPastOk(w)) return;
       icsOf(t.id).forEach(ic => { out[ic.email] = {}; wdays(w).forEach(k => { const v = (plan[ic.id] || {})[k] || ''; out[ic.email][k] = v === 'off' ? 'OFF' : v === 'leave' ? 'LEAVE' : v; }); });
       const r = await tapi('team.roster', { week: w, plan: out, via: DB.rvia || 'grid' }); DB.rvia = null; if (r.ok) delete DB.rdraft[t.id + '|' + w];
-      return done(r, 'Roster submitted. Your BM and admins can see it now.', false); }
+      return done(r, `Roster saved for the week of ${fmtDay(w)}. Your BM and admins can see it now.`, false); }
     case 'psave': { stop(); const r = await tapi('team.people', { op: 'addSM', name: $('na').value, email: $('em').value, crm: $('cr').value, emp: $('ei').value, tl: TL($('tl').value).email, team: $('ty').value }); return done(r, 'SM added. Give them a week off in the roster.'); }
     case 'tsave': { stop(); const bm = role() === 'mgr' ? meId() : $('bm').value; return done(await tapi('team.people', { op: 'addTL', name: $('na').value, email: $('em').value, emp: $('ei').value, mgr: MGRS[bm].email }), 'Team lead added. They also get the Daily KRA.'); }
     case 'premok': stop(); return done(await tapi('team.people', { op: 'remove', email: P(el.dataset.id).email }), 'Made inactive. Their history is kept.');
