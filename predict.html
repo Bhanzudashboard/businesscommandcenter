@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Predictive Outlook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f7fa;--surface:#ffffff;--raised:#fbfcfe;--line:#dce5ed;--line2:#c6d4e0;
+  --ink:#0e1d2a;--mute:#57708a;--dim:#8fa4b8;
+  --accent:#1668b3;--accent-soft:#e8f1fa;--accent-line:#a8cbe9;
+  --pos:#0d7550;--pos-bg:#e4f3ec;--warn:#a4640f;--warn-bg:#fbeed8;--neg:#b8382a;--neg-bg:#fbe6e2;
+  --ctx:#c3ceda;--fc:#a8cbe9;
+  --shadow:0 1px 2px rgba(14,29,42,.05),0 8px 24px -16px rgba(14,29,42,.18);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --display:'Bricolage Grotesque','Inter',system-ui,sans-serif;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0b131b;--surface:#111b25;--raised:#15212d;--line:#223241;--line2:#2e4254;
+  --ink:#e4edf5;--mute:#93a8bb;--dim:#62788c;
+  --accent:#62a8e8;--accent-soft:#122a40;--accent-line:#285680;
+  --pos:#4cc395;--pos-bg:#0e2a20;--warn:#e2a654;--warn-bg:#2d2313;--neg:#ee7e70;--neg-bg:#341b18;
+  --ctx:#3a4d60;--fc:#285680;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0b131b;--surface:#111b25;--raised:#15212d;--line:#223241;--line2:#2e4254;
+  --ink:#e4edf5;--mute:#93a8bb;--dim:#62788c;
+  --accent:#62a8e8;--accent-soft:#122a40;--accent-line:#285680;
+  --pos:#4cc395;--pos-bg:#0e2a20;--warn:#e2a654;--warn-bg:#2d2313;--neg:#ee7e70;--neg-bg:#341b18;
+  --ctx:#3a4d60;--fc:#285680;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.top .brand{font-family:var(--display);font-weight:700;font-size:15px}
+.top .note{margin-left:auto}
+.note{color:var(--mute);font-size:12px}
+.mono{font-family:var(--mono)}
+h1{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.022em;line-height:1.15}
+h2{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+h3{font-size:13px;font-weight:600}
+.sub{color:var(--mute);margin-top:6px;max-width:820px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 11px;font:500 12.5px var(--body);cursor:pointer}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-top:16px}
+.ph{padding:16px 18px 6px}
+.ph .kick{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.pb{padding:8px 18px 18px}
+.hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--raised)}
+.tile .lab{font:600 11px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.tile .big{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.tile .rng{color:var(--mute);font-size:12.5px}
+.prog{position:relative;height:14px;border-radius:7px;background:var(--line);margin:24px 0 8px;overflow:visible}
+.prog .bk{position:absolute;left:0;top:0;bottom:0;border-radius:7px 0 0 7px;background:var(--accent)}
+.prog .fc{position:absolute;top:0;bottom:0;background:var(--fc)}
+.prog .rg{position:absolute;top:-3px;bottom:-3px;border:1.5px dashed var(--mute);border-radius:4px}
+.prog .tg{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink)}
+.prog .tg span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font:600 10.5px var(--mono);white-space:nowrap;color:var(--ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.kv{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;font-size:12.5px}
+.kv b{font-weight:600}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.warnc{color:var(--warn)}
+.ai{margin-top:14px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;padding:12px 14px}
+.ai .t{font-weight:600}
+.ai ul{margin:6px 0 0 18px}
+.warns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.w{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--raised);position:relative}
+.w .sev{display:inline-flex;align-items:center;gap:5px;font:600 10.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;border-radius:6px;padding:1px 7px}
+.sev.high{background:var(--neg-bg);color:var(--neg)}.sev.med{background:var(--warn-bg);color:var(--warn)}.sev.info{background:var(--accent-soft);color:var(--accent)}
+.w .area{font:500 11px var(--mono);color:var(--dim);margin-left:6px}
+.w .tt{font-weight:600;margin-top:6px}
+.w .ev{color:var(--mute);font-size:12.5px;margin-top:3px}
+.w .fix{margin-top:8px;font-size:12.5px;padding-top:8px;border-top:1px dashed var(--line2)}
+.w .fix b{font-weight:600}
+.w .own{font-size:11.5px;color:var(--dim);margin-top:6px}
+svg{display:block;max-width:100%;overflow:visible}
+svg text{font-family:var(--body);fill:var(--mute);font-size:11px}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;font:600 11px var(--mono);letter-spacing:.03em;text-transform:uppercase;color:var(--dim);padding:7px 8px;border-bottom:1px solid var(--line2);white-space:nowrap;cursor:pointer;user-select:none}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr.me td{background:var(--accent-soft)}
+.tbl tr.sub td{font-size:12px;color:var(--mute);background:var(--raised)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.bar{position:relative;height:10px;border-radius:5px;background:var(--line);min-width:120px}
+.bar .f{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.bar .t{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.pill{display:inline-block;font:600 11px var(--mono);border-radius:6px;padding:1px 7px}
+.pill.g{background:var(--pos-bg);color:var(--pos)}.pill.a{background:var(--warn-bg);color:var(--warn)}.pill.r{background:var(--neg-bg);color:var(--neg)}.pill.x{background:var(--line);color:var(--mute)}
+.why{display:flex;gap:4px;flex-wrap:wrap}
+.why span{font-size:11px;border:1px solid var(--line2);border-radius:6px;padding:0 6px;color:var(--mute);white-space:nowrap}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+select,input[type=range]{font:13px var(--body);color:var(--ink)}
+select{border:1px solid var(--line2);border-radius:8px;padding:5px 8px;background:var(--surface)}
+.btn{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:5px 11px;font:500 12.5px var(--body);color:var(--ink);cursor:pointer}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.grid2>*,.hero>*,.warns>*{min-width:0}
+.tbl td.mono .note{font-family:var(--body)}
+.tbl.mk td{white-space:nowrap}
+.sl{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:10px 0}
+.sl output{font:600 13px var(--mono);text-align:right}
+.res{font-family:var(--display);font-size:22px;font-weight:700}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12px;border-radius:8px;padding:6px 9px;z-index:50;display:none;max-width:260px;line-height:1.4}
+.gate{max-width:420px;margin:12vh auto;text-align:center}
+.gate p{color:var(--mute);margin:10px 0 18px}
+#gbtn{display:inline-block}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:12.5px;color:var(--accent)}
+.method p{margin-top:8px;color:var(--mute);max-width:860px}
+.empty{padding:18px;border:1px dashed var(--line2);border-radius:12px;color:var(--mute)}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:4px 10px;font:500 12px var(--body);color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--paper)}
+@media (max-width:780px){.hero,.warns,.grid2{grid-template-columns:minmax(0,1fr)}h1{font-size:21px}.tile .big{font-size:25px}.sl{grid-template-columns:110px 1fr 60px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="note" style="padding:40px 0;text-align:center">Loading…</p></div>
+<div class="tip" id="tip"></div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   PREDICTIVE OUTLOOK — reads the daily forecast built by predictBuild()
+   in the Daily KRA script. Sign-in is the same as the Team portal.
+   ═══════════════════════════════════════════════════════════════════ */
+const LIVE = { ENDPOINT: '', CLIENT_ID: '' };   // blank = borrowed from kra.html on the same site
+if (!LIVE.ENDPOINT && /^https?:$/.test(location.protocol)) {
+  try { const x = new XMLHttpRequest(); x.open('GET', 'kra.html?k=' + Date.now(), false); x.send();
+    if (x.status === 200) { const ep = /ENDPOINT:\s*'([^']+)'/.exec(x.responseText), ci = /CLIENT_ID:\s*'([^']+)'/.exec(x.responseText);
+      if (ep && /\/exec\s*$/.test(ep[1])) LIVE.ENDPOINT = ep[1].trim(); if (ci) LIVE.CLIENT_ID = ci[1].trim(); } } catch (e) { }
+}
+const $ = id => document.getElementById(id);
+const store = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }, del: k => { try { localStorage.removeItem(k); } catch (e) { } } };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let SESSION = store.get('team.session'), D = null, NOTES = null, ME = null;
+const S = { mk: 'rp', leadMkt: 'all', bm: 'floor', metric: 'rp', leadTl: 'all', leadTeam: 'all', leadMin: 0, leadSort: 'pm', leadN: 40, tlSort: 'gap', dem: 0, dc: 0, open: {} };
+
+async function api(action, payload = {}) {
+  try { const r = await fetch(LIVE.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, session: SESSION, ...payload }) });
+    return await r.json(); } catch (e) { return { ok: false, message: 'Couldn’t reach the server. Check your connection and try again.' }; }
+}
+async function boot() {
+  if (window.__PRED) { D = window.__PRED.data; NOTES = window.__PRED.notes; ME = window.__PRED.me; return start(); }   // local preview
+  if (!LIVE.ENDPOINT) return gate('This page needs the web app link. Open it from the Business Command Centre site.');
+  if (!SESSION) return gate();
+  const r = await api('team.predict');
+  if (r.auth === false) { store.del('team.session'); SESSION = null; return gate(); }
+  if (!r.ok) return gate(r.message);
+  D = r.data; NOTES = r.notes; ME = r.me; start();
+}
+function gate(msg) {
+  $('app').innerHTML = `<div class="gate"><h1>Predictive outlook</h1><p>${esc(msg || 'Sign in with your expinfi.com account. This page is for the Super admin and BMs.')}</p><div id="gbtn"></div></div>`;
+  if (!LIVE.CLIENT_ID) return;
+  const go = () => { google.accounts.id.initialize({ client_id: LIVE.CLIENT_ID, hd: 'expinfi.com', auto_select: true, callback: async c => {
+      $('gbtn').innerHTML = '<p class="note">Signing you in…</p>'; const r = await api('team.predictLogin', { idToken: c.credential });
+      if (!r.ok) return gate(r.message); SESSION = r.session; store.set('team.session', SESSION); D = r.data; NOTES = r.notes; ME = r.me; start(); } });
+    google.accounts.id.renderButton($('gbtn'), { theme: 'filled_blue', size: 'large', shape: 'pill' }); };
+  if (window.google && google.accounts) go(); else { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = go; document.head.appendChild(s); }
+}
+
+/* ── formatting ── */
+const u0 = x => Math.round(Number(x) || 0).toLocaleString('en-IN');
+const L = x => { x = Number(x) || 0; return x >= 1e7 ? '₹' + (x / 1e7).toFixed(2) + ' Cr' : '₹' + (x / 1e5).toFixed(1) + ' L'; };
+const K = x => '₹' + Math.round((Number(x) || 0) / 1000).toLocaleString('en-IN') + 'k';
+const pct = x => x == null ? '—' : Math.round(x * 100) + '%';
+const fmt = (m, x) => m === 'otp' ? L(x) : m === 'dem' ? u0(x) : u0(x);
+const unit = m => m === 'otp' ? '' : m === 'dem' ? ' demos' : ' RP units';
+const day = k => new Date(k + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+const mon = m => new Date(m + '-15T00:00:00Z').toLocaleDateString('en-GB', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+const nameOf = e => { const p = (D.people || []).find(x => x.e === e); return p ? p.n : e; };
+const hitPill = p => p == null ? '<span class="pill x">no target</span>' : `<span class="pill ${p >= .6 ? 'g' : p >= .3 ? 'a' : 'r'}">${Math.round(p * 100)}%</span>`;
+
+function start() {
+  if (ME && ME.role === 'mgr' && S.bm === 'floor' && !S._init) { S.bm = ME.email; }
+  S._init = true; render();
+}
+/* the slice the viewer has picked: the floor or one BM */
+function scope() {
+  if (S.bm === 'floor') return { name: 'The floor', rp: D.floor.rp, otp: D.floor.otp, tls: D.tls, sms: D.sms, leads: D.leads, warn: D.warnings };
+  const b = D.bms.find(x => x.id === S.bm) || {}, tls = D.tls.filter(t => t.bm === S.bm), ids = tls.map(t => t.id);
+  const mk = f => ({ mtd: b[f].mtd, fc: b[f].fc, lo: b[f].fc - (D.floor[f].fc - D.floor[f].lo) * (b[f].fc / Math.max(1, D.floor[f].fc)), hi: b[f].fc + (D.floor[f].hi - D.floor[f].fc) * (b[f].fc / Math.max(1, D.floor[f].fc)),
+    target: b[f].target, needPerNight: b[f].needPerNight, perNightFc: b[f].perNight, pHit: b[f].pHit });
+  return { name: b.n || 'BM', rp: mk('rp'), otp: mk('otp'), tls, sms: D.sms.filter(s => s.bm === S.bm), leads: D.leads.filter(l => l.bm === S.bm || ids.includes(l.tl)), warn: D.warnings.filter(w => !w.owner || w.owner === S.bm), b };
+}
+
+/* ── the page ── */
+function render() {
+  const sc = scope(), r = sc.rp, o = sc.otp, gapR = r.target ? r.fc - r.target : null;
+  const head = r.target ? (gapR >= 0 ? `At this pace ${sc.name === 'The floor' ? 'the floor' : sc.name + '’s teams'} land${sc.name === 'The floor' ? 's' : ''} ${u0(r.fc)} RP units, ${u0(gapR)} above target`
+    : `At this pace ${sc.name === 'The floor' ? 'the floor' : sc.name + '’s teams'} land${sc.name === 'The floor' ? 's' : ''} ${u0(r.fc)} RP units, ${u0(-gapR)} short of ${u0(r.target)}`) : `At this pace ${sc.name} lands ${u0(r.fc)} RP units this month`;
+  const subH = `${D.nightsLeft} nights left in ${D.monthName}. Booked so far: ${u0(r.mtd)} RP and ${L(o.mtd)} OTP. ` + (r.target && r.needPerNight > r.perNightFc ? `Reaching target needs ${r.needPerNight.toFixed(1)} RP a night; the forecast rate is ${r.perNightFc.toFixed(1)}.` : r.target ? `The forecast rate of ${r.perNightFc.toFixed(1)} RP a night is enough for target.` : '');
+  const bmChips = [['floor', 'Floor']].concat(D.bms.map(b => [b.id, b.n])).map(([v, l]) => `<button class="chip${S.bm === v ? ' on' : ''}" data-bm="${esc(v)}">${esc(l)}</button>`).join('');
+  $('app').innerHTML = `
+  <div class="top"><span class="brand">Predictive outlook</span><div class="chips">${bmChips}</div><span class="note">Forecast as of the night of ${day(D.asOf)} · updated daily at 7:30 PM</span></div>
+  <h1>${esc(head)}</h1><p class="sub">${esc(subH)}</p>
+  <div class="hero">${tile('RP units', 'rp', r)}${tile('OTP revenue', 'otp', o)}</div>
+  ${aiBlock()}
+  <section class="panel"><div class="ph"><div class="kick">Outlook by market</div><h2>${esc(mktTitle())}</h2><p class="sub">US and Canada, each split by Indian and Non-Indian families. Forecast month-end against last month in full; the tick on each bar is last month. Hot leads are open demos with a 30%+ chance this month.</p></div>
+    <div class="pb"><div class="filters"><div class="seg">${[['rp', 'RP units'], ['otp', 'OTP ₹']].map(([m, l]) => `<button class="${S.mk === m ? 'on' : ''}" data-mk="${m}">${l}</button>`).join('')}</div></div><div id="mkts" style="display:grid;grid-template-columns:minmax(0,1fr);gap:20px"></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Funnel leakage by market</div><h2 id="fh"></h2><p class="sub">Lead → demo done → sale for each market, this month so far against last month. “Leaks most” compares each market with the floor. Whole floor; leads aren’t assigned to a BM until the demo.</p></div>
+    <div class="pb"><div class="tw" id="funt"></div><div style="margin-top:16px"><div class="filters"><h3 style="margin-right:6px">Why leads never reached a demo</h3><select id="fmk" aria-label="Market"></select><span class="note">Leads from 3 to 40 days ago with no demo yet, by CRM stage</span></div><div id="lost"></div></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Lead source return</div><h2 id="sh"></h2><p class="sub">What a lead from each source (UTM) turns into: demos and sales per 100 leads and revenue per lead, this month against last. Ad spend isn’t recorded by source, so this is return per lead, not per rupee spent.</p></div>
+    <div class="pb tw" id="srct"></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Problems before they happen</div><h2>${warnTitle(sc.warn)}</h2><p class="sub">Each check looks at a leading signal (leads, demos, DC2E, attendance, hot leads waiting). The suggested fix is a starting point for the TL or BM.</p></div>
+    <div class="pb">${sc.warn.length ? `<div class="warns">${sc.warn.map(warnCard).join('')}</div>` : '<div class="empty">Nothing to flag for this view.</div>'}</div></section>
+  <section class="panel"><div class="ph"><div class="kick">Unusual nights</div><h2 id="uh"></h2><p class="sub">Last night, and the last three nights together, against what is normal for those weekdays: for the floor, each market and each team lead. Flagged only when it is well outside the usual night-to-night swing.</p></div>
+    <div class="pb" id="unl"></div></section>
+  <section class="panel"><div class="ph"><div class="kick">The month, night by night</div><h2 id="nh"></h2><p class="sub">Solid bars are booked nights; light bars are the forecast for each night left, from the floor’s recent rate and its weekly rhythm.</p></div>
+    <div class="pb"><div class="filters"><div class="seg">${[['rp', 'RP units'], ['otp', 'OTP ₹'], ['dem', 'Demos']].map(([m, l]) => `<button class="${S.metric === m ? 'on' : ''}" data-metric="${m}">${l}</button>`).join('')}</div><span class="note">Whole floor</span></div><div id="nchart"></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Booked</span><span><i style="background:var(--fc)"></i>Forecast</span><span><i style="background:var(--ink);width:12px;height:2px"></i>Nightly need for target</span></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Future sales performance</div><h2>${tlTitle(sc.tls)}</h2><p class="sub">Forecast month-end against target for each team lead, with the chance of reaching it. Tap a team to see its people; the line on each bar is the target.</p></div>
+    <div class="pb tw">${tlTable(sc)}</div></section>
+  <section class="panel"><div class="ph"><div class="kick">SM capacity</div><h2 id="ch"></h2><p class="sub">Each demo is followed for 14 days to see if it bought, then grouped by how many demos that SM took that night (demos from 2 to 10 weeks ago). Below: who has room for more demos and who converts less when loaded.</p></div>
+    <div class="pb grid2"><div id="capc"></div><div class="tw" id="capt"></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Customers likely to buy</div><h2>${leadTitle(sc.leads)}</h2><p class="sub">Every demo from the last 30 nights with no sale yet and not closed or lost in the CRM, scored by how leads like it have bought in the past. The chance falls each night after the demo, so the top of this list is tonight’s call list.</p></div>
+    <div class="pb">${leadFilters(sc)}<div class="tw" id="leadt"></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">Next month</div><h2 id="mh"></h2><p class="sub">Past months as booked, this month as forecast, next month projected from current lead flow, lead-to-demo rate and what each demo has been worth over the last three months.</p></div>
+    <div class="pb grid2"><div id="mchart"></div><div id="mnext"></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">What would it take</div><h2>Move the two levers to see the month-end</h2><p class="sub">More demos a night, or a better DC2E, for the ${D.nightsLeft} nights left. Applied to the forecast for ${esc(sc.name === 'The floor' ? 'the whole floor' : sc.name + '’s teams')}.</p></div>
+    <div class="pb grid2"><div><div class="sl"><label for="sdem">Demos a night</label><input type="range" id="sdem" min="-20" max="40" step="5" value="${S.dem}"><output id="odem"></output></div>
+      <div class="sl"><label for="sdc">DC2E change</label><input type="range" id="sdc" min="-5" max="10" step="1" value="${S.dc}"><output id="odc"></output></div></div><div id="what"></div></div></section>
+  <section class="panel"><div class="ph"><div class="kick">What drives a sale</div><h2 id="dh"></h2><p class="sub">From every demo in the last ~6 months: how 30-day conversion changes with what is known about the lead, against the floor average of ${D.floor.pipeline.p0}%.</p></div>
+    <div class="pb grid2"><div id="lifts"></div><div><h3>The chance fades after the demo</h3><p class="note">Of leads still open on each night after the demo, the share who buy that night.</p><div id="lagc"></div>
+      <h3 style="margin-top:16px">How well the score matches what happened</h3><p class="note">Past leads grouped by the chance the score gave them (without the CRM stage), and how many actually bought within 30 days.</p><div class="tw" id="calt"></div></div></div></section>
+  <section class="panel method"><div class="ph"><div class="kick">How this is worked out</div><h2>Method and limits</h2></div><div class="pb">${methodText()}</div></section>`;
+  bind(); drawMkts(); drawUnusual(); drawFunnel(); drawSources(); drawCap(); drawNights(); drawMonths(); drawLeads(); drawWhat(); drawLifts(); drawLag(); drawCalib();
+}
+const mkts = () => (D.markets || {})[S.bm === 'floor' ? 'floor' : S.bm] || [];
+const chg = (a, b) => b ? (a - b) / b : null;
+const chgTxt = (a, b) => { const c = chg(a, b); return c == null ? '—' : `<span class="${c >= 0 ? 'pos' : 'neg'}">${c >= 0 ? '▲' : '▼'} ${Math.abs(Math.round(c * 100))}%</span>`; };
+function mktTitle() {
+  const R = mkts().filter(r => r.c !== 'Other' && r.e !== 'All' && r.rp.last > 5); if (!R.length) return 'Outlook by market';
+  const w = R.map(r => ({ r, c: chg(r.rp.fc, r.rp.last) })).sort((a, b) => a.c - b.c), lo = w[0], hi = w[w.length - 1];
+  return lo.c < 0 ? `${lo.r.c} ${lo.r.e} is heading ${Math.abs(Math.round(lo.c * 100))}% below last month on RP; ${hi.r.c} ${hi.r.e} ${hi.c >= 0 ? 'is up ' + Math.round(hi.c * 100) + '%' : 'holds best'}`
+    : `Every market is level with or ahead of last month; ${hi.r.c} ${hi.r.e} leads at +${Math.round(hi.c * 100)}%`;
+}
+function drawMkts() {
+  const m = S.mk, R = mkts(), box = $('mkts'); if (!R.length) { box.innerHTML = '<div class="empty">No market data in this view.</div>'; return; }
+  const card = c => { const rows = R.filter(r => r.c === c); if (!rows.length) return ''; const all = rows.find(r => r.e === 'All'), parts = rows.filter(r => r.e !== 'All');
+    const max = Math.max(...rows.map(r => Math.max(r[m].hi || 0, r[m].last || 0))) * 1.08 || 1;
+    const line = (r, top) => `<tr${top ? ' style="font-weight:600"' : ''}><td>${top ? (c === 'US' ? 'United States' : c === 'CA' ? 'Canada' : 'Other') : esc(r.e)}</td>
+      <td class="n">${fmt(m, r[m].fc)}<div class="note">${fmt(m, r[m].lo)}–${fmt(m, r[m].hi)}</div></td>
+      <td style="min-width:110px"><div class="bar" title="Forecast ${fmt(m, r[m].fc)}, last month ${fmt(m, r[m].last)}"><div class="f" style="width:${r[m].fc / max * 100}%;background:${top ? 'var(--accent)' : 'var(--fc)'}"></div>${r[m].last ? `<div class="t" style="left:${r[m].last / max * 100}%"></div>` : ''}</div></td>
+      <td class="n">${chgTxt(r[m].fc, r[m].last)}</td><td class="n">${u0(r.dem.fc)}</td><td class="n">${r.dc2e != null ? r.dc2e + '%' : '—'}<div class="note">${r.dc2eLast != null ? 'last ' + r.dc2eLast + '%' : ''}</div></td>
+      <td class="n">${r.pipe.hot}<div class="note">${m === 'otp' ? K(r.pipe.otp) : r.pipe.rp + ' RP'}</div></td></tr>`;
+    return `<div><h3>${c === 'US' ? 'United States' : c === 'CA' ? 'Canada' : 'Other countries'}</h3><p class="note">Booked so far ${fmt(m, all[m].mtd)}${unit(m)}; same point last month ${fmt(m, all[m].lastSame)} (${chgTxt(all[m].mtd, all[m].lastSame)}).</p>
+      <div class="tw"><table class="tbl mk" style="margin-top:6px"><tr><th></th><th class="n">Forecast</th><th>vs last month</th><th class="n">Change</th><th class="n">Demos</th><th class="n">DC2E</th><th class="n">Hot leads</th></tr>${line(all, true)}${parts.map(r => line(r)).join('')}</table></div></div>`; };
+  box.innerHTML = card('US') + card('CA') + (R.some(r => r.c === 'Other' && (r.rp.fc + r.otp.fc) > 0) ? card('Other') : '');
+}
+function spark(a, dir) { const W = 120, H = 28, mx = Math.max(...a, 1), x = i => i / (a.length - 1) * W, y = v => H - 2 - v / mx * (H - 4);
+  return `<svg width="${W}" height="${H}" aria-hidden="true"><path d="${a.map((v, i) => (i ? 'L' : 'M') + x(i) + ' ' + y(v)).join(' ')}" fill="none" stroke="var(--ctx)" stroke-width="2"/><circle cx="${x(a.length - 1)}" cy="${y(a[a.length - 1])}" r="4" fill="${dir === 'down' ? 'var(--neg)' : 'var(--pos)'}" stroke="var(--surface)" stroke-width="2"/></svg>`; }
+function drawUnusual() {
+  const U = (D.unusual || []).filter(x => S.bm === 'floor' || !x.id || x.bm === S.bm);
+  $('uh').textContent = U.length ? `${U.length} unusual ${U.length === 1 ? 'result' : 'results'} in the last three nights` + (U[0] ? `; the biggest: ${U[0].who} ${U[0].metric} ${U[0].pct}%` : '') : 'Last night looked normal';
+  $('unl').innerHTML = U.length ? `<div class="tw"><table class="tbl"><tr><th>Who</th><th>What</th><th>When</th><th class="n">Actual</th><th class="n">Usual</th><th class="n">Change</th><th>Last 14 nights</th><th>Note</th></tr>${U.slice(0, 20).map(x => `<tr><td><b>${esc(x.who)}</b></td><td>${esc(x.metric)}</td><td>${esc(x.span)}</td><td class="n">${x.actual}</td><td class="n">${x.expected}</td><td class="n"><span class="${x.dir === 'down' ? 'neg' : 'pos'}">${x.pct > 0 ? '+' : ''}${x.pct}%</span></td><td>${spark(x.spark, x.dir)}</td><td class="note">${esc(x.note)}</td></tr>`).join('')}</table></div>` : '<div class="empty">Nothing outside the normal range.</div>';
+}
+const mkName = r => r.c === 'Floor' ? 'Floor' : (r.c === 'US' ? 'US' : r.c === 'CA' ? 'Canada' : 'Other') + (r.e === 'All' ? '' : ' · ' + r.e);
+function drawFunnel() {
+  const F = (D.funnel || []).filter(r => r.mtd && r.c !== 'Other'), box = $('funt'); if (!F.length) { box.innerHTML = '<div class="empty">No funnel data yet.</div>'; $('fh').textContent = 'Funnel leakage by market'; return; }
+  const segs = F.filter(r => r.e !== 'All' && r.leak && r.mtd.leads >= 50).sort((a, b) => a.leak.vs - b.leak.vs), w = segs[0];
+  $('fh').textContent = w && w.leak.vs < 0 ? `${mkName(w)} leaks most at ${w.leak.stage.toLowerCase()}: ${Math.abs(w.leak.vs)}% below the floor` : 'No market is leaking much more than the floor';
+  const d = (a, b) => a == null || b == null ? '' : `<div class="note">${a >= b ? '▲' : '▼'} last ${b}%</div>`;
+  box.innerHTML = `<table class="tbl mk"><tr><th>Market</th><th class="n">Leads</th><th class="n">Lead → demo</th><th class="n">Demos</th><th class="n">Demo → sale</th><th class="n">Sales (units)</th><th class="n">Lead → sale</th><th>Leaks most</th></tr>
+    ${F.map(r => { const m = r.mtd, l = r.last || {}; return `<tr${r.e === 'All' ? ' style="font-weight:600"' : ''}><td>${esc(mkName(r))}</td><td class="n">${u0(m.leads)}</td><td class="n">${m.l2d ?? '—'}%${d(m.l2d, l.l2d)}</td><td class="n">${u0(m.demos)}</td><td class="n">${m.d2s ?? '—'}%${d(m.d2s, l.d2s)}</td><td class="n">${m.units}</td><td class="n">${m.l2s ?? '—'}%${d(m.l2s, l.l2s)}</td>
+      <td>${r.leak ? `<span class="${r.leak.vs < -5 ? 'neg' : r.leak.vs > 5 ? 'pos' : ''}">${esc(r.leak.stage)} ${r.leak.vs > 0 ? '+' : ''}${r.leak.vs}%</span>` : '<span class="note">—</span>'}</td></tr>`; }).join('')}</table>`;
+  const sel = $('fmk'); if (!sel.options.length) { sel.innerHTML = F.filter(r => r.lost).map((r, i) => `<option value="${i}">${esc(mkName(r))}</option>`).join(''); sel.onchange = drawLost; }
+  drawLost();
+}
+function drawLost() {
+  const F = (D.funnel || []).filter(r => r.mtd && r.c !== 'Other' && r.lost), r = F[+$('fmk').value || 0]; if (!r) { $('lost').innerHTML = ''; return; }
+  const mx = Math.max(...r.lost.top.map(t => t.pct), 1);
+  $('lost').innerHTML = `<p class="note">${u0(r.lost.n)} leads with no demo.</p>` + r.lost.top.map(t => `<div style="display:grid;grid-template-columns:minmax(120px,220px) 1fr 80px;gap:8px;align-items:center;margin:5px 0;font-size:12.5px"><span>${esc(t.st)}</span><div class="bar"><div class="f" style="width:${t.pct / mx * 100}%;background:${t === r.lost.top[0] ? 'var(--accent)' : 'var(--ctx)'}"></div></div><span class="mono" style="text-align:right">${t.pct}% <span class="note">${u0(t.n)}</span></span></div>`).join('');
+}
+function drawSources() {
+  const R = (D.sources || {}).rows || [], box = $('srct'); if (!R.length) { box.innerHTML = '<div class="empty">No source data yet.</div>'; $('sh').textContent = 'Lead source return'; return; }
+  const ok = R.filter(r => r.mtd && r.mtd.leads >= 100).sort((a, b) => b.mtd.perLead - a.mtd.perLead), fpl = D.sources.floorPerLead;
+  $('sh').textContent = ok.length >= 2 ? `A ${ok[0].u} lead is worth ₹${u0(ok[0].mtd.perLead)}, ${(ok[0].mtd.perLead / Math.max(1, ok[ok.length - 1].mtd.perLead)).toFixed(1)}× a ${ok[ok.length - 1].u} lead` : 'Lead source return';
+  const ar = (a, b) => a == null || b == null ? '' : ` <span class="${a >= b ? 'pos' : 'neg'}">${a >= b ? '▲' : '▼'}</span>`;
+  box.innerHTML = `<table class="tbl mk"><tr><th>Source</th><th class="n">Leads</th><th>Share of leads vs revenue</th><th class="n">Demos / 100 leads</th><th class="n">DC2E</th><th class="n">Sales / 100 leads</th><th class="n">₹ per lead</th><th class="n">Last month ₹ per lead</th></tr>
+    ${R.map(r => { const m = r.mtd || {}, l = r.last || {}; return `<tr><td><b>${esc(r.u)}</b></td><td class="n">${m.leads != null ? u0(m.leads) : '—'}</td>
+      <td style="min-width:150px">${m.shareLeads != null ? `<div class="bar" style="height:6px" title="${m.shareLeads}% of leads"><div class="f" style="width:${Math.min(100, m.shareLeads * 2)}%;background:var(--ctx)"></div></div><div class="bar" style="height:6px;margin-top:3px" title="${m.shareRev}% of revenue"><div class="f" style="width:${Math.min(100, (m.shareRev || 0) * 2)}%;background:${(m.shareRev || 0) >= m.shareLeads ? 'var(--accent)' : 'var(--neg)'}"></div></div><div class="note">${m.shareLeads}% of leads · ${m.shareRev ?? 0}% of revenue</div>` : ''}</td>
+      <td class="n">${m.d100 ?? '—'}${ar(m.d100, l.d100)}</td><td class="n">${m.dc2e != null ? m.dc2e + '%' : '—'}${ar(m.dc2e, l.dc2e)}</td><td class="n">${m.u100 ?? '—'}${ar(m.u100, l.u100)}</td>
+      <td class="n"><b class="${m.perLead != null && fpl ? (m.perLead >= fpl ? 'pos' : 'neg') : ''}">${m.perLead != null ? '₹' + u0(m.perLead) : '—'}</b></td><td class="n">${l.perLead != null ? '₹' + u0(l.perLead) : '—'}</td></tr>`; }).join('')}</table>
+    <p class="note" style="margin-top:8px">Floor average this month: ${fpl ? '₹' + u0(fpl) : '—'} per lead, ${D.sources.floorU100 ?? '—'} sales per 100 leads. Sources with fewer than 30 leads this month are left out.</p>`;
+}
+function drawCap() {
+  const C = D.capacity || {}, cv = C.curve || [], box = $('capc');
+  if (!cv.length) { box.innerHTML = '<div class="empty">Not enough history yet.</div>'; $('ch').textContent = 'SM capacity'; $('capt').innerHTML = ''; return; }
+  const best = cv.reduce((a, c) => c.conv > a.conv ? c : a, cv[0]);
+  $('ch').textContent = C.knee ? `Conversion drops once an SM takes ${C.knee} demos in a night; it peaks at ${best.dem} (${best.conv}%)` : `Conversion holds steady up to ${cv[cv.length - 1].dem} demos a night: there is room to give SMs more`;
+  const W = box.clientWidth || 480, Hh = 200, pl = 34, pb = 34, pt = 18, iw = W - pl - 8, ih = Hh - pb - pt, mx = Math.max(...cv.map(c => c.conv)) * 1.15, bw = iw / cv.length, y = v => pt + ih - v / mx * ih;
+  box.innerHTML = `<h3>14-day conversion by demos that night</h3><svg width="${W}" height="${Hh}" role="img" aria-label="Conversion by demos per night">${cv.map((c, i) => { const x = pl + i * bw + bw * .2, w = bw * .6, hot = C.knee && cv.findIndex(z => z.dem === C.knee) <= i;
+    return `<rect x="${x}" y="${y(c.conv)}" width="${w}" height="${pt + ih - y(c.conv)}" rx="4" fill="${hot ? 'var(--neg)' : c === best ? 'var(--accent)' : 'var(--ctx)'}"/><text x="${x + w / 2}" y="${y(c.conv) - 5}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${c.conv}%</text><text x="${x + w / 2}" y="${Hh - 18}" text-anchor="middle">${c.dem}</text><text x="${x + w / 2}" y="${Hh - 4}" text-anchor="middle" style="font-size:10px">${u0(c.nights)} nights</text>`; }).join('')}</svg>
+    <p class="note">Median SM takes ${C.median} demos a night (last 4 weeks). Floor 14-day conversion: ${C.floorConv}%.</p>`;
+  const P = (C.people || []).filter(p => S.bm === 'floor' || p.bm === S.bm), room = P.filter(p => p.tag === 'room').sort((a, b) => b.conv - a.conv), str = P.filter(p => p.tag === 'stretched' || p.tag === 'fades').sort((a, b) => a.conv - b.conv);
+  const tb = (L, lab) => L.length ? `<h3 style="margin-top:4px">${lab}</h3><table class="tbl" style="margin:6px 0 14px"><tr><th>SM</th><th>TL</th><th class="n">Demos / night</th><th class="n">Converts</th><th class="n">Light nights</th><th class="n">Heavy nights</th></tr>${L.slice(0, 8).map(p => `<tr><td>${esc(p.n)}</td><td class="note">${esc(nameOf(p.tl))}</td><td class="n">${p.load}</td><td class="n"><b>${p.conv}%</b></td><td class="n">${p.light != null ? p.light + '%' : '—'}</td><td class="n">${p.heavy != null ? p.heavy + '%' : '—'}</td></tr>`).join('')}</table>` : '';
+  $('capt').innerHTML = (tb(room, `Room for more demos (${room.length})`) + tb(str, `Converts less when loaded (${str.length})`)) || '<div class="empty">Everyone is close to the floor average.</div>';
+}
+function tile(lab, m, x) {
+  const max = Math.max(x.hi, x.target || 0) * 1.06 || 1, w = v => Math.max(0, Math.min(100, v / max * 100)), gap = x.target ? x.fc - x.target : null;
+  return `<div class="tile"><div class="lab">${lab}</div><div class="big">${fmt(m, x.fc)}</div><div class="rng">Likely range ${fmt(m, x.lo)} – ${fmt(m, x.hi)}${x.target ? ` · target ${fmt(m, x.target)}` : ''}</div>
+    <div class="prog" role="img" aria-label="${lab}: booked ${fmt(m, x.mtd)}, forecast ${fmt(m, x.fc)}${x.target ? ', target ' + fmt(m, x.target) : ''}"><div class="fc" style="left:${w(x.mtd)}%;width:${w(x.fc) - w(x.mtd)}%"></div><div class="bk" style="width:${w(x.mtd)}%"></div>
+      <div class="rg" style="left:${w(x.lo)}%;width:${Math.max(1, w(x.hi) - w(x.lo))}%"></div>${x.target ? `<div class="tg" style="left:${w(x.target)}%"><span>target</span></div>` : ''}</div>
+    <div class="kv"><span>Booked <b>${fmt(m, x.mtd)}</b></span><span>Forecast rest <b>${fmt(m, x.fc - x.mtd)}</b></span>${x.target ? `<span class="${gap >= 0 ? 'pos' : 'neg'}">${gap >= 0 ? 'Ahead by' : 'Short by'} <b>${fmt(m, Math.abs(gap))}</b></span>` : ''}${x.pHit != null && x.pHit !== undefined ? `<span>Chance of target ${hitPill(x.pHit)}</span>` : ''}</div></div>`;
+}
+function aiBlock() {
+  if (!NOTES || NOTES.asOf !== D.asOf) return `<div class="ai"><span class="t">AI read</span> <span class="note">· today’s written read isn’t in yet. It is added after the forecast runs each evening.</span></div>`;
+  const n = NOTES; return `<div class="ai"><div class="t">${esc(n.headline || 'AI read')}</div>${n.body ? `<p style="margin-top:4px">${esc(n.body)}</p>` : ''}${(n.actions || []).length ? `<ul>${n.actions.map(a => `<li><b>${esc(a.owner || '')}</b>${a.owner ? ': ' : ''}${esc(a.action)}${a.why ? ` <span class="note">(${esc(a.why)})</span>` : ''}</li>`).join('')}</ul>` : ''}</div>`;
+}
+const warnTitle = W => { const h = W.filter(w => w.sev === 'high').length; return h ? `${h} problem${h > 1 ? 's need' : ' needs'} action this week` : W.length ? `${W.length} thing${W.length > 1 ? 's' : ''} to watch` : 'Nothing urgent ahead'; };
+function warnCard(w) {
+  return `<div class="w"><span class="sev ${w.sev}">${w.sev === 'high' ? '▲ Act now' : w.sev === 'med' ? '● Watch' : 'ℹ Note'}</span><span class="area">${esc(w.area)}</span>
+    <div class="tt">${esc(w.title)}</div><div class="ev">${esc(w.evidence)}</div><div class="fix"><b>Fix:</b> ${esc(w.fix)}</div>${w.owner ? `<div class="own">Owner: ${esc(nameOf(w.owner))}</div>` : ''}</div>`;
+}
+const tlTitle = T => { const t = T.filter(x => x.rp.target > 0 || x.otp.target > 0), miss = t.filter(x => (x.rp.target > 0 ? x.rp.pHit : x.otp.pHit) < .3).length; return t.length ? `${t.length - miss} of ${t.length} team leads are on course; ${miss} need help` : 'No targets set this month'; };
+function tlTable(sc) {
+  const rows = sc.tls.slice().map(t => { const rp = t.rp.target > 0, x = rp ? t.rp : t.otp; return { t, rp, x, gap: x.target ? (x.fc - x.target) / x.target : 0 }; }).sort((a, b) => a.gap - b.gap);
+  if (!rows.length) return '<div class="empty">No team leads in this view.</div>';
+  return `<table class="tbl"><tr><th>Team lead</th><th>Type</th><th class="n">Booked</th><th class="n">Forecast</th><th class="n">Target</th><th>Forecast vs target</th><th class="n">Needs / night</th><th class="n">Doing / night</th><th class="n">Chance</th><th class="n">DC2E</th></tr>
+  ${rows.map(({ t, rp, x }) => { const m = rp ? 'rp' : 'otp', max = Math.max(x.fc, x.target || 0) * 1.1 || 1, open = S.open[t.id], col = x.pHit == null ? 'var(--ctx)' : x.pHit >= .6 ? 'var(--pos)' : x.pHit >= .3 ? 'var(--warn)' : 'var(--neg)';
+    const sm = open ? D.sms.filter(s => s.tl === t.id).sort((a, b) => (a.pct ?? 999) - (b.pct ?? 999)).map(s => { const y = s.type === 'OTP' ? s.otp : s.rp, mm = s.type === 'OTP' ? 'otp' : 'rp';
+      return `<tr class="sub"><td style="padding-left:22px">${esc(s.n)}</td><td>${esc(s.type || '')}</td><td class="n">${fmt(mm, y.mtd)}</td><td class="n">${fmt(mm, y.fc)}</td><td class="n">${y.target ? fmt(mm, y.target) : '—'}</td><td>${s.pct != null ? `<span class="${s.pct < 45 ? 'neg' : s.pct < 100 ? 'warnc' : 'pos'}">${s.pct}% of target</span>${s.pct < 45 ? ' · below warning line' : ''}` : '—'}</td><td class="n">${y.needPerNight ? (mm === 'otp' ? K(y.needPerNight) : y.needPerNight) : '—'}</td><td class="n">${mm === 'otp' ? K(y.perNight) : y.perNight}</td><td class="n">${hitPill(y.pHit)}</td><td class="n">${s.dc2e != null ? s.dc2e + '%' : '—'}</td></tr>`; }).join('') : '';
+    return `<tr class="${ME && ME.email === t.id ? 'me' : ''}" data-tl="${esc(t.id)}" style="cursor:pointer"><td><b>${open ? '▾' : '▸'} ${esc(t.n)}</b><div class="note">${esc(nameOf(t.bm))}</div></td><td>${rp ? 'RP' : 'OTP'}</td><td class="n">${fmt(m, x.mtd)}</td><td class="n"><b>${fmt(m, x.fc)}</b></td><td class="n">${x.target ? fmt(m, x.target) : '—'}</td>
+      <td><div class="bar" title="Forecast ${fmt(m, x.fc)} of ${fmt(m, x.target)}"><div class="f" style="width:${x.fc / max * 100}%;background:${col}"></div>${x.target ? `<div class="t" style="left:${x.target / max * 100}%"></div>` : ''}</div></td>
+      <td class="n">${x.needPerNight ? (m === 'otp' ? K(x.needPerNight) : x.needPerNight) : '—'}</td><td class="n">${m === 'otp' ? K(x.perNight) : x.perNight}</td><td class="n">${hitPill(x.pHit)}</td><td class="n">${t.dc2e != null ? t.dc2e + '%' : '—'}</td></tr>${sm}`; }).join('')}</table>`;
+}
+const leadTitle = Ls => { const hot = Ls.filter(l => l.pm >= .3), rp = hot.filter(l => l.team === 'RP').reduce((a, l) => a + l.pm, 0), otp = hot.filter(l => l.team === 'OTP').reduce((a, l) => a + l.ev, 0);
+  return hot.length ? `${hot.length} hot leads could bring about ${u0(rp)} RP units and ${L(otp)} OTP this month` : 'No hot leads right now'; };
+function leadFilters(sc) {
+  const tls = sc.tls.map(t => `<option value="${esc(t.id)}"${S.leadTl === t.id ? ' selected' : ''}>${esc(t.n)}</option>`).join('');
+  return `<div class="filters"><select id="ltl" aria-label="Team lead"><option value="all">All team leads</option>${tls}</select>
+    <select id="lteam" aria-label="Team"><option value="all">RP and OTP</option><option value="RP"${S.leadTeam === 'RP' ? ' selected' : ''}>RP</option><option value="OTP"${S.leadTeam === 'OTP' ? ' selected' : ''}>OTP</option></select>
+    <select id="lmkt" aria-label="Market"><option value="all">All markets</option>${['US|Indian', 'US|Non-Indian', 'CA|Indian', 'CA|Non-Indian'].map(v => `<option value="${v}"${S.leadMkt === v ? ' selected' : ''}>${v.replace('|', ' · ')}</option>`).join('')}</select>
+    <select id="lmin" aria-label="Minimum chance"><option value="0">Any chance</option>${[.2, .3, .5].map(v => `<option value="${v}"${S.leadMin == v ? ' selected' : ''}>${v * 100}%+ this month</option>`).join('')}</select>
+    <button class="btn" id="lcsv">Download list</button><span class="note" id="lcount"></span></div>`;
+}
+const mktOf = l => { const c = String(l.ctry || '').toUpperCase(); return (c === 'US' || c === 'CA' ? c : 'Other') + '|' + (l.eth === 'Indian' ? 'Indian' : l.eth === 'Unknown' ? 'Unknown' : 'Non-Indian'); };
+function leadRows() { const sc = scope(); return sc.leads.filter(l => (S.leadMkt === 'all' || mktOf(l) === S.leadMkt) && (S.leadTl === 'all' || l.tl === S.leadTl) && (S.leadTeam === 'all' || l.team === S.leadTeam) && l.pm >= S.leadMin)
+  .sort((a, b) => S.leadSort === 'age' ? a.age - b.age : S.leadSort === 'ev' ? (b.team === 'RP' ? b.pm * D.floor.ticket : b.ev) - (a.team === 'RP' ? a.pm * D.floor.ticket : a.ev) : b[S.leadSort] - a[S.leadSort]); }
+function drawLeads() {
+  const L1 = leadRows(), show = L1.slice(0, S.leadN);
+  $('lcount').textContent = `${L1.length} lead${L1.length === 1 ? '' : 's'}`;
+  $('leadt').innerHTML = L1.length ? `<table class="tbl"><tr><th>Lead ID</th><th>SM · TL</th><th>Stage</th><th class="n" data-ls="age">Nights since demo</th><th class="n" data-ls="p7">Next 7 nights</th><th class="n" data-ls="pm">By month end</th><th class="n" data-ls="ev">Worth</th><th>Why</th></tr>
+    ${show.map(l => `<tr><td class="mono" style="font-size:11.5px">${esc(l.id.length > 18 ? l.id.slice(0, 8) + '…' + l.id.slice(-6) : l.id)}<div class="note">${esc(l.team)} · ${esc(l.subj)} · ${esc(l.eth || '')}</div></td><td>${esc(l.sm)}<div class="note">${esc(nameOf(l.tl))}</div></td><td>${esc(l.st)}</td><td class="n">${l.age}</td>
+      <td class="n">${Math.round(l.p7 * 100)}%</td><td class="n"><b>${Math.round(l.pm * 100)}%</b><div class="bar" style="min-width:60px;height:5px;margin-top:3px"><div class="f" style="width:${l.pm * 100}%;background:var(--accent)"></div></div></td>
+      <td class="n">${l.team === 'RP' ? l.ev.toFixed(2) + ' RP' : K(l.ev)}</td><td><div class="why">${l.why.map(w => `<span>${esc(w)}</span>`).join('')}</div></td></tr>`).join('')}</table>
+    ${L1.length > S.leadN ? `<p style="margin-top:10px"><button class="btn" id="lmore">Show ${Math.min(40, L1.length - S.leadN)} more</button></p>` : ''}` : '<div class="empty">No open leads match these filters.</div>';
+  const m = $('lmore'); if (m) m.onclick = () => { S.leadN += 40; drawLeads(); };
+  document.querySelectorAll('[data-ls]').forEach(th => th.onclick = () => { S.leadSort = th.dataset.ls; drawLeads(); });
+}
+function csv() {
+  const rows = [['Lead ID', 'SM', 'TL', 'Team', 'Subject', 'Stage', 'Demo night', 'Nights since demo', 'Chance next 7 nights %', 'Chance by month end %', 'Worth', 'Why']].concat(leadRows().map(l => [l.id, l.sm, nameOf(l.tl), l.team, l.subj, l.st, l.k, l.age, Math.round(l.p7 * 100), Math.round(l.pm * 100), l.team === 'RP' ? l.ev : Math.round(l.ev), l.why.join('; ')]));
+  const b = new Blob([rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n')], { type: 'text/csv' }), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = 'Likely_buyers_' + D.asOf + '.csv'; a.click();
+}
+
+/* ── charts (plain SVG) ── */
+function tipOn(el, html) { el.addEventListener('mousemove', e => { const t = $('tip'); t.innerHTML = html; t.style.display = 'block'; t.style.left = Math.min(innerWidth - 270, e.clientX + 12) + 'px'; t.style.top = (e.clientY + 12) + 'px'; }); el.addEventListener('mouseleave', () => $('tip').style.display = 'none'); }
+function drawNights() {
+  const m = S.metric, N = D.nights, val = n => n[m] != null ? n[m] : n['f' + m], box = $('nchart'), W = box.clientWidth || 900, Hh = 220, pl = 44, pb = 26, pt = 10, iw = W - pl - 8, ih = Hh - pb - pt;
+  const f = D.floor[m], need = m !== 'dem' && f.target ? f.needPerNight : 0, max = Math.max(...N.map(val), need) * 1.12 || 1, bw = iw / N.length, y = v => pt + ih - v / max * ih;
+  const ticks = [0, max / 2, max].map(v => `<line x1="${pl}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${m === 'otp' ? K(v) : Math.round(v)}</text>`).join('');
+  const bars = N.map((n, i) => { const v = val(n) || 0, x = pl + i * bw + 1, h = Math.max(0, pt + ih - y(v)), done = n[m] != null;
+    return `<g class="nb" data-i="${i}"><rect x="${x}" y="${pt}" width="${Math.max(1, bw - 2)}" height="${ih}" fill="transparent"/><rect x="${x}" y="${y(v)}" width="${Math.max(1, bw - 2)}" height="${h}" rx="3" fill="${done ? 'var(--accent)' : 'var(--fc)'}"/></g>`; }).join('');
+  const lab = N.map((n, i) => (i % Math.ceil(N.length / (W < 600 ? 6 : 12)) === 0) ? `<text x="${pl + i * bw + bw / 2}" y="${Hh - 8}" text-anchor="middle">${+n.k.slice(8)}</text>` : '').join('');
+  const nl = need ? `<line x1="${pl + N.findIndex(n => n[m] == null) * bw}" x2="${W - 8}" y1="${y(need)}" y2="${y(need)}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>` : '';
+  box.innerHTML = `<svg width="${W}" height="${Hh}" role="img" aria-label="Nightly ${m} this month">${ticks}${bars}${nl}${lab}</svg>`;
+  box.querySelectorAll('.nb').forEach(g => { const n = N[+g.dataset.i], v = val(n), done = n[m] != null; tipOn(g, `<b>${day(n.k)}</b>${n.hol ? ' · ' + esc(n.hol) : ''}<br>${done ? 'Booked' : 'Forecast'}: ${m === 'otp' ? L(v) : (Math.round(v * 10) / 10) + (m === 'dem' ? ' demos' : ' RP')}${done && m !== 'dem' ? `<br>Demos: ${n.dem}` : ''}`); });
+  const left = N.filter(n => n[m] == null), restAvg = left.length ? left.reduce((a, n) => a + val(n), 0) / left.length : 0;
+  $('nh').textContent = m === 'dem' ? `About ${Math.round(restAvg)} demos a night expected for the rest of the month` : need ? (restAvg >= need ? `The nights ahead cover what target needs (${m === 'otp' ? K(need) : need.toFixed(1)} a night)` : `The nights ahead fall short: ${m === 'otp' ? K(restAvg) : restAvg.toFixed(1)} expected a night against ${m === 'otp' ? K(need) : need.toFixed(1)} needed`) : `${m === 'otp' ? K(restAvg) : restAvg.toFixed(1)} expected a night for the rest of the month`;
+}
+function drawMonths() {
+  const M = D.months.slice(-6), cur = D.month, box = $('mchart'), W = box.clientWidth || 520, Hh = 220, pl = 40, pb = 28, pt = 18, iw = W - pl - 8, ih = Hh - pb - pt;
+  const rows = M.map(x => ({ m: x.m, v: x.m === cur ? D.floor.rp.fc : x.rp, cur: x.m === cur, lo: x.m === cur ? D.floor.rp.lo : null, hi: x.m === cur ? D.floor.rp.hi : null })).concat([{ m: D.next.m, v: D.next.rp, next: true, lo: D.next.rpLo, hi: D.next.rpHi }]);
+  const max = Math.max(...rows.map(r => r.hi || r.v)) * 1.12 || 1, bw = iw / rows.length, y = v => pt + ih - v / max * ih;
+  const g = rows.map((r, i) => { const x = pl + i * bw + bw * .18, w = bw * .64, fill = r.next ? 'var(--fc)' : r.cur ? 'var(--accent)' : 'var(--ctx)';
+    return `<g class="mb" data-i="${i}"><rect x="${x}" y="${y(r.v)}" width="${w}" height="${pt + ih - y(r.v)}" rx="4" fill="${fill}"/>${r.lo != null ? `<line x1="${x + w / 2}" x2="${x + w / 2}" y1="${y(r.hi)}" y2="${y(r.lo)}" stroke="var(--ink)" stroke-width="1.5"/>` : ''}
+      <text x="${x + w / 2}" y="${y(r.hi || r.v) - 5}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${u0(r.v)}</text><text x="${x + w / 2}" y="${Hh - 9}" text-anchor="middle">${mon(r.m)}${r.cur ? ' (fc)' : r.next ? ' (proj)' : ''}</text></g>`; }).join('');
+  box.innerHTML = `<h3>RP units by month</h3><svg width="${W}" height="${Hh}" role="img" aria-label="RP units by month">${g}</svg><div class="legend"><span><i style="background:var(--ctx)"></i>Booked</span><span><i style="background:var(--accent)"></i>This month (forecast)</span><span><i style="background:var(--fc)"></i>Next month (projection)</span></div>`;
+  const n = D.next, prev = rows[rows.length - 2].v, ch = prev ? (n.rp - prev) / prev : 0;
+  $('mh').textContent = `${mon(n.m)} projects about ${u0(n.rp)} RP units (${u0(n.rpLo)}–${u0(n.rpHi)}), ${ch >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(ch * 100))}% on this month`;
+  $('mnext').innerHTML = `<h3>What the projection assumes</h3><table class="tbl" style="margin-top:6px"><tr><td>New leads a day (last 14 days)</td><td class="n"><b>${n.leadsPerDay}</b></td></tr><tr><td>Leads in ${mon(n.m)}</td><td class="n">${u0(n.leads)}</td></tr><tr><td>Lead → demo</td><td class="n">${n.l2d}%</td></tr><tr><td>Demos</td><td class="n">${u0(n.dem)}</td></tr><tr><td>RP units</td><td class="n"><b>${u0(n.rp)}</b> <span class="note">(${u0(n.rpLo)}–${u0(n.rpHi)})</span></td></tr><tr><td>OTP revenue</td><td class="n"><b>${L(n.otp)}</b> <span class="note">(${L(n.otpLo)}–${L(n.otpHi)})</span></td></tr></table>
+    <p class="note" style="margin-top:8px">The range uses the lowest and highest value per demo of the last three months. If lead flow changes, this moves with it.</p>`;
+}
+function drawWhat() {
+  const sc = scope(), f = sc.rp, o = sc.otp, dem = +$('sdem').value, dc = +$('sdc').value, base = D.floor.dc2e.mtd || 30;
+  S.dem = dem; S.dc = dc; $('odem').textContent = (dem > 0 ? '+' : '') + dem + '%'; $('odc').textContent = (dc > 0 ? '+' : '') + dc + ' pts';
+  const mult = (1 + dem / 100) * ((base + dc) / base), rp = f.mtd + (f.fc - f.mtd) * mult, ot = o.mtd + (o.fc - o.mtd) * mult;
+  const line = (lab, m, v, x) => `<div style="margin-bottom:12px"><div class="note">${lab}</div><div class="res">${fmt(m, v)}</div>${x.target ? `<div class="${v >= x.target ? 'pos' : 'neg'}">${v >= x.target ? 'Reaches target with ' + fmt(m, v - x.target) + ' to spare' : fmt(m, x.target - v) + ' short of target'}</div>` : ''}</div>`;
+  $('what').innerHTML = line('RP units at month end', 'rp', rp, f) + line('OTP revenue at month end', 'otp', ot, o) + `<p class="note">Floor DC2E so far this month: ${base}%. Changes apply only to the nights left.</p>`;
+}
+function drawLifts() {
+  const dims = ['source', 'eth', 'grade', 'country', 'lead', 'booked'].filter(k => D.lifts[k] && D.lifts[k].rows.length >= 2), box = $('lifts');
+  let all = []; dims.forEach(k => D.lifts[k].rows.forEach(r => all.push(Object.assign({ dim: D.lifts[k].label }, r))));
+  const top = all.slice().sort((a, b) => b.lift - a.lift)[0], bot = all.slice().sort((a, b) => a.lift - b.lift)[0];
+  $('dh').textContent = top && bot ? `${top.dim} “${top.v}” converts ${top.lift.toFixed(1)}× the floor; ${bot.dim.toLowerCase()} “${bot.v}” only ${bot.lift.toFixed(1)}×` : 'What drives a sale';
+  box.innerHTML = dims.map(k => { const R = D.lifts[k].rows.slice(0, 6), mx = Math.max(2, ...R.map(r => r.lift));
+    return `<h3 style="margin-top:10px">${esc(D.lifts[k].label)}</h3>` + R.map(r => `<div style="display:grid;grid-template-columns:130px 1fr 92px;gap:8px;align-items:center;margin:4px 0;font-size:12px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.v)}">${esc(r.v)}</span>
+      <div class="bar" style="min-width:60px"><div class="f" style="width:${r.lift / mx * 100}%;background:${r.lift >= 1.15 ? 'var(--accent)' : r.lift <= .85 ? 'var(--neg)' : 'var(--ctx)'}"></div><div class="t" style="left:${1 / mx * 100}%;width:1px"></div></div>
+      <span class="mono" style="text-align:right">${r.lift.toFixed(2)}× <span class="note">${r.rate}%</span></span></div>`).join(''); }).join('') + '<p class="note" style="margin-top:8px">The thin line is the floor average (1×). Only values with 30+ demos are shown.</p>';
+}
+function drawLag() {
+  const Lg = D.lag.filter(x => x.t <= 21), box = $('lagc'), W = box.clientWidth || 480, Hh = 150, pl = 34, pb = 22, pt = 8, iw = W - pl - 8, ih = Hh - pb - pt, max = Math.max(...Lg.map(x => x.h)) * 1.15 || 1;
+  const x = t => pl + t / 21 * iw, y = v => pt + ih - v / max * ih, path = Lg.map((p, i) => (i ? 'L' : 'M') + x(p.t) + ' ' + y(p.h)).join(' ');
+  box.innerHTML = `<svg width="${W}" height="${Hh}" role="img" aria-label="Chance of buying by nights since demo"><line x1="${pl}" x2="${W - 8}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line2)"/><text x="${pl - 5}" y="${y(max / 1.15) + 4}" text-anchor="end">${(max / 1.15).toFixed(1)}%</text>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>${Lg.map(p => `<circle class="lg" data-t="${p.t}" cx="${x(p.t)}" cy="${y(p.h)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`).join('')}
+    ${[0, 7, 14, 21].map(t => `<text x="${x(t)}" y="${Hh - 6}" text-anchor="${t === 0 ? 'start' : t === 21 ? 'end' : 'middle'}">${t === 0 ? 'demo night' : t + ' nights'}</text>`).join('')}</svg>`;
+  box.querySelectorAll('.lg').forEach(c => { const p = D.lag.find(z => z.t === +c.dataset.t); tipOn(c, `Night ${p.t} after the demo<br>${p.h}% of open leads bought<br><span style="opacity:.7">${p.risk} leads still open</span>`); });
+}
+function drawCalib() {
+  $('calt').innerHTML = D.calib.length ? `<table class="tbl"><tr><th>Score said</th><th class="n">Leads</th><th class="n">Average score</th><th class="n">Actually bought</th></tr>${D.calib.map(c => `<tr><td>${c.band}</td><td class="n">${u0(c.n)}</td><td class="n">${c.said}%</td><td class="n"><b>${c.did}%</b></td></tr>`).join('')}</table>` : '<div class="empty">Not enough history yet.</div>';
+}
+function methodText() {
+  const bt = D.floor.rp.backtest || [];
+  return `<p><b>Month-end forecast.</b> Booked so far, plus each night left × the floor’s nightly rate (the last 28 nights, recent nights counting more) × that weekday’s usual share (Sun ${D.floor.dow[0]}×, Mon ${D.floor.dow[1]}×, … Sat ${D.floor.dow[6]}×). Holidays count at 60%. The same method was run at day ${D.dayNow} of each past month: actual ÷ forecast was ${bt.map(x => mon(x.m) + ' ' + x.r).join(', ') || 'not available'}. The median of those (${D.floor.rp.bias}) corrects the forecast, and their spread gives the likely range.</p>
+  <p><b>Teams and people.</b> Each BM, TL and SM is forecast the same way from their own recent nights (blended with their month so far). The chance of reaching target treats the sales still to come as random around the forecast (Poisson), so a small gap with many nights left is still likely, and a big gap late in the month is not.</p>
+  <p><b>Chance a lead buys.</b> Starts from how often leads still open on that night after their demo have bought (the fading curve), then is raised or lowered by what is known about the lead: ethnicity, source, grade, country, subject, new or older lead, how the demo was booked, and the SM’s own 30-day conversion. These overlap, so their combined effect is damped (power ${D.alpha}, chosen to best match past outcomes). The CRM stage then applies a starting weight (Payment link sent ×${D.stageW['Payment Link Sent']}, AD Positive ×${D.stageW['AD Positive']}, May buy later ×${D.stageW['AD May Buy Later']} …). Stage history is not kept in the CRM, so these weights are set by hand for now; each night’s scores are saved so they can be checked against what actually sold.</p>
+  <p><b>Next month.</b> Leads a day over the last 14 days × days in the month × lead-to-demo rate × RP units and OTP ₹ per demo (median of the last three full months; the range uses their lowest and highest).</p>
+  <p><b>Limits.</b> Forecasts assume the next nights look like the recent ones: a sudden change in lead flow, pricing or headcount will not show until it appears in the data. Lead IDs only; no names or contact details are shown.</p>`;
+}
+function bind() {
+  document.querySelectorAll('[data-bm]').forEach(b => b.onclick = () => { S.bm = b.dataset.bm; S.leadTl = 'all'; render(); });
+  document.querySelectorAll('[data-mk]').forEach(b => b.onclick = () => { S.mk = b.dataset.mk; document.querySelectorAll('[data-mk]').forEach(x => x.classList.toggle('on', x === b)); drawMkts(); });
+  document.querySelectorAll('[data-metric]').forEach(b => b.onclick = () => { S.metric = b.dataset.metric; document.querySelectorAll('[data-metric]').forEach(x => x.classList.toggle('on', x === b)); drawNights(); });
+  document.querySelectorAll('[data-tl]').forEach(r => r.onclick = () => { S.open[r.dataset.tl] = !S.open[r.dataset.tl]; render(); });
+  $('ltl').onchange = e => { S.leadTl = e.target.value; S.leadN = 40; drawLeads(); };
+  $('lteam').onchange = e => { S.leadTeam = e.target.value; S.leadN = 40; drawLeads(); };
+  $('lmkt').onchange = e => { S.leadMkt = e.target.value; S.leadN = 40; drawLeads(); };
+  $('lmin').onchange = e => { S.leadMin = +e.target.value; S.leadN = 40; drawLeads(); };
+  $('lcsv').onclick = csv; $('sdem').oninput = drawWhat; $('sdc').oninput = drawWhat;
+}
+let _rz; addEventListener('resize', () => { clearTimeout(_rz); _rz = setTimeout(() => { if (D) { drawMkts(); drawCap(); drawNights(); drawMonths(); drawLag(); } }, 200); });
+boot();
+</script>
+</body>
+</html>
