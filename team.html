@@ -1869,8 +1869,14 @@ function tsignIn(msg) {
 }
 async function tlogin(idToken) { $('gbtn') && ($('gbtn').innerHTML = '<p class="note">Signing you in…</p>'); const r = await tapi('team.login', { idToken }); if (!r.ok) return tsignIn(r.message); TSESSION = r.session; tstore.set('team.session', TSESSION); applyTeamBoot(r.boot); S.view = null; render(); }
 function tsignOut(expired) { TSESSION = null; tstore.del('team.session'); if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); tsignIn(expired ? 'Your session ended. Please sign in again.' : ''); }
-async function treboot(silent) { const r = await tapi('team.boot'); if (!r.ok) { if (!silent) toast(r.message); return false; } const keep = { view: S.view, rw: S.rw, tlF: S.tlF }; applyTeamBoot(r.boot); Object.assign(S, keep); if (!$('overlay').innerHTML) render(); return true; }
-async function done(r, msg, close = true) { if (!r.ok) { toast(r.message || 'That didn’t work. Try again.'); return false; } if (close) closeModal(); await treboot(true); if (msg) toast(msg); return true; }
+/* one refresh at a time: a second request while one is running shares its result */
+let _bootP = null;
+function treboot(silent, after) {   // after = true: a change was just saved, so the refresh must start after it (not share one already running)
+  if (_bootP && !after) return _bootP;
+  const p = (_bootP && after ? _bootP.catch(() => { }).then(() => treboot1(silent)) : treboot1(silent)).finally(() => { if (_bootP === p) _bootP = null; });
+  return (_bootP = p); }
+async function treboot1(silent) { const r = await tapi('team.boot'); if (!r.ok) { if (!silent) toast(r.message); return false; } const keep = { view: S.view, rw: S.rw, tlF: S.tlF }; applyTeamBoot(r.boot); Object.assign(S, keep); if (!$('overlay').innerHTML) render(); return true; }
+async function done(r, msg, close = true) { if (!r.ok) { toast(r.message || 'That didn’t work. Try again.'); return false; } if (close) closeModal(); await treboot(true, true); if (msg) toast(msg); return true; }
 const meP = () => role() === 'tl' ? PERSON('tl-' + meId()) : IC(meId());
 /* A short code describing this laptop's hardware (processor, memory, graphics chip, time zone). It stays the same when
    browser data is cleared, so the server can recognise the same laptop and re-link it without an admin reset. */
@@ -1919,7 +1925,8 @@ async function liveMe2(x, m) {
   closeModal();
   /* show the saved shift straight away from the reply; the full refresh runs in the background */
   if (r.day && r.day.ev && DB.night[ic.id]) { DB.night[ic.id].ev = r.day.ev.map(e => ({ ...e })).sort((p, q) => p.t - q.t); if (r.day.late > 0) DB.lateTonight[ic.id] = r.day.late; render(); }
-  treboot(true);
+  /* the screen is already up to date from the reply; the full refresh waits a few seconds so a rush of clock-ins doesn't all refresh at once */
+  setTimeout(() => treboot(true), 4000 + Math.random() * 8000);
   if (x === 'in') toast(r.day.late ? `Clocked in, ${r.day.late} min after your rostered start.` : 'You’re in. Have a good shift.');
   if (x === 'out') { if (r.day.st === 'Present') setTimeout(confetti, 200); else toast('Shift ended. It’s recorded as short.'); }
 }
@@ -1984,7 +1991,7 @@ if (IS_LIVE) setInterval(() => {
   if (!TSESSION || !S.as) return;
   const r = role(); if (r === 'ic' || r === 'tl') { const n = tonight(meP()).st; if (['working', 'break', 'overrun'].includes(n)) tapi('team.beat'); }
 }, 5 * 60000);
-if (IS_LIVE) setInterval(() => { if (!TSESSION || !S.as || document.hidden || $('overlay').innerHTML) return; const leader = role() !== 'ic'; const due = leader ? (['now', 'exc', 'rosters'].includes(S.view) ? 60e3 : 5 * 60e3) : 5 * 60e3; if (Date.now() - LAST_BOOT > due) treboot(true); }, 15000);
+if (IS_LIVE) setInterval(() => { if (!TSESSION || !S.as || document.hidden || $('overlay').innerHTML) return; const leader = role() !== 'ic'; const due = leader ? (['now', 'exc', 'rosters'].includes(S.view) ? 3 * 60e3 : 5 * 60e3) : 5 * 60e3; if (Date.now() - LAST_BOOT > due) treboot(true); }, 15000);
 async function tliveBoot() {
   document.querySelector('.proto').style.display = 'none';
   if (!TSESSION) return tsignIn();
