@@ -206,7 +206,7 @@ function render() {
   <h1>${esc(head)}</h1><p class="sub">${esc(subH)}</p>
   <div class="hero">${tile('RP units', 'rp', r)}${tile('OTP revenue', 'otp', o)}</div>
   ${aiBlock()}
-  <section class="panel"><div class="ph"><div class="kick">Outlook by market</div><h2>${esc(mktTitle())}</h2><p class="sub">US and Canada, each split by Indian and Non-Indian families. Forecast month-end against last month in full; the tick on each bar is last month. Hot leads are open demos with a 30%+ chance this month.</p></div>
+  <section class="panel"><div class="ph"><div class="kick">Outlook by market</div><h2>${esc(mktTitle())}</h2><p class="sub">US and Canada, each split by Indian and Non-Indian families. Forecast month-end against last month in full; the tick on each bar is last month. Hot leads are open demos with a 15%+ chance this month (most open leads are under 5%).</p></div>
     <div class="pb"><div class="filters"><div class="seg">${[['rp', 'RP units'], ['otp', 'OTP ₹']].map(([m, l]) => `<button class="${S.mk === m ? 'on' : ''}" data-mk="${m}">${l}</button>`).join('')}</div></div><div id="mkts" style="display:grid;grid-template-columns:minmax(0,1fr);gap:20px"></div></div></section>
   <section class="panel"><div class="ph"><div class="kick">Funnel leakage by market</div><h2 id="fh"></h2><p class="sub">Lead → demo done → sale for each market, this month so far against last month. “Leaks most” compares each market with the floor. Whole floor; leads aren’t assigned to a BM until the demo.</p></div>
     <div class="pb"><div class="tw" id="funt"></div><div style="margin-top:16px"><div class="filters"><h3 style="margin-right:6px">Why leads never reached a demo</h3><select id="fmk" aria-label="Market"></select><span class="note">Leads from 3 to 40 days ago with no demo yet, by CRM stage</span></div><div id="lost"></div></div></div></section>
@@ -320,6 +320,9 @@ function aiBlock() {
 }
 const warnTitle = W => { const h = W.filter(w => w.sev === 'high').length; return h ? `${h} problem${h > 1 ? 's need' : ' needs'} action this week` : W.length ? `${W.length} thing${W.length > 1 ? 's' : ''} to watch` : 'Nothing urgent ahead'; };
 function warnCard(w) {
+  if (w.items) return `<div class="w"><span class="sev ${w.sev}">${w.sev === 'high' ? '▲ Act now' : w.sev === 'med' ? '● Watch' : 'ℹ Note'}</span><span class="area">${esc(w.area)}</span>
+    <div class="tt">${esc(w.title)}</div>${w.items.map(x => `<div class="ev" style="margin-top:6px"><b style="color:var(--ink);font-weight:600">${esc(x.title)}</b><br>${esc(x.evidence)}</div>`).join('')}
+    <div class="fix"><b>Fix:</b> ${w.items.map(x => esc(x.fix)).filter((f, i, a) => a.indexOf(f) === i).join(' ')}</div>${w.owner ? `<div class="own">Owner: ${esc(nameOf(w.owner))}</div>` : ''}</div>`;
   return `<div class="w"><span class="sev ${w.sev}">${w.sev === 'high' ? '▲ Act now' : w.sev === 'med' ? '● Watch' : 'ℹ Note'}</span><span class="area">${esc(w.area)}</span>
     <div class="tt">${esc(w.title)}</div><div class="ev">${esc(w.evidence)}</div><div class="fix"><b>Fix:</b> ${esc(w.fix)}</div>${w.owner ? `<div class="own">Owner: ${esc(nameOf(w.owner))}</div>` : ''}</div>`;
 }
@@ -335,14 +338,14 @@ function tlTable(sc) {
       <td><div class="bar" title="Forecast ${fmt(m, x.fc)} of ${fmt(m, x.target)}"><div class="f" style="width:${x.fc / max * 100}%;background:${col}"></div>${x.target ? `<div class="t" style="left:${x.target / max * 100}%"></div>` : ''}</div></td>
       <td class="n">${x.needPerNight ? (m === 'otp' ? K(x.needPerNight) : x.needPerNight) : '—'}</td><td class="n">${m === 'otp' ? K(x.perNight) : x.perNight}</td><td class="n">${hitPill(x.pHit)}</td><td class="n">${t.dc2e != null ? t.dc2e + '%' : '—'}</td></tr>${sm}`; }).join('')}</table>`;
 }
-const leadTitle = Ls => { const hot = Ls.filter(l => l.pm >= .3), rp = hot.filter(l => l.team === 'RP').reduce((a, l) => a + l.pm, 0), otp = hot.filter(l => l.team === 'OTP').reduce((a, l) => a + l.ev, 0);
+const leadTitle = Ls => { const hot = Ls.filter(l => l.pm >= .15), rp = hot.filter(l => l.team === 'RP').reduce((a, l) => a + l.pm, 0), otp = hot.filter(l => l.team === 'OTP').reduce((a, l) => a + l.ev, 0);
   return hot.length ? `${hot.length} hot leads could bring about ${u0(rp)} RP units and ${L(otp)} OTP this month` : 'No hot leads right now'; };
 function leadFilters(sc) {
   const tls = sc.tls.map(t => `<option value="${esc(t.id)}"${S.leadTl === t.id ? ' selected' : ''}>${esc(t.n)}</option>`).join('');
   return `<div class="filters"><select id="ltl" aria-label="Team lead"><option value="all">All team leads</option>${tls}</select>
     <select id="lteam" aria-label="Team"><option value="all">RP and OTP</option><option value="RP"${S.leadTeam === 'RP' ? ' selected' : ''}>RP</option><option value="OTP"${S.leadTeam === 'OTP' ? ' selected' : ''}>OTP</option></select>
     <select id="lmkt" aria-label="Market"><option value="all">All markets</option>${['US|Indian', 'US|Non-Indian', 'CA|Indian', 'CA|Non-Indian'].map(v => `<option value="${v}"${S.leadMkt === v ? ' selected' : ''}>${v.replace('|', ' · ')}</option>`).join('')}</select>
-    <select id="lmin" aria-label="Minimum chance"><option value="0">Any chance</option>${[.2, .3, .5].map(v => `<option value="${v}"${S.leadMin == v ? ' selected' : ''}>${v * 100}%+ this month</option>`).join('')}</select>
+    <select id="lmin" aria-label="Minimum chance"><option value="0">Any chance</option>${[.05, .1, .15, .3].map(v => `<option value="${v}"${S.leadMin == v ? ' selected' : ''}>${v * 100}%+ this month</option>`).join('')}</select>
     <button class="btn" id="lcsv">Download list</button><span class="note" id="lcount"></span></div>`;
 }
 const mktOf = l => { const c = String(l.ctry || '').toUpperCase(); return (c === 'US' || c === 'CA' ? c : 'Other') + '|' + (l.eth === 'Indian' ? 'Indian' : l.eth === 'Unknown' ? 'Unknown' : 'Non-Indian'); };
