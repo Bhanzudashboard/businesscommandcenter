@@ -1234,6 +1234,7 @@ async function api(action, payload = {}, tries = 0) {
   } catch (e) { return { ok: false, message: 'Couldn’t reach the KRA server. Check your connection and try again.' }; }
   if (res && res.busy && tries < 3) { await new Promise(r => setTimeout(r, 1500 + Math.random() * 2500)); return api(action, payload, tries + 1); }   // not applied, safe to resend
   if (res && res.auth === false) { signOut(true); }
+  else if (res && res.ok && res.session) { SESSION = res.session; store.set('kra.session', SESSION); }   // the server renews a sign-in in use
   return res || { ok: false, message: 'Empty reply from the server.' };
 }
 function applyBoot(b) {
@@ -1268,6 +1269,7 @@ async function login(idToken) {
   if (!r.ok) return signInScreen(r.message || 'Sign-in failed.');
   SESSION = r.session; store.set('kra.session', SESSION);
   applyBoot(r.boot); S.view = viewsFor()[0][0]; render();
+  resumePending();
 }
 function signOut(expired) { SESSION = null; store.del('kra.session'); if (window.google && google.accounts) google.accounts.id.disableAutoSelect(); signInScreen(expired ? 'Your session ended. Sign in again; your draft is kept on this device.' : ''); }
 async function liveBoot() {
@@ -1275,7 +1277,7 @@ async function liveBoot() {
   $('view').innerHTML = '<p class="note" style="padding:40px 0;text-align:center">Loading your KRA…</p>';
   const r = await api('bootstrap');
   if (!r.ok) return SESSION ? signInScreen(r.message) : null;
-  applyBoot(r.boot); S.view = viewsFor()[0][0]; render();
+  applyBoot(r.boot); S.view = viewsFor()[0][0]; render(); resumePending();
   setInterval(async () => { if (document.hidden || !SESSION || (S.view === 'day' && role() === 'tl')) return; const x = await api('bootstrap'); if (x.ok) { const keep = S.as; applyBoot(x.boot); S.as = keep; if (!$('overlay').innerHTML) render(); } }, 5 * 60000);
 }
 
@@ -1328,10 +1330,20 @@ function submit() {
   render({ justSubmitted: !wasEdit }); window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
   if (!wasEdit) setTimeout(confetti, 250); else toast('Changes saved.');
 }
+/* a KRA refused because the sign-in ended is kept on this device and sent once after the next sign-in, if still for the open shift */
+function pendingSave(id, k, kra) { store.set('kra.pending', { email: id, k, kra: JSON.parse(JSON.stringify(kra)), at: Date.now() }); }
+async function resumePending() {
+  const p = store.get('kra.pending'); if (!p) return;
+  store.del('kra.pending');                                   // taken before sending, so it can never go twice
+  if (p.email !== meId() || p.k !== openShift() || role() !== 'tl') return;
+  F = p.kra; toast('Sending the KRA you submitted before your sign-in ended…');
+  return submitLive(p.email, p.k);
+}
 async function submitLive(id, os) {
   const btn = document.querySelector('[data-act="submit"]'); if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
   const wasEdit = S.editing;
   const r = await api('submit', { k: os, kra: F });
+  if (r && r.auth === false) { pendingSave(id, os, F); return; }   // sign-in ended: keep it and send it right after the next sign-in
   if (!r.ok) { if (btn) { btn.disabled = false; btn.textContent = wasEdit ? 'Save changes' : 'Submit KRA and mark present'; } toast(r.message || 'Couldn’t submit. Try again.'); return; }
   DB.days[id][os] = r.day; delete DB.drafts[id]; store.del('kra.draft.' + id);
   S.editing = false; S.step = 0; S.showErr = false;
