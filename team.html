@@ -1099,7 +1099,7 @@ const saleW = (pi, prod) => pi < 0 ? 1 : pi === 2 ? (prod === 2 ? 1 : 0) : pi ==
    Demos: same month = demos on leads created this month; previous month = demos on older leads; rolling has no demos. */
 const SALE_GROUPS = [['all', 'All'], ['sm', 'Same month'], ['pm', 'Previous month'], ['rl', 'Rolling'], ['rlpm', 'Rolling + previous month']];
 const SALE_NOTE = { all: 'all sales', sm: 'same month', pm: 'previous month', rl: 'rolling (no demo this month)', rlpm: 'rolling + previous month' };
-const saleGrp = (leadThis, demoThis) => demoThis ? (leadThis ? 'sm' : 'pm') : 'rl';
+const saleGrp = (leadThis, demoThis) => leadThis ? 'sm' : demoThis ? 'pm' : 'rl';   // same month = lead created this month, with or without a demo
 const okSaleG = (g, sel) => !sel || sel === 'all' || g === sel || (sel === 'rlpm' && g !== 'sm');
 const okDemoG = (leadThis, sel) => !sel || sel === 'all' || (sel === 'sm' ? !!leadThis : sel === 'rl' ? false : !leadThis);
 function agg(list, f) {
@@ -1193,7 +1193,7 @@ function vNums() {
   $('view').innerHTML = `${liveNote()}
     <div class="kpis">
       <div class="kpi att">${ringSVG(q.att, q.att >= 1 ? 'var(--pos)' : 'var(--accent)')}<div><span>${q.type === 'RP' ? 'RP units' : 'OTP revenue'} vs target</span><b>${q.type === 'RP' ? fmt1(q.ach) + ' / ' + fmt1(q.tgt) : lakh(q.ach)}</b><small>${q.type === 'RP' ? 'units' : 'of ' + lakh(q.tgt)}</small></div></div>
-      <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>lead, demo and sale all this month · target 35%</small></div></div>
+      <div class="kpi att">${ringSVG(q.smdc / RULES.DC2E_TARGET, q.smdc >= RULES.DC2E_TARGET ? 'var(--pos)' : 'var(--warn)')}<div><span>Same-month DC2E</span><b>${pct(q.smdc, 1)}</b><small>lead created and sold this month · target 35%</small></div></div>
       <div class="kpi"><span>Needed per working day</span><b>${fmtV(q.type, q.perDay)}</b><small>${q.daysLeft} working day${q.daysLeft === 1 ? '' : 's'} left this month</small></div></div>
     <section class="panel"><div class="ph"><h2>My performance</h2><p>${filterNote()}</p></div><div class="pb">${filterBar({ prod: true, sale: true, ctry: true, extra: srcFilter() })}
       <div class="kpis" style="margin:16px 0 6px">
@@ -1208,7 +1208,7 @@ function vNums() {
 function quickNums(ic) {
   const q = numsOf(ic);
   return `<div class="kpi"><span>${q.type === 'RP' ? 'RP units this month' : 'OTP revenue this month'}</span><b>${q.type === 'RP' ? fmt1(q.ach) : lakh(q.ach)}</b><small>${pct(q.att)} of ${fmtV(q.type, q.tgt)}</small></div>
-    <div class="kpi"><span>Same-month DC2E</span><b class="${q.smdc >= RULES.DC2E_TARGET ? 'good' : 'bad'}">${pct(q.smdc, 1)}</b><small>lead, demo and sale all this month · target 35%</small></div>
+    <div class="kpi"><span>Same-month DC2E</span><b class="${q.smdc >= RULES.DC2E_TARGET ? 'good' : 'bad'}">${pct(q.smdc, 1)}</b><small>lead created and sold this month · target 35%</small></div>
     <div class="kpi"><span>Demos completed</span><b>${fmtN(q.demos)}</b><small>overall DC2E ${pct(q.dc2e, 1)}</small></div>
     <div class="kpi"><span>Needed per working day</span><b>${fmtV(q.type, q.perDay)}</b><small>${q.daysLeft} working day${q.daysLeft === 1 ? '' : 's'} left</small></div>`;
 }
@@ -1771,6 +1771,7 @@ async function tapi(action, payload = {}, tries = 0) {
   try {
     const r = await fetch(LIVE.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, session: TSESSION, ...payload }) });
     const j = await r.json(); if (j && j.auth === false) tsignOut(true);
+    else if (j && j.ok && j.session && action !== 'team.login') { TSESSION = j.session; tstore.set('team.session', TSESSION); }   // the server renews a sign-in in use
     /* busy = the server never started this request, so it is safe to send it again */
     if (j && j.busy && tries < 3) { await new Promise(res => setTimeout(res, 1500 + Math.random() * 2500)); return tapi(action, payload, tries + 1); }
     return j || { ok: false, message: 'Empty reply.' };
@@ -1911,12 +1912,20 @@ function meButtons(on, el) {   // lock every attendance button while a click is 
 async function liveMe(x, m, el) {
   if (_meBusy) return toast('Still saving your last click…');
   if (x === 'out' && m !== 'force' && shiftOf(meP()).credited < RULES.SHIFT_MIN * MIN) return liveMe2(x, m);   // the confirm box comes first
+  if (x === 'be' && m !== 'force' && shortBreakMs((DB.night[meP().id] || {}).ev || [])) return liveMe2(x, m);   // so does the short-break check
   _meBusy = true; meButtons(true, el);
   try { return await liveMe2(x, m); } finally { _meBusy = false; meButtons(false, el); }
+}
+/* how long the current break has run, if it is under 2 minutes (else 0): ending it that soon is usually a second click */
+function shortBreakMs(ev, t = now()) {
+  const last = ev[ev.length - 1]; if (!last || last.type !== 'bs') return 0;
+  const ms = t - last.t; return ms >= 0 && ms < 2 * MIN ? ms : 0;
 }
 async function liveMe2(x, m) {
   const ic = meP(), s = shiftOf(ic);
   if (isPhone()) return toast('Use your registered laptop to mark attendance.');
+  if (x === 'be' && m !== 'force' && shortBreakMs((DB.night[ic.id] || {}).ev || []))
+    return modal('End your break?', `<p>Your break started <b>${Math.max(1, Math.round(shortBreakMs(DB.night[ic.id].ev) / 1000))} seconds</b> ago. If you meant to start a break, it is already running.</p><div class="acts"><button class="big go" data-act="close">Keep my break</button><button class="big stop" data-act="me" data-x="be" data-m="force">End break now</button></div>`);
   if (x === 'out' && m !== 'force' && s.credited < RULES.SHIFT_MIN * MIN)
     return modal('End your shift now?', `<p>You’ve done <b>${fmtDur(s.credited)}</b> of the ${RULES.SHIFT_MIN / 60}-hour shift. Ending now records a short shift and emails ${ic.isTL ? `you and ${esc(mgrOf(ic).name)}` : `you, ${esc(TL(ic.tl).name)} and ${esc(mgrOf(ic).name)}`}.</p><div class="acts"><button class="big go" data-act="close">Keep working</button><button class="big stop" data-act="me" data-x="out" data-m="force">End shift anyway</button></div>`);
   const mode = m === 'wfh' ? 'wfh' : 'office';
