@@ -148,7 +148,8 @@ const S = { mk: 'rp', leadMkt: 'all', bm: 'floor', metric: 'rp', leadTl: 'all', 
 
 async function api(action, payload = {}) {
   try { const r = await fetch(LIVE.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, session: SESSION, ...payload }) });
-    return await r.json(); } catch (e) { return { ok: false, message: 'Couldn’t reach the server. Check your connection and try again.' }; }
+    const j = await r.json(); if (j && j.ok && j.session && action !== 'team.predictLogin') { SESSION = j.session; store.set('team.session', SESSION); }   // renewed sign-in
+    return j; } catch (e) { return { ok: false, message: 'Couldn’t reach the server. Check your connection and try again.' }; }
 }
 async function boot() {
   if (window.__PRED) { D = window.__PRED.data; NOTES = window.__PRED.notes; ME = window.__PRED.me; return start(); }   // local preview
